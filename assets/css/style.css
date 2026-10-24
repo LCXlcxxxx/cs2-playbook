@@ -1,4 +1,14 @@
 /* CS2 Playbook 查看器 — 单栏自适应（竖屏 1440×2560 为设计基准） */
+/* ================= 命名规矩（R1-D 立规，只规新增、不批量改存量） =================
+   1. 新增类一律 pb- 前缀（如 pb-foo）；禁用裸通用词类名——先例：
+      .set-row 早已被 ⚙ 设置弹层占用（I47 列表套装行误撞会改坏设置层），
+      .manual-in 是起点/目标手动输入的回车提交事件载体（复用会被抢 Enter，I47）。
+   2. 复用/新建类名前必须 grep assets/js/*.js + 本文件全库确认无冲突（事件委托类名
+      同样是契约，不只看 CSS）。
+   3. [hidden] 剃刀（本文件末行全局 !important）：任何元素一旦被 JS 以 hidden 属性
+      控制显隐，display:flex/grid 一律压不过它——新写弹层/可折叠块不需要再配
+      「XXX[hidden]{display:none}」守卫；存量守卫保留（无害）。历史四犯见
+      #chip-filter/#lightbox/.viewer-empty/.callout-label 的守卫注释。 */
 
 :root {
   --bg: #10141c;
@@ -1955,3 +1965,12 @@ html, body {
   font-weight: 600;
   background: linear-gradient(90deg, rgba(90, 162, 247, 0.12), transparent);
 }
+
+/* ================= [hidden] 剃刀（R1-D） =================
+任何元素的 hidden 属性恒生效——display:flex/grid（含更高优先级规则）压不过它。
+落地前已全库审计：JS 以 hidden 控制显隐的元素中，唯一被作者 display 压过的
+是 .viewer-img（block 压 hidden，属 I6 类 bug，剃刀后真隐藏——详情页 stage 有
+min-height 兜底，带图条目不受影响）；无「需要 hidden 被压制」的合法场景；
+存量作用域守卫（#chip-filter/#lightbox/.viewer-empty/.callout-label/#anchor-nav）
+就此冗余但保留。 */
+[hidden] { display: none !important; }

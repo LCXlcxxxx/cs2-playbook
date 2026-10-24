@@ -16,7 +16,7 @@
 - 本地仓库在项目根（`git init -b main`，**无远端、永不 push**）。git.exe 位置：`%LocalAppData%\Programs\Git\cmd\git.exe`（npmmirror 便携版 2.56，**未加入 PATH**——winget 在本机因 GitHub 直连失败不可用，Dev 会话用全路径调用）。
 - 仓库级身份已配（不动全局）：`user.name=cs2-playbook-dev`、`user.email=cs2-playbook-dev@localhost`（占位）、`core.autocrlf=false`（防整库换行抖动污染 diff）。
 - **提交规范**：每迭代 = 改动 + PROGRESS.md 台账行 + 一条 git 提交，信息格式 `ITER-Ixx: 摘要` 或 `Rx: 摘要`。大改前先做基线提交，保证重构本身可回滚。
-- **并行规则**：R1-B 拆分后按 §3 评估——五个 UI 域文件（pb-list/pb-detail/pb-tactics/pb-editor/pb-sortdesk）可各认领一个并行；pb-core/pb-data/pb-sync/app.js 四个共享文件与 index.html 改动仍一律串行（等前一会话台账入账且 `git status` 干净再动手）。
+- **并行规则（R1-D 后终态）**：五个 UI 域文件（pb-list/pb-detail/pb-tactics/pb-editor/pb-sortdesk）可各认领一个并行；**pb-core/pb-data/pb-sync/app.js 四个共享文件、index.html、style.css（单文件共享）与 pb.py 改动仍一律串行**（等前一会话台账入账且 `git status` 干净再动手）。app.js 瘦壳仅 334 行，动它的场景（新键盘钩子/新路由分支）天然少——「app.js 串行」实质已收敛为「共享文件串行」，无需专门解除。
 - 不入库（.gitignore）：`dist/`、`build/`、`*.bak`、`*.zip`、`__pycache__/`、`cookies.txt`、`tools/_test*`；**media/ 与 文件夹批量录入/ 内容图片入库**（内容可回滚是核心收益，本地仓 ~290MB 可承受）。
 - **红线**：git 只存在于开发会话；任何面向使用者的文档/界面/说明不得出现 git 字样。
 
