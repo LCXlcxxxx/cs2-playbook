@@ -4,61 +4,6 @@
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
-const TYPE_INFO = {
-  smoke:   { cn: "烟雾", icon: "assets/icons/icon-smoke.svg",   color: "#7aa2f7" },
-  flash:   { cn: "闪光", icon: "assets/icons/icon-flash.svg",   color: "#e8c15a" },
-  molotov: { cn: "燃烧", icon: "assets/icons/icon-molotov.svg", color: "#f07a5a" },
-  he:      { cn: "高爆", icon: "assets/icons/icon-he.svg",      color: "#9ece6a" },
-};
-const PHASE_CN = {
-  execute: "爆点", default: "默认", retake: "回防", postplant: "防守", "anti-eco": "科研",
-};
-const SIDE_CN = { T: "T 方", CT: "CT 方", both: "双方" };
-const STATUS_CN = { draft: "待验证", verified: "已实测", broken: "已失效", retired: "弃用" };
-const PLAYER_COLORS = ["#f07a5a", "#5aa2f7", "#e8c15a", "#3fd68f", "#c58af9"];
-const EDITABLE_SLOTS = [
-  ["1-stand", "站位"], ["2-aim", "瞄点"], ["4-result", "落点&效果"],
-];
-const PHASE_OPTS = [["execute", "爆点"], ["default", "默认"], ["retake", "回防"], ["postplant", "防守"], ["anti-eco", "科研"]];
-const PHASE_ORDER = ["default", "execute", "postplant", "retake", "anti-eco"];   // 列表分组顺序
-const BASE_SLOTS = ["1-stand", "2-aim", "4-result"];   // 基础槽（只可替换不可删）
-
-let entryRows = [];   // 当前列表页扁平顺序（键盘高亮/详情上一条下一条共用）
-let entryListPlaceholder = false;   // 列表页显示过「该图还没有录入道具」占位
-
-const state = {
-  tab: "tactics",      // 默认打开就是报点地图
-  map: localStorage.getItem("pb-map") || "de_dust2",   // 默认炙热沙城，记住上次选择（I14）
-  side: "",
-  types: new Set(),
-  search: "",
-  searchTerms: null,   // 点击报点后的多关键词过滤（任一命中即显示）
-  spot: null,          // {map, name} 报点精确过滤（按条目 spots 字段）
-  drill: null,         // {map, name, mode} 两级钻取：已选点位（mode=起点/目标模式）
-  drillTarget: null,   // 已选的第二级地名（起点模式下是目标；目标模式下是起点）
-  drillMode: ["origin", "target", "all"].includes(localStorage.getItem("pb-drill-mode"))
-    ? localStorage.getItem("pb-drill-mode") : "all",   // all=普通视图：显示全部相关报点（I16）
-  entryView: null,     // {id} 道具二级详情页
-  detailFrom: "list",  // 详情页来源（I42）："tactics"=战术板系跳入（Esc 回战术板）/"list"=列表（Esc 回列表）
-  entryListScroll: 0,  // 列表滚动位置（返回时还原）
-  listIdx: -1,         // 列表页键盘高亮行
-  showArchived: localStorage.getItem("pb-show-archived") === "1",   // 全局设置持久化（I17）
-  mapLayer: ["callouts", "nades", "timeline"].includes(localStorage.getItem("pb-map-layer"))
-    ? localStorage.getItem("pb-map-layer") : "callouts",   // 战术板图层（I38 双层，I39 加时间轴）
-  tacticEditId: null,  // 战术板编辑器打开中（id 或 "__new__"，I39）
-  tlBoard: null,       // 时间轴层当前选中的战术板 id（I39，会话内不持久化）
-  pinEdit: false,      // 道具层「✏️ 调点」模式（I41，会话内不持久化）
-  focusIdx: -1,        // 当前键盘聚焦的可见卡片
-  editor: false,       // 报点编辑器模式
-  picking: false,      // 地图选点弹窗打开中（I13，Esc 由弹窗捕获消费）
-  setsOnly: false,     // 📦 只看战术包（套装折叠视图，会话内有效，默认关，I47）
-  filterChips: new Set(),  // 快捷筛选 chips 选中的 id（I50，会话内不持久化，刷新即清）
-};
-
-const setsExpanded = new Set();   // 展开的套装名（会话内保持，不持久化，I47）
-
-const data = window.PLAYBOOK;
-
 /* ---------------- SCHEMA 消费助手（R1-C：字段知识单一真相源在 pb.py 注册表） ----------------
    build 把注册表注入 window.PLAYBOOK.SCHEMA；此处只做读取与兜底——
    SCHEMA 缺失（旧 data.js）时 warn 一次并回落调用方内置兜底，不做整份镜像，防两份真相。 */
@@ -99,6 +44,63 @@ function schemaImportMergeKeys() {
 /* 编辑结果先写 data/entries/*.md（已关联项目文件夹时），并即时存 localStorage
    让本次浏览生效；跑 pb build 后 data.js 与文件一致，覆盖层内容相同故无副作用。
    红线：查看器不可改动 status（转 verified 只能走 pb verify）。 */
+
+const TYPE_INFO = {
+  smoke:   { cn: "烟雾", icon: "assets/icons/icon-smoke.svg",   color: "#7aa2f7" },
+  flash:   { cn: "闪光", icon: "assets/icons/icon-flash.svg",   color: "#e8c15a" },
+  molotov: { cn: "燃烧", icon: "assets/icons/icon-molotov.svg", color: "#f07a5a" },
+  he:      { cn: "高爆", icon: "assets/icons/icon-he.svg",      color: "#9ece6a" },
+};
+const PHASE_CN = {
+  execute: "爆点", default: "默认", retake: "回防", postplant: "防守", "anti-eco": "科研",
+};
+const SIDE_CN = { T: "T 方", CT: "CT 方", both: "双方" };
+const STATUS_CN = { draft: "待验证", verified: "已实测", broken: "已失效", retired: "弃用" };
+const PLAYER_COLORS = ["#f07a5a", "#5aa2f7", "#e8c15a", "#3fd68f", "#c58af9"];
+const EDITABLE_SLOTS = [
+  ["1-stand", "站位"], ["2-aim", "瞄点"], ["4-result", "落点&效果"],
+];
+// R1-C：阶段选项由注册表驱动（值序=表单与显示序）；SCHEMA 缺失回落内置对
+const PHASE_OPTS = schemaEnumPairs("entry", "phase")
+  || [["execute", "爆点"], ["default", "默认"], ["retake", "回防"], ["postplant", "防守"], ["anti-eco", "科研"]];
+const PHASE_ORDER = ["default", "execute", "postplant", "retake", "anti-eco"];   // 列表分组顺序（显示分组序，非枚举序——UI 特化保留）
+const BASE_SLOTS = ["1-stand", "2-aim", "4-result"];   // 基础槽（只可替换不可删）
+
+let entryRows = [];   // 当前列表页扁平顺序（键盘高亮/详情上一条下一条共用）
+let entryListPlaceholder = false;   // 列表页显示过「该图还没有录入道具」占位
+
+const state = {
+  tab: "tactics",      // 默认打开就是报点地图
+  map: localStorage.getItem("pb-map") || "de_dust2",   // 默认炙热沙城，记住上次选择（I14）
+  side: "",
+  types: new Set(),
+  search: "",
+  searchTerms: null,   // 点击报点后的多关键词过滤（任一命中即显示）
+  spot: null,          // {map, name} 报点精确过滤（按条目 spots 字段）
+  drill: null,         // {map, name, mode} 两级钻取：已选点位（mode=起点/目标模式）
+  drillTarget: null,   // 已选的第二级地名（起点模式下是目标；目标模式下是起点）
+  drillMode: ["origin", "target", "all"].includes(localStorage.getItem("pb-drill-mode"))
+    ? localStorage.getItem("pb-drill-mode") : "all",   // all=普通视图：显示全部相关报点（I16）
+  entryView: null,     // {id} 道具二级详情页
+  detailFrom: "list",  // 详情页来源（I42）："tactics"=战术板系跳入（Esc 回战术板）/"list"=列表（Esc 回列表）
+  entryListScroll: 0,  // 列表滚动位置（返回时还原）
+  listIdx: -1,         // 列表页键盘高亮行
+  showArchived: localStorage.getItem("pb-show-archived") === "1",   // 全局设置持久化（I17）
+  mapLayer: ["callouts", "nades", "timeline"].includes(localStorage.getItem("pb-map-layer"))
+    ? localStorage.getItem("pb-map-layer") : "callouts",   // 战术板图层（I38 双层，I39 加时间轴）
+  tacticEditId: null,  // 战术板编辑器打开中（id 或 "__new__"，I39）
+  tlBoard: null,       // 时间轴层当前选中的战术板 id（I39，会话内不持久化）
+  pinEdit: false,      // 道具层「✏️ 调点」模式（I41，会话内不持久化）
+  focusIdx: -1,        // 当前键盘聚焦的可见卡片
+  editor: false,       // 报点编辑器模式
+  picking: false,      // 地图选点弹窗打开中（I13，Esc 由弹窗捕获消费）
+  setsOnly: false,     // 📦 只看战术包（套装折叠视图，会话内有效，默认关，I47）
+  filterChips: new Set(),  // 快捷筛选 chips 选中的 id（I50，会话内不持久化，刷新即清）
+};
+
+const setsExpanded = new Set();   // 展开的套装名（会话内保持，不持久化，I47）
+
+const data = window.PLAYBOOK;
 
 const ENTRY_OV_KEY = "pb-entries-v1";
 const TACTIC_OV_KEY = "pb-tactics-v1";   // 战术板覆盖层（I39）：与条目覆盖层同结构、同 I19 语义

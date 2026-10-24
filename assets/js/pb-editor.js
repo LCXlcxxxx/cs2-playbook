@@ -81,17 +81,17 @@ function entryEditor(idOrNew) {
           <input class="manual-in" data-manual-in="target" hidden placeholder="多个报点用逗号隔开，回车确认">
         </span>
       </label>
-      <label>键位<select id="ef-click">${opt([["lmb", "左键"], ["rmb", "右键"], ["both", "双键"]], e.click)}</select></label>
-      <label>移动<select id="ef-move">${opt(moveChoices([["stand", "原地"], ["crouch", "蹲下"], ["w", "W 前进"], ["walk-step", "W 一步"], ["shift", "Shift"], ["shift-w", "Shift+W"], ["run", "跑"]]), e.move)}</select></label>
+      <label>键位<select id="ef-click">${opt(schemaEnumPairs("entry", "click") || [["lmb", "左键"], ["rmb", "右键"], ["both", "双键"]], e.click)}</select></label>
+      <label>移动<select id="ef-move">${opt(moveChoices(schemaEnumPairs("entry", "move") || [["stand", "原地"], ["crouch", "蹲下"], ["w", "W 前进"], ["walk-step", "W 一步"], ["shift", "Shift"], ["shift-w", "Shift+W"], ["run", "跑"]]), e.move)}</select></label>
       <label>　<span class="set-tip">更多移动方式在顶部 ⚙ 设置里添加</span></label>
-      <label>投掷<select id="ef-action">${opt([["direct", "直接投"], ["jump", "跳投"], ["crouch-jump", "蹲跳投"]], e.action)}</select></label>
+      <label>投掷<select id="ef-action">${opt(schemaEnumPairs("entry", "action") || [["direct", "直接投"], ["jump", "跳投"], ["crouch-jump", "蹲跳投"]], e.action)}</select></label>
       <label>难度<span class="diff-radio" id="ef-difficulty" role="radiogroup" aria-label="难度（三档单选）">
         ${DIFF_ORDER.map(d => `<button type="button" class="diff-opt diff-${d}" data-diff="${d}"><i class="diff-dot"></i>${DIFF_CN[d]}</button>`).join("")}
         <span class="set-tip">快捷键 1/2/3</span>
       </span></label>
-      <label>类型<select id="ef-type">${opt([["smoke", "烟雾"], ["flash", "闪光"], ["molotov", "燃烧"], ["he", "高爆"]], e.type)}</select></label>
-      <label>阵营<select id="ef-side">${opt([["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]], e.side || "T")}</select></label>
-      <label>状态<select id="ef-status">${opt([["draft", "待验证"], ["verified", "已实测"], ["broken", "已失效"], ["retired", "弃用"]], e.status)}</select></label>
+      <label>类型<select id="ef-type">${opt(schemaEnumPairs("entry", "type") || [["smoke", "烟雾"], ["flash", "闪光"], ["molotov", "燃烧"], ["he", "高爆"]], e.type)}</select></label>
+      <label>阵营<select id="ef-side">${opt(schemaEnumPairs("entry", "side") || [["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]], e.side || "T")}</select></label>
+      <label>状态<select id="ef-status">${opt(schemaEnumPairs("entry", "status") || [["draft", "待验证"], ["verified", "已实测"], ["broken", "已失效"], ["retired", "弃用"]], e.status)}</select></label>
       <label>实测日期（状态=已实测时生效）<input id="ef-checked" value="${escapeHtml(e.checked || new Date().toISOString().slice(0, 10))}" placeholder="YYYY-MM-DD"></label>
       <label>阶段（多选）<span class="checks" id="ef-phase">${PHASE_OPTS.map(([v, cn]) =>
         `<label class="chk"><input type="checkbox" value="${v}" ${(e.phase || []).includes(v) ? "checked" : ""}>${cn}</label>`).join("")}</span></label>
@@ -1209,7 +1209,7 @@ function tacticEditor(idOrNew) {
       <label>标题<input id="tf-title" value="${escapeHtml(t.title)}"></label>
       <label>地图<select id="tf-map" ${isNew ? "" : `disabled title="已有板不改地图（id 与地图绑定）"`}>${mapOrder().map(m =>
         `<option value="${m}" ${t.map === m ? "selected" : ""}>${escapeHtml(data.maps[m]?.cn || m)}</option>`).join("")}</select></label>
-      <label>阵营<select id="tf-side">${opt([["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]], t.side)}</select></label>
+      <label>阵营<select id="tf-side">${opt(schemaEnumPairs("tactic", "side") || [["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]], t.side)}</select></label>
       <label>时间窗<input id="tf-window" value="${escapeHtml(t.window || "")}" placeholder="如 1:55-1:20 或 整局"></label>
       <label>状态<select id="tf-status">${opt([["draft", "待验证"], ["verified", "已实测"]], t.status || "draft")}</select></label>
       <label>实测日期（状态=已实测时生效）<input id="tf-checked" value="${escapeHtml(t.checked || new Date().toISOString().slice(0, 10))}" placeholder="YYYY-MM-DD"></label>
