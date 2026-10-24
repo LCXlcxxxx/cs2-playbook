@@ -807,7 +807,25 @@ def lint():
         "verified": verified_count,
         "missing_images": missing_images,
         "sets": {name: len(ids) for name, ids in sorted(set_names.items())},
+        "by_map": {},
     }
+    # R3 批次 0：内容看板数据（地图 × status/side/type）
+    by_map: dict = {}
+    for e in entries:
+        fm = e["fm"]
+        if not fm:
+            continue
+        mp = str(fm.get("map", "?"))
+        st = str(fm.get("status", "?"))
+        d = by_map.setdefault(mp, {"total": 0, "verified": 0, "draft": 0, "side_type": {}})
+        d["total"] += 1
+        if st == "verified":
+            d["verified"] += 1
+        elif st == "draft":
+            d["draft"] += 1
+        sd, tp = str(fm.get("side", "?")), str(fm.get("type", "?"))
+        d["side_type"][(sd, tp)] = d["side_type"].get((sd, tp), 0) + 1
+    stats["by_map"] = by_map
     return problems, stats
 
 
@@ -989,6 +1007,27 @@ def write_report(problems, stats, pinyin=None):
             lines.append(f"- {sname}：{cnt} 条")
     else:
         lines.append("- 无（还没有条目挂 sets 字段）")
+    lines.append("")
+    # R3 批次 0：内容看板（地图 × status + side × type + sets verified 数 + 转化率）
+    by_map = stats.get("by_map") or {}
+    lines.append("## 内容看板（R3）")
+    lines.append("")
+    for mp in sorted(by_map):
+        d = by_map[mp]
+        pct = d["verified"] * 100 // d["total"] if d["total"] else 0
+        lines.append(f"### {mp}（{d['total']} 条 / verified {d['verified']} / draft {d['draft']} / {pct}%）")
+        lines.append("")
+        for (sd, tp) in sorted(d["side_type"]):
+            lines.append(f"- {sd} {tp}：{d['side_type'][(sd, tp)]}")
+        lines.append("")
+    tot_e = stats.get("entries", 0)
+    ver_e = sum(d["verified"] for d in by_map.values())
+    if tot_e:
+        lines.append(f"- **全库转化率：verified {ver_e}/{tot_e}（{ver_e * 100 // tot_e}%）**")
+    else:
+        lines.append("- 无条目")
+    lines.append("- **套装**：" + ("；".join(f"{sname}（{cnt} 条）" for sname, cnt in set_stats.items())
+                 if set_stats else "无"))
     lines.append("")
     lines.append("## 问题清单")
     lines.append("")

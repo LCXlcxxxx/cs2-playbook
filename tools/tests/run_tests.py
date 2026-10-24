@@ -733,6 +733,42 @@ def r2b_num_keys(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3 批次 0
+@case("R3/I42 归档判定——池无剩余放行、池有剩余阻塞")
+def r3_i42_archive(page, base):
+    goto(page, base)
+    # 场景 1：池有剩余 → 阻塞归档（返回阻塞消息而非 null）
+    r1 = page.evaluate("""() => {
+      sortSt.pool = new Map([
+        ['k1', { group: '测试组A', src: 'pool' }],
+        ['k2', { group: '测试组A', src: 'pool' }],
+      ]);
+      sortSt.rows = [];   // 无行引用该组
+      return sortMaybeMoveGroup('测试组A');
+    }""")
+    assert r1 and "未入坑" in r1, f"池有剩余应阻塞归档，实际 {r1!r}"
+    # 场景 2：池无剩余 → 不阻塞（rootPerm=none 下 parentDir=null → return null，非阻塞消息）
+    r2 = page.evaluate("""() => {
+      sortSt.pool = new Map();   // 清空池 → 该组全部已入坑
+      sortSt.rows = [];
+      return sortMaybeMoveGroup('测试组A');
+    }""")
+    assert r2 is None or r2 == "moved", \
+        f"池无剩余应放行（null=parentDir 缺失放行/moved=实际归档），实际 {r2!r}"
+    # 场景 3：池有剩余但属于别的组 → 不阻塞本组
+    r3 = page.evaluate("""() => {
+      sortSt.pool = new Map([
+        ['k1', { group: '别的组B', src: 'pool' }],
+      ]);
+      sortSt.rows = [];
+      return sortMaybeMoveGroup('测试组A');
+    }""")
+    assert r3 is None or r3 == "moved", \
+        f"池剩余属于别的组不应阻塞本组，实际 {r3!r}"
+    # 清理
+    page.evaluate("() => { sortSt.pool = new Map(); sortSt.rows = []; }")
+
+
 
 def _open_first_row(pg):
     first = pg.evaluate("() => document.querySelector('.entry-row')?.dataset.id")
@@ -789,6 +825,7 @@ CASES = [
     s5_layers, s5_timeline_sort,
     r2a_modes, r2a_badge, r2a_band,
     r2b_set_runbook, r2b_tactic_runbook, r2b_num_keys,
+    r3_i42_archive,
     s6_pixels,
 ]
 

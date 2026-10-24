@@ -272,23 +272,16 @@ async function sortMaybeMoveGroup(group) {
       if (s?.src === "pool" && s.group === group) return `「${group}」还有行未导入，暂不移入已录入`;
     }
   }
-  // I42：归档只认磁盘真值——先枚举 srcDir 磁盘图片，>0 张 = 不移入（内存池受 I29 globalMap
-  // 过滤与状态时效影响，不能作为归档依据；曾在筛选态把还有剩图的文件夹误判「已分拣完」）。
+  // R3 批次 0（I42 修）：归档条件改为「行无引用 + 池无剩余（全量不过滤）」——
+  // I42 原判定 diskLeft>0 永真：导入副本留在源文件夹，磁盘枚举恒 ≥1 → 除空文件夹外组永不归档。
+  // 修法=池全量无剩余（不受 globalMap 过滤影响）即全部图片均已入坑并导入，磁盘上的源文件是导入副本，安全归档。
+  let poolRemaining = 0;
+  for (const [, item] of sortSt.pool) { if (item.group === group) poolRemaining++; }
+  if (poolRemaining > 0) return `「${group}」还有 ${poolRemaining} 张未入坑，文件夹保留在素材池`;
+  // 池无剩余 → 安全归档（复制源文件夹到 已录入/ 后删源目录）
   const parentDir = sortSt.groupParents.get(group) || (rootDirHandle
     ? await rootDirHandle.getDirectoryHandle(SORT_POOL_DIR).catch(() => null) : null);
   if (!parentDir) return null;
-  let diskLeft = -1;   // 磁盘剩余图片数（-1=枚举失败，才回落内存池判定）
-  try {
-    const srcDirProbe = await parentDir.getDirectoryHandle(group);
-    diskLeft = 0;
-    for await (const [name, h] of srcDirProbe.entries()) {
-      if (h.kind === "file" && SORT_IMG_RE.test(name)) diskLeft++;
-    }
-  } catch { /* 目录不存在/枚举失败 → 用内存判定兜底 */ }
-  if (diskLeft > 0) return `「${group}」还有 ${diskLeft} 张未入坑，文件夹保留在素材池`;
-  if (diskLeft < 0) {
-    for (const [, item] of sortSt.pool) if (item.group === group) return null;   // 兜底：池里还有剩余
-  }
   try {
     const doneDir = await parentDir.getDirectoryHandle(SORT_DONE_DIR, { create: true });
     const srcDir = await parentDir.getDirectoryHandle(group);
