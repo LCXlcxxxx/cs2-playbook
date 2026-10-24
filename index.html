@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS2 Playbook — 道具速查与战术板</title>
+<link rel="icon" href="assets/icons/icon-smoke.svg">
+<link rel="stylesheet" href="assets/css/style.css?v=156">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">CS2<span>道具速查</span></div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="tactics" class="active">战术板</button>
+    <button data-tab="entries">道具</button>
+  </nav>
+
+  <select id="map-filter" title="地图"></select>
+
+  <div class="type-icons" id="type-filter" title="道具类型过滤（可多选，战术板地图同步生效）">
+    <button data-type="smoke"   title="烟雾"><img src="assets/icons/icon-smoke.svg"   alt="烟雾"></button>
+    <button data-type="flash"   title="闪光"><img src="assets/icons/icon-flash.svg"   alt="闪光"></button>
+    <button data-type="molotov" title="燃烧"><img src="assets/icons/icon-molotov.svg" alt="燃烧"></button>
+    <button data-type="he"      title="高爆"><img src="assets/icons/icon-he.svg"      alt="高爆"></button>
+  </div>
+
+  <button id="sets-toggle" class="sets-btn" title="📦 只看战术包：按套装折叠显示道具（再点还原普通列表）">📦</button>
+
+  <div class="seg" id="side-filter" title="阵营过滤（双方通用道具在 T/CT 下都显示）">
+    <button data-side="" class="active">全部</button>
+    <button data-side="T">T</button>
+    <button data-side="CT">CT</button>
+  </div>
+
+  <input id="search" type="search" placeholder="搜索标题/点位/地标，支持拼音首字母（按 / 聚焦）" autocomplete="off">
+
+  <button id="btn-settings" title="全局设置">⚙ 设置</button>
+
+  <span id="topbar-auth"></span>
+
+  <button id="sync-badge" class="sync-badge" hidden title="待写：点这里写回项目文件（未授权会提示先🔑授权）；搁置：打开设置查看/导出">● 修改待写入</button>
+
+  <div id="chip-filter" class="chip-filter" hidden></div>
+</header>
+
+<main id="main">
+  <div id="no-data" class="empty-panel" hidden>
+    <p>没有找到 build/data.js —— 请先在项目根目录运行：</p>
+    <p><code>tools\pb.cmd build</code></p>
+  </div>
+  <div id="empty-filter" class="empty-panel" hidden>
+    <p>没有匹配的条目。<span class="kbd">Esc</span> 清空筛选</p>
+  </div>
+  <div id="cards"></div>
+</main>
+
+<footer id="footer">
+  <span class="kbd">/</span> 搜索 ·
+  <span class="kbd">J</span>/<span class="kbd">K</span> 或 <span class="kbd">↑</span>/<span class="kbd">↓</span> 跳条目 ·
+  点击图片放大 · <span class="kbd">Esc</span> 关闭/清空
+</footer>
+
+<div id="lightbox" hidden>
+  <div class="lb-zone left" title="上一张">‹</div>
+  <img id="lightbox-img" src="" alt="">
+  <div class="lb-zone right" title="下一张">›</div>
+  <div id="lightbox-label"></div>
+  <span id="lightbox-zoom" title="滚轮缩放 · 双击复位 · +/-/0">100%</span>
+</div>
+
+<script src="build/data.js?v=156"></script>
+<script src="assets/js/app.js?v=156"></script>
+<script>
+  // 顶栏徽标（I19）：待写 → 授权后全量写回项目文件；仅搁置 → 打开设置查看/导出
+  document.getElementById("sync-badge").addEventListener("click", () => onSyncBadgeClick());
+</script>
+</body>
+</html>

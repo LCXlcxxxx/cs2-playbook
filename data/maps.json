@@ -1,0 +1,117 @@
+{
+  "de_mirage": {
+    "name": "Mirage",
+    "cn": "荒漠迷城",
+    "duty": true,
+    "radar": "assets/radar/de_mirage.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（游戏文件导出，2mlml/cs2-radar-images 仓库转存）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "de_inferno": {
+    "name": "Inferno",
+    "cn": "炼狱小镇",
+    "duty": true,
+    "radar": "assets/radar/de_inferno.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "de_dust2": {
+    "name": "Dust2",
+    "cn": "炙热沙城II",
+    "duty": true,
+    "radar": "assets/radar/de_dust2.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "de_nuke": {
+    "name": "Nuke",
+    "cn": "核子危机",
+    "duty": true,
+    "radar": "assets/radar/de_nuke_combined.png",
+    "radar_lower": "assets/radar/de_nuke_lower.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存，含下层 de_nuke_lower.png，双层显示待支持）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台",
+      "note": "上下层纵向拼接图（白色分隔带，原始单层图保留溯源）"
+    }
+  },
+  "de_ancient": {
+    "name": "Ancient",
+    "cn": "远古遗迹",
+    "duty": true,
+    "radar": "assets/radar/de_ancient.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "de_anubis": {
+    "name": "Anubis",
+    "cn": "阿努比斯",
+    "duty": true,
+    "radar": "assets/radar/de_anubis.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "de_train": {
+    "name": "Train",
+    "cn": "列车停放站",
+    "duty": false,
+    "radar": "assets/radar/de_train.png",
+    "radar_lower": "assets/radar/de_train_lower.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存，含下层 de_train_lower.png，双层显示待支持）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "de_vertigo": {
+    "name": "Vertigo",
+    "cn": "殒命大厦",
+    "duty": false,
+    "radar": "assets/radar/de_vertigo_combined.png",
+    "radar_lower": "assets/radar/de_vertigo_lower.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存，含下层 de_vertigo_lower.png，双层显示待支持）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台",
+      "note": "上下层纵向拼接图（白色分隔带，原始单层图保留溯源）"
+    }
+  },
+  "de_overpass": {
+    "name": "Overpass",
+    "cn": "死亡游乐园",
+    "duty": false,
+    "radar": "assets/radar/de_overpass.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  },
+  "cs_office": {
+    "name": "Office",
+    "cn": "办公室",
+    "duty": false,
+    "radar": "assets/radar/cs_office.png",
+    "radar_source": {
+      "origin": "CS2 官方雷达图（2mlml/cs2-radar-images 仓库转存，人质图 cs_ 前缀）",
+      "url": "https://github.com/2mlml/cs2-radar-images",
+      "license": "Valve 版权素材，仅限个人与朋友小范围本地查阅，不上公开平台"
+    }
+  }
+}

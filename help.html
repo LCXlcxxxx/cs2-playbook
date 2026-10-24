@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS2 道具速查 · 使用说明</title>
+<style>
+  /* 与查看器同款配色字体（内联，抗路径变化） */
+  body {
+    margin: 0;
+    padding: 32px 16px 48px;
+    background: #10141c;
+    color: #d6dde7;
+    font-size: 18px;
+    line-height: 1.75;
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    color: #fff;
+  }
+  .sub { color: #8b97a8; font-size: 16px; margin: 0 0 28px; }
+  .card {
+    background: #1a2029;
+    border: 1px solid #2c3542;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 0 0 16px;
+  }
+  .q {
+    font-size: 20px;
+    font-weight: 700;
+    color: #5aa2f7;
+    margin: 0 0 10px;
+  }
+  .card p { margin: 8px 0; }
+  .card b { color: #fff; }
+  .tip {
+    color: #8b97a8;
+    font-size: 15px;
+    border-left: 3px solid #2c3542;
+    padding-left: 10px;
+    margin: 10px 0 0;
+  }
+  .foot {
+    margin-top: 28px;
+    text-align: center;
+    color: #8b97a8;
+    font-size: 14px;
+  }
+  .back {
+    display: inline-block;
+    margin-top: 4px;
+    color: #5aa2f7;
+    text-decoration: none;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CS2 道具速查 · 使用说明</h1>
+  <p class="sub">六个常见问题，看完就会用。<a class="back" href="index.html">← 返回册子</a></p>
+
+  <div class="card">
+    <p class="q">① 这个册子怎么用？</p>
+    <p>双击 <b>index.html</b> 打开。顶部搜索框输文字就能找道具（支持<b>拼音首字母</b>，比如打 jjy 就能找到警家烟）；右边四个图标按<b>烟雾 / 闪光 / 燃烧 / 高爆</b>筛选。「战术板」页是一张地图，点地图上的地名，就能看到这个点位相关的道具；还能切到「💥 道具」看落点、「🕒 时间轴」按顺序看套路。</p>
+    <p>常用的道具点 <b>⭐ 收藏</b>，会自动排在列表最上面。<b>截图后不用存文件</b>——复制截图，在要填的图槽上直接 <b>Ctrl+V</b> 就能贴进去。</p>
+    <p class="tip">「🕒 时间轴」里的时间是<b>倒计时</b>：1:55＝刚开局，0:00＝回合结束，步骤按先发生的排前面。每一步可以分给 ①-⑤ 号角色（角色只填名字，地图上自动站在他第一个动作的道具起点）。「💥 道具」层点 <b>✏️ 调点</b>：报点管区域，道具点要精准——同一区域重叠的道具会<b>自动散开</b>，逐颗拖到真实落点就记住了（没拖过的不记位置），时间轴也跟着用调好的位置。</p>
+  </div>
+
+  <div class="card">
+    <p class="q">② 我在网页里做的修改存在哪？</p>
+    <p>先存进「<b>浏览器的小抽屉</b>」——每个浏览器各有各的抽屉，换浏览器、清缓存之后就看不到了。</p>
+    <p>点过「<b>关联项目文件夹</b>」和「<b>开启自动保存</b>」之后，你的修改会在 1 秒内自动写进项目文件夹里的文件。<b>那才是真身</b>——以后不管换哪台电脑、哪个浏览器打开，看到的都一样。</p>
+    <p class="tip">队长版和朋友版的区别：发给朋友的压缩包里没有源文件，所以朋友的修改永远只在他自己的小抽屉里——朋友录完记得用 ⚙ → 📤 分享给队长留底。</p>
+  </div>
+
+  <div class="card">
+    <p class="q">③ 顶部出现「● N 条修改待写入文件」怎么办？</p>
+    <p>浏览器重启后，授权会自动过期——这是浏览器的正常安全行为，不是坏了。顶栏会出现 <b>🔑 项目文件夹</b> / <b>🔗 自动保存</b> 按钮，点一下、允许一次，修改就会自动写进文件，这条提示随即消失。</p>
+    <p>放着不处理也不会丢——它一直替你留着，什么时候点什么时候写。</p>
+  </div>
+
+  <div class="card">
+    <p class="q">④ 为什么改完要双击「同步并打包.bat」？</p>
+    <p>它做两件事：把项目文件里的内容<b>装进网页实际读取的数据</b>（不点它，别的电脑打开还是旧内容）；再把最新内容<b>打好发给朋友的压缩包</b>。</p>
+    <p>它只在<b>队长的电脑</b>上用（背后用到 Python，队长电脑已装好，双击即可）。朋友什么都不用装。</p>
+  </div>
+
+  <div class="card">
+    <p class="q">⑤ 朋友怎么把自己喜欢的道具加进大家的册子？</p>
+    <p>在网页里「＋ 新增道具」、传好截图 → 点 <b>⚙ 设置 → 📤 把我的修改分享给队长</b> → 把下载的文件微信发给队长 → 队长在 ⚙ 设置里 <b>📥 导入朋友的修改</b>。</p>
+    <p>导入的都算「<b>待验证</b>」（橙色）——队长亲自进游戏试过，才会转成绿色的「已实测」，之后下次发的包里大家就都有了。</p>
+    <p class="tip">分拣台小知识：某一组的素材图<b>全部入册</b>后，它的文件夹会自动搬进「<b>已录入/</b>」留档（<b>图不会删</b>，想重录可以从那里把图拷回来）——看到文件夹被搬走是正常现象，不是丢了。</p>
+  </div>
+
+  <div class="card">
+    <p class="q">⑥ 遇到问题怎么办？</p>
+    <p><b>改了却看不到</b> → 按 <b>Ctrl+F5</b> 强制刷新一次再看。</p>
+    <p><b>换了一个浏览器</b> → 第一次使用时点一次「关联项目文件夹」和「开启自动保存」就好。</p>
+    <p><b>担心修改丢失</b> → 任何被新内容取代的旧修改都会进「搁置区」留底，⚙ 设置里能看到、能导出，<b>绝不会无声消失</b>。</p>
+  </div>
+
+  <p class="foot">仅限自己和朋友小范围使用，不对外发布</p>
+</div>
+</body>
+</html>

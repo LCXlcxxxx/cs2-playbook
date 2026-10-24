@@ -1,0 +1,7 @@
+__pycache__/
+build/
+dist/
+*.bak
+*.zip
+tools/_test*
+cookies.txt
