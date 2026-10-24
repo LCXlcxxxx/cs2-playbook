@@ -39,11 +39,19 @@ assets/js/ 十文件加载序（index.html 同序，禁 ES module——file:// C
 
 **并行开发评估**：pb-list / pb-detail / pb-tactics / pb-editor / pb-sortdesk 五个 UI 域文件互不修改对方，可各认领一个并行（跨文件只读引用是安全的）；**pb-core（人人引用的常量与 state）、pb-data（双端对称契约）、pb-sync（被编辑器/列表调用的 I19 引擎）、app.js（render 路由+boot+全局键盘）四个共享文件改动仍需串行**。任何模块新增顶层 const/let 时注意加载序（先定义后执行的只有顶层语句；函数体运行时解析无此限制）。
 
-## 4. 迭代五步清单（缺一不可）
+## 4. 字段收口纪律（R1-C 起）
+
+字段知识单一真相源 = tools/pb.py 的 `FIELD_REGISTRY`（entry/tactic 两节；键/类型/required/enum[值+中文名]/default/dump_order/dump_empty_array/import_merge/lint 规则名/cn）。build 注入 `window.PLAYBOOK.SCHEMA`，JS 侧经 pb-core 的 `schemaEnumPairs/schemaEnumValues/schemaImportMergeKeys` 消费（SCHEMA 缺失 warn 一次回落内置兜底）。
+
+- **加字段 = 改 pb.py 注册表 + 必要 UI 特化**（如 chips 输入、难度 Radio、报点选择器这类特化交互留在编辑器原样）；dump 键序、new 模板、导入净化与合并清单、编辑器选项随注册表自动跟随。
+- **JS 侧禁止再新增硬编码字段数组**——提交前 grep 自查：`pb-editor.js/pb-sync.js/pb-data.js` 内不得出现新的 `["title", "oneline", ...]` 式字段清单或 `["lmb", "左键"]` 式枚举字面量（现有：I34 表单校准 FIELDS=UI 特化保留、分拣台短标签 select=UI 特化保留、throwBadge/PHASE_CN 等中文显示表=显示层契约）。
+- lint 规则两类：`enum_check: True` 的标量枚举由通用循环驱动；跨字段/内容级规则（id_pattern、source_kind、sets_shapes、pin_uv、timeline_steps 等）以 rule id 记录在字段 `lint` 键，实现在 lint() 内——改规则文案必须先跑 tools/tests/lint_fixtures.py 快照对比。
+
+## 5. 迭代五步清单（缺一不可）
 
 ① 规范 delta（涉及 AGENTS/UI/DEV 的先改文档）→ ② 代码 → ③ 验收（`pb lint` 0 ERROR + `pb test` 全绿 + 关键页像素比对 0 diff）→ ④ PROGRESS.md 台账行 → ⑤ git 提交。
 
-## 5. 测试坑清单（浏览器自动化，血泪沉淀）
+## 6. 测试坑清单（浏览器自动化，血泪沉淀）
 
 - **IAB（内置浏览器）goto 不支持 file://**：功能测试用项目根 `python -m http.server 8642` 当载体（应用本身零服务器依赖）；视口/像素级验收用 %TEMP% 下独立安装的 headless playwright（IAB 无视口控制）。
 - **playwright evaluate 是隔离世界**：页面顶层变量/函数（state、dumpEntryMd、rootPerm…）读不到；stub（mock 句柄/权限旗标）必须用 `<script>` 标签注入主世界，结果写 `document.documentElement.dataset` 再读回。localStorage 在隔离世界可直接读写。
@@ -59,7 +67,7 @@ assets/js/ 十文件加载序（index.html 同序，禁 ES module——file:// C
 - 列表分组头（.list-group-head）与行（.entry-row）是**平级兄弟**不是容器包裹——「某组首行」= 文档序下一个 .entry-row，不是组头.nextElementSibling.querySelectorAll。
 - 测试用例必须自建状态（自己 goto + 切 Tab）并按显式注册表排序——按函数名字母序执行时，靠前用例遗留状态会污染后续全部断言（R1-A 首跑 4/16 的真因）。
 
-## 6. 工具参考（开发会话专用）
+## 7. 工具参考（开发会话专用）
 
 ```bat
 tools\pb.cmd lint                    :: 校验（0 ERROR 才能过 bat；WARN 不拦）
@@ -80,7 +88,7 @@ tools\pb.cmd test                     :: R1-A 回归套件（playwright 可选�
 - 「同步并打包.bat」= build + pack，使用者的唯一入口；开发会话验证 bat 直接 `call "同步并打包.bat"`。
 - 双端对称纪律：投法徽章/枚举/中文表在 pb.py 与 app.js 各一份（CHECK-01 验证过 63 组合），**改一处必须 grep 另一处**；mdScalar/mdKey 与 pb.py dump_doc/dkey 同理（字典键引号规则以读端 _KEY_RE 裸键白名单为准）。
 
-## 7. 环境速查（2026-10 现状）
+## 8. 环境速查（2026-10 现状）
 
 - Python 3.12：`%LocalAppData%\Programs\Python\Python312`；多命令 python 一律加 `-X utf8`。
 - git：npmmirror 便携版 2.56，`%LocalAppData%\Programs\Git\cmd\git.exe`（未入 PATH；本机 winget 因 GitHub 直连失败不可用，下载走 npmmirror 镜像）。
