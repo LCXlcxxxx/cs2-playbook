@@ -16,15 +16,34 @@
 - 本地仓库在项目根（`git init -b main`，**无远端、永不 push**）。git.exe 位置：`%LocalAppData%\Programs\Git\cmd\git.exe`（npmmirror 便携版 2.56，**未加入 PATH**——winget 在本机因 GitHub 直连失败不可用，Dev 会话用全路径调用）。
 - 仓库级身份已配（不动全局）：`user.name=cs2-playbook-dev`、`user.email=cs2-playbook-dev@localhost`（占位）、`core.autocrlf=false`（防整库换行抖动污染 diff）。
 - **提交规范**：每迭代 = 改动 + PROGRESS.md 台账行 + 一条 git 提交，信息格式 `ITER-Ixx: 摘要` 或 `Rx: 摘要`。大改前先做基线提交，保证重构本身可回滚。
-- **并行规则**：R1（代码重构）完成前，动 app.js 的迭代一律**串行**——等前一会话台账入账且 `git status` 干净再动手；R1 拆文件后才可分支并行。
+- **并行规则**：R1-B 拆分后按 §3 评估——五个 UI 域文件（pb-list/pb-detail/pb-tactics/pb-editor/pb-sortdesk）可各认领一个并行；pb-core/pb-data/pb-sync/app.js 四个共享文件与 index.html 改动仍一律串行（等前一会话台账入账且 `git status` 干净再动手）。
 - 不入库（.gitignore）：`dist/`、`build/`、`*.bak`、`*.zip`、`__pycache__/`、`cookies.txt`、`tools/_test*`；**media/ 与 文件夹批量录入/ 内容图片入库**（内容可回滚是核心收益，本地仓 ~290MB 可承受）。
 - **红线**：git 只存在于开发会话；任何面向使用者的文档/界面/说明不得出现 git 字样。
 
-## 3. 迭代五步清单（缺一不可）
+## 3. 模块边界与并行开发（R1-B 拆分后）
+
+assets/js/ 十文件加载序（index.html 同序，禁 ES module——file:// CORS）：**pb-core → pb-data → pb-filter → pb-sync → pb-list → pb-detail → pb-tactics → pb-editor → pb-sortdesk → app.js**。全部普通 script 共享全局作用域，原函数名未改；`window.PB` 仅作登记（PB.files）与共享 state 宿主（PB.state 指向同一 state 对象，诊断用）。
+
+| 文件 | 行数 | 职责 |
+| --- | --- | --- |
+| pb-core.js | ~220 | $/$$、常量表（TYPE_INFO/PHASE_*/BASE_SLOTS…）、state 单仓、toast、存储键、moveExtra/favs、throwBadge 族、地图排序 |
+| pb-data.js | ~255 | dumpEntryMd/parseEntryMd、dumpTacticMd/parseTacticMd/flowVal、难度三档（DIFF_*/diffEnum/徽章） |
+| pb-sync.js | ~1460 | I19 引擎：覆盖层/搁置区/补写、FS Access 写盘族、图片 idb/压缩、朋友修改回流、resetLocalEdits |
+| pb-filter.js | ~200 | hayOf/报点匹配/pinOrCallout/FILTER_CHIPS/entryMatch/拼音/难度语法 |
+| pb-list.js | ~330 | 列表分组/行渲染/sets 折叠/详情导航入口/I49 锚点导航 |
+| pb-detail.js | ~335 | 翻图面板/entryCard/lightbox |
+| pb-tactics.js | ~935 | 报点地图卡/钻取/💥道具图层/✏️调点/🕒时间轴/tacticCard/jumpToEntry |
+| pb-editor.js | ~1480 | 条目编辑器/选点弹窗/⚙ 设置弹层/战术板编辑器/报点编辑器 |
+| pb-sortdesk.js | ~940 | 录入分拣台全部 |
+| app.js | 334 | init/boot/render 路由壳/全局键盘 onKey |
+
+**并行开发评估**：pb-list / pb-detail / pb-tactics / pb-editor / pb-sortdesk 五个 UI 域文件互不修改对方，可各认领一个并行（跨文件只读引用是安全的）；**pb-core（人人引用的常量与 state）、pb-data（双端对称契约）、pb-sync（被编辑器/列表调用的 I19 引擎）、app.js（render 路由+boot+全局键盘）四个共享文件改动仍需串行**。任何模块新增顶层 const/let 时注意加载序（先定义后执行的只有顶层语句；函数体运行时解析无此限制）。
+
+## 4. 迭代五步清单（缺一不可）
 
 ① 规范 delta（涉及 AGENTS/UI/DEV 的先改文档）→ ② 代码 → ③ 验收（`pb lint` 0 ERROR + `pb test` 全绿 + 关键页像素比对 0 diff）→ ④ PROGRESS.md 台账行 → ⑤ git 提交。
 
-## 4. 测试坑清单（浏览器自动化，血泪沉淀）
+## 5. 测试坑清单（浏览器自动化，血泪沉淀）
 
 - **IAB（内置浏览器）goto 不支持 file://**：功能测试用项目根 `python -m http.server 8642` 当载体（应用本身零服务器依赖）；视口/像素级验收用 %TEMP% 下独立安装的 headless playwright（IAB 无视口控制）。
 - **playwright evaluate 是隔离世界**：页面顶层变量/函数（state、dumpEntryMd、rootPerm…）读不到；stub（mock 句柄/权限旗标）必须用 `<script>` 标签注入主世界，结果写 `document.documentElement.dataset` 再读回。localStorage 在隔离世界可直接读写。
@@ -40,7 +59,7 @@
 - 列表分组头（.list-group-head）与行（.entry-row）是**平级兄弟**不是容器包裹——「某组首行」= 文档序下一个 .entry-row，不是组头.nextElementSibling.querySelectorAll。
 - 测试用例必须自建状态（自己 goto + 切 Tab）并按显式注册表排序——按函数名字母序执行时，靠前用例遗留状态会污染后续全部断言（R1-A 首跑 4/16 的真因）。
 
-## 5. 工具参考（开发会话专用）
+## 6. 工具参考（开发会话专用）
 
 ```bat
 tools\pb.cmd lint                    :: 校验（0 ERROR 才能过 bat；WARN 不拦）
@@ -61,7 +80,7 @@ tools\pb.cmd test                     :: R1-A 回归套件（playwright 可选�
 - 「同步并打包.bat」= build + pack，使用者的唯一入口；开发会话验证 bat 直接 `call "同步并打包.bat"`。
 - 双端对称纪律：投法徽章/枚举/中文表在 pb.py 与 app.js 各一份（CHECK-01 验证过 63 组合），**改一处必须 grep 另一处**；mdScalar/mdKey 与 pb.py dump_doc/dkey 同理（字典键引号规则以读端 _KEY_RE 裸键白名单为准）。
 
-## 6. 环境速查（2026-10 现状）
+## 7. 环境速查（2026-10 现状）
 
 - Python 3.12：`%LocalAppData%\Programs\Python\Python312`；多命令 python 一律加 `-X utf8`。
 - git：npmmirror 便携版 2.56，`%LocalAppData%\Programs\Git\cmd\git.exe`（未入 PATH；本机 winget 因 GitHub 直连失败不可用，下载走 npmmirror 镜像）。
