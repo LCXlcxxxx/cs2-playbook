@@ -1141,6 +1141,25 @@ def cmd_migrate_difficulty(_args):
     return 1 if manual else 0
 
 
+def cmd_test(_args):
+    """R1-A：回归测试套件（tools/tests/run_tests.py，playwright 可选依赖）。
+    环境缺失时打印跳过原因并以 0 退出——零依赖约束只管运行时，测试工具可选。"""
+    runner = ROOT / "tools" / "tests" / "run_tests.py"
+    if not runner.is_file():
+        print("[ERROR] tools/tests/run_tests.py 不存在")
+        return 1
+    try:
+        import playwright  # noqa: F401
+    except ImportError:
+        print("[SKIP] playwright 未安装（可选依赖，不影响 bat/发布）")
+        print("       安装：pip install playwright -i https://pypi.tuna.tsinghua.edu.cn/simple")
+        print("             python -m playwright install chromium")
+        return 0
+    import subprocess
+    r = subprocess.run([sys.executable, "-X", "utf8", str(runner), "--root", str(ROOT)])
+    return r.returncode
+
+
 def cmd_verify(args):
     entries = {e["fm"]["id"]: e for e in load_entries() if e["fm"]}
     e = entries.get(args.id)
@@ -1191,9 +1210,11 @@ def main(argv):
     p_verify.add_argument("id")
     p_verify.add_argument("--broken", action="store_true", help="标记失效（内容过时/版本改动），防止重复录入")
     sub.add_parser("migrate-difficulty", help="I51 一次性迁移：difficulty 数字 1-5 → easy/normal/hard（每文件存 .bak）")
+    sub.add_parser("test", help="R1-A 回归测试套件（playwright 可选依赖，缺失时优雅跳过）")
     args = ap.parse_args(argv)
     return {"lint": cmd_lint, "build": cmd_build, "new": cmd_new, "shots": cmd_shots,
-            "pack": cmd_pack, "verify": cmd_verify, "migrate-difficulty": cmd_migrate_difficulty}[args.cmd](args)
+            "pack": cmd_pack, "verify": cmd_verify, "migrate-difficulty": cmd_migrate_difficulty,
+            "test": cmd_test}[args.cmd](args)
 
 
 if __name__ == "__main__":

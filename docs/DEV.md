@@ -22,7 +22,7 @@
 
 ## 3. 迭代五步清单（缺一不可）
 
-① 规范 delta（涉及 AGENTS/UI/DEV 的先改文档）→ ② 代码 → ③ 验收（`pb lint` 0 ERROR + 浏览器/脚本实测）→ ④ PROGRESS.md 台账行 → ⑤ git 提交。
+① 规范 delta（涉及 AGENTS/UI/DEV 的先改文档）→ ② 代码 → ③ 验收（`pb lint` 0 ERROR + `pb test` 全绿 + 关键页像素比对 0 diff）→ ④ PROGRESS.md 台账行 → ⑤ git 提交。
 
 ## 4. 测试坑清单（浏览器自动化，血泪沉淀）
 
@@ -36,6 +36,9 @@
 - J/K 高亮步进按 **entryRows 数据序**（≠ DOM 分组序）；列表行选择器是 `.entry-row`（button）不是 `.card`；地图切换控件是 `#map-filter`；默认 Tab=战术板。
 - 行内交互元素（fav-btn / diffbtn 等）是 span 不是嵌套 button（entry-row 本身是 button），行 click handler 里 `closest` 命中即 return，不 stopPropagation。
 - mock FS 句柄必须实现真实 API 形态（`.entries()` async generator、`h.kind="directory"`、getFile 返回真 File/Blob）；异步渲染后断言前等 300ms；测试残留先怀疑再怀疑代码（localStorage 键：pb-entries-v1 / pb-tactics-v1 / pb-callouts-v2 / pb-retired-v1 / pb-favs / pb-map-order / pb-sort-map）。
+- Chrome 对 flex 项 `margin-left: auto` 的 getComputedStyle 返回 used value（0px）而非 "auto"——断言样式请查样式表规则（document.styleSheets.cssRules）而非计算样式。
+- 列表分组头（.list-group-head）与行（.entry-row）是**平级兄弟**不是容器包裹——「某组首行」= 文档序下一个 .entry-row，不是组头.nextElementSibling.querySelectorAll。
+- 测试用例必须自建状态（自己 goto + 切 Tab）并按显式注册表排序——按函数名字母序执行时，靠前用例遗留状态会污染后续全部断言（R1-A 首跑 4/16 的真因）。
 
 ## 5. 工具参考（开发会话专用）
 
@@ -48,7 +51,11 @@ tools\pb.cmd new tactic <id> --side T                                 :: 战术�
 tools\pb.cmd shots <目录> --id <id> [--dry-run]                       :: 截图归位（只复制不搬动，覆盖前存 .bak；认不出的按 mtime 配给 --id）
 tools\pb.cmd verify <id> [--broken]   :: CLI 标记实测（网页编辑器可替代）
 tools\pb.cmd migrate-difficulty       :: I51 一次性迁移（难度 1-5 → easy/normal/hard，每文件 .bak，幂等）
+tools\pb.cmd test                     :: R1-A 回归套件（playwright 可选依赖，缺失时优雅跳过）
 ```
+
+- **回归套件**（tools/tests/）：16 个用例（顶栏过滤/chips/搜索分词/列表分组/收藏/sets 折叠/行渲染/详情/编辑器 mock FS 写盘/三图层/时间轴排序）+ 两视口三页像素比对。基线在 `tools/tests/baseline/`（入库），产物在 `build/_tests/`（不入库）。**改了行为（UI.md 规格）→ 删 baseline 对应 png 重跑一遍生成新基线，再跑一遍确认确定性**；纯重构（R1-B/C/D）不许动基线。
+- 真实 playwright 的 evaluate 在**主世界**（与 IAB 隔离世界相反）——stub 可直接赋值顶层 let（rootPerm/rootDirHandle）；IAB 的 script 注入套路在真实 playwright 不需要。
 
 - `build/report.md`：缺图清单、draft/verified 统计、战术包（sets）统计、拼音索引、问题清单。
 - 「同步并打包.bat」= build + pack，使用者的唯一入口；开发会话验证 bat 直接 `call "同步并打包.bat"`。
