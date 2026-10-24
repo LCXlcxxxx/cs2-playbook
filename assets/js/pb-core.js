@@ -214,4 +214,9 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
 }
 
+/* ---- window.PB 模块登记与共享 state 宿主（R1-B） ---- */
+window.PB = window.PB || {};
+PB.files = PB.files || [];
+PB.state = state;
+
 PB.files.push("pb-core.js");   // R1-B 模块登记
