@@ -29,21 +29,124 @@ REQUIRED_SLOTS = ["1-stand", "2-aim", "4-result"]
 EXTRA_SLOT_LABELS = {"5-alt": "备选站位", "5-demo": "演示"}
 IMG_EXTS = [".png", ".jpg", ".jpeg", ".webp"]
 
-ENTRY_REQUIRED = ["id", "map", "side", "type", "click", "move", "action", "origin", "target",
-                  "title", "oneline", "difficulty", "phase", "status"]
-TACTIC_REQUIRED = ["id", "map", "side", "title", "window", "status", "uses"]
-
-ENUMS = {
-    "side": ["T", "CT", "both"],
-    "type": ["smoke", "flash", "molotov", "he"],
-    "click": ["lmb", "rmb", "both"],
-    "move": ["stand", "crouch", "w", "walk-step", "shift", "shift-w", "run"],
-    "action": ["direct", "jump", "crouch-jump"],
-    "phase": ["execute", "default", "retake", "postplant", "anti-eco"],
-    "status": ["draft", "verified", "broken", "retired"],
-    "source.kind": ["self", "video", "web", "friend"],
-    "difficulty": ["easy", "normal", "hard"],   # I51：三档难度（中文只在上屏层）
+# ---- 字段注册表（R1-C）：字段知识单一真相源 ----
+# 每字段：key / type(scalar|scalar_array|array|object) / required / enum(值序=表单与显示序，[值, 中文名] 对) /
+# default(new 模板初值) / new_value(模板占位) / dump_order(dumpEntryMd 键序，None=特判序列化) /
+# dump_empty_array(空数组落 .md) / import_merge(朋友导入合并清单) / lint(规则名；跨字段与内容级规则
+# 留在 lint() 内以同名注释对应) / cn(中文说明)。
+# 加字段 = 改这里 + 必要 UI 特化；JS 侧经 data.js 的 window.PLAYBOOK.SCHEMA 消费（禁再新增硬编码字段数组）。
+FIELD_REGISTRY = {
+    "entry": [
+        {"key": "id", "type": "scalar", "required": True, "dump_order": 1,
+         "lint": "id_pattern+filename", "cn": "条目 id（系统自动生成，改 map/side/type 自动跟随改名）"},
+        {"key": "map", "type": "scalar", "required": True, "dump_order": 2,
+         "lint": "map_registered", "cn": "地图 key（maps.json）"},
+        {"key": "side", "type": "scalar", "required": True, "enum_check": True, "dump_order": 3,
+         "default": "T", "import_merge": True,
+         "enum": [["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]],
+         "lint": "enum", "cn": "阵营（both 双方通用）"},
+        {"key": "type", "type": "scalar", "required": True, "enum_check": True, "dump_order": 4,
+         "import_merge": True,
+         "enum": [["smoke", "烟雾"], ["flash", "闪光"], ["molotov", "燃烧"], ["he", "高爆"]],
+         "lint": "enum", "cn": "道具类型"},
+        {"key": "click", "type": "scalar", "required": True, "enum_check": True, "dump_order": 5,
+         "default": "lmb", "import_merge": True,
+         "enum": [["lmb", "左键"], ["rmb", "右键"], ["both", "双键"]],
+         "lint": "enum", "cn": "键位（三字段必填，组合即完整投法）"},
+        {"key": "move", "type": "scalar", "required": True, "dump_order": 6,
+         "default": "stand", "import_merge": True,
+         "enum": [["stand", "原地"], ["crouch", "蹲下"], ["w", "W 前进"], ["walk-step", "W 一步"],
+                  ["shift", "Shift"], ["shift-w", "Shift+W"], ["run", "跑"]],
+         "lint": "enum_warn_custom", "cn": "移动方式（自定义值经 ⚙ 设置，lint WARN）"},
+        {"key": "action", "type": "scalar", "required": True, "enum_check": True, "dump_order": 7,
+         "default": "direct", "import_merge": True,
+         "enum": [["direct", "直接投"], ["jump", "跳投"], ["crouch-jump", "蹲跳投"]],
+         "lint": "enum", "cn": "投掷方式"},
+        {"key": "origin", "type": "scalar", "required": True, "dump_order": 8,
+         "import_merge": True, "new_value": "待补中文地标",
+         "lint": "spots_callouts(经 spots 兜底)", "cn": "起点（报点表中文名）"},
+        {"key": "target", "type": "scalar_array", "required": True, "dump_order": 9,
+         "import_merge": True, "new_value": "待补",
+         "lint": "target_callouts", "cn": "目标（报点名；多落点用行内数组）"},
+        {"key": "title", "type": "scalar", "required": True, "dump_order": 10,
+         "import_merge": True, "new_value": "待补标题", "cn": "标题"},
+        {"key": "oneline", "type": "scalar", "required": True, "dump_order": 11,
+         "import_merge": True, "new_value": "一句话怎么扔（卡片上最大字号的一行）",
+         "cn": "一句话「怎么扔」，卡片最大字号的一行"},
+        {"key": "difficulty", "type": "scalar", "required": True, "dump_order": 12,
+         "default": "normal", "import_merge": True,
+         "enum": [["easy", "简单"], ["normal", "中等"], ["hard", "困难"]],
+         "lint": "difficulty_enum", "cn": "难度三档（中文只在显示层；数字旧值跑 migrate-difficulty）"},
+        {"key": "phase", "type": "scalar_array", "required": True, "dump_order": 13,
+         "default": ["default"], "import_merge": True,
+         "enum": [["execute", "爆点"], ["default", "默认"], ["retake", "回防"],
+                  ["postplant", "防守"], ["anti-eco", "科研"]],
+         "lint": "phase_enum", "cn": "阶段（可多选，数据键不变）"},
+        {"key": "status", "type": "scalar", "required": True, "enum_check": True, "dump_order": 14,
+         "default": "draft",
+         "enum": [["draft", "待验证"], ["verified", "已实测"], ["broken", "已失效"], ["retired", "弃用"]],
+         "lint": "enum+checked_date", "cn": "状态（没实测永远是 draft）"},
+        {"key": "spots", "type": "array", "dump_order": 15, "import_merge": True,
+         "lint": "spots_callouts", "cn": "互动地图报点关联（精确过滤）"},
+        {"key": "tags", "type": "array", "dump_order": 16, "dump_empty_array": True,
+         "import_merge": True, "cn": "战术标签（搜索/筛选 chips 用）"},
+        {"key": "sets", "type": "array", "dump_order": 17, "dump_empty_array": True,
+         "import_merge": True, "lint": "sets_shapes", "cn": "战术包（自由中文名数组）"},
+        {"key": "related", "type": "array", "dump_order": 18, "dump_empty_array": True,
+         "import_merge": True, "lint": "related_link", "cn": "条目互链"},
+        {"key": "coords", "type": "object", "dump_order": 19,
+         "cn": "getpos 坐标（全部可选，实测后回填）"},
+        {"key": "pin_origin", "type": "array", "dump_order": 20, "lint": "pin_uv",
+         "cn": "图层起点显示坐标覆写 [u, v]"},
+        {"key": "pin_target", "type": "array", "dump_order": 21, "lint": "pin_uv",
+         "cn": "单目标落点显示坐标覆写 [u, v]"},
+        {"key": "pin_targets", "type": "object", "dump_order": 22, "lint": "pin_uv",
+         "cn": "多目标落点显示坐标覆写 {报点名: [u, v]}（含空格键须引号）"},
+        {"key": "source", "type": "object", "dump": "block", "lint": "source_kind",
+         "sub": {"kind": {"enum": ["self", "video", "web", "friend"]}},
+         "cn": "来源署名（video/web 必记 creator/url）"},
+        {"key": "checked", "type": "scalar", "dump": "conditional", "lint": "checked_date",
+         "cn": "最后实测日期（仅 verified 必填，YYYY-MM-DD）"},
+    ],
+    "tactic": [
+        {"key": "id", "type": "scalar", "required": True, "dump_order": 1,
+         "lint": "tactic_id_pattern+filename", "cn": "战术板 id（<map去前缀>-plan-<两位序号>）"},
+        {"key": "map", "type": "scalar", "required": True, "dump_order": 2,
+         "cn": "地图 key（已有板锁定不改）"},
+        {"key": "side", "type": "scalar", "required": True, "enum_check": True, "dump_order": 3,
+         "default": "both", "enum": [["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]],
+         "lint": "enum", "cn": "阵营"},
+        {"key": "title", "type": "scalar", "required": True, "dump_order": 4,
+         "new_value": "待补标题", "cn": "标题"},
+        {"key": "window", "type": "scalar", "required": True, "dump_order": 5,
+         "new_value": "整局", "cn": "适用回合时间窗"},
+        {"key": "status", "type": "scalar", "required": True, "dump_order": 6,
+         "default": "draft",
+         "enum": [["draft", "待验证"], ["verified", "已实测"], ["broken", "已失效"], ["retired", "弃用"]],
+         "lint": "enum", "cn": "状态"},
+        {"key": "checked", "type": "scalar", "dump_order": 7,
+         "cn": "实测日期（这块板游戏里跑通过）"},
+        {"key": "uses", "type": "array", "required": True, "dump_order": 8,
+         "default": [], "lint": "uses_link", "cn": "引用的道具 id（必须真实存在）"},
+        {"key": "roles", "type": "array", "dump_order": 9, "lint": "roles_shape",
+         "cn": "角色名（≤5 项）"},
+        {"key": "timeline", "type": "array", "dump_order": 10, "lint": "timeline_steps",
+         "cn": "时间轴步骤（≤20 步，倒计时 M:SS）"},
+    ],
 }
+
+# 枚举值表（由注册表派生；保留裸值列表形态以维持历史消息「允许 ['T', 'CT', 'both']」不变）
+ENUMS = {}
+for _kind in FIELD_REGISTRY.values():
+    for _f in _kind:
+        if _f.get("enum"):
+            ENUMS[_f["key"]] = [_p[0] for _p in _f["enum"]]
+        for _sub, _subdef in (_f.get("sub") or {}).items():
+            ENUMS[f"{_f['key']}.{_sub}"] = _subdef["enum"]
+# 注册表分节语义：entry 必填 = 非空（None/""/[] 都算缺）；tactic 必填 = 键存在（uses: [] 合法）
+REQUIRED_SEMANTICS = {"entry": "nonempty", "tactic": "exists"}
+ENTRY_REQUIRED = [f["key"] for f in FIELD_REGISTRY["entry"] if f.get("required")]
+TACTIC_REQUIRED = [f["key"] for f in FIELD_REGISTRY["tactic"] if f.get("required")]
 # I51：数字难度 → 三档枚举的一次性映射（1-2→easy / 3→normal / 4-5→hard）
 DIFF_MIGRATE = {1: "easy", 2: "easy", 3: "normal", 4: "hard", 5: "hard"}
 
@@ -514,8 +617,12 @@ def lint():
                 add("ERROR", name, f"必填字段缺失: {field}")
         if any(fm.get(f) in (None, "", []) for f in ENTRY_REQUIRED):
             continue  # 缺字段的条目不再往下校验枚举，避免刷屏
-        # 枚举：标量字段逐个查；phase 允许标量或列表
-        for field in ("side", "type", "click", "action", "status"):
+        # 枚举：注册表驱动（R1-C）——lint=="enum" 的标量字段逐个查；
+        # move(enum_warn_custom)/difficulty(difficulty_enum)/phase(phase_enum) 等特例走下方专属规则
+        for _f in FIELD_REGISTRY["entry"]:
+            if not _f.get("enum_check"):
+                continue
+            field = _f["key"]
             if fm.get(field) not in ENUMS[field]:
                 add("ERROR", name, f"{field} 枚举非法: {fm.get(field)!r}（允许 {ENUMS[field]}）")
         # move 允许自定义（查看器 ⚙ 设置里加的，如「蹲下」转正前的过渡）
@@ -803,6 +910,9 @@ def build_data(entries, tactics, maps, callouts):
         # 数据一致性铁律（I19）：builtAt 是浏览器暂存退役对账的基准，格式必须保持
         # YYYY-MM-DDTHH:MM:SSZ（UTC），app.js 用字符串比较判定 savedAt
         "builtAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        # R1-C：字段注册表随 build 注入——JS 侧（dump 键序/导入净化与合并/表单元数据）由此消费，
+        # 加字段从六处变一处；SCHEMA 缺失时 JS 消费点 warn 并回落内置兜底
+        "SCHEMA": FIELD_REGISTRY,
         "maps": maps_out,
         "entries": entry_list,
         "tactics": tactic_list,
@@ -911,39 +1021,54 @@ def cmd_lint(_args):
     return 1 if n_err else 0
 
 
-ENTRY_TEMPLATE = """---
-id: {id}
-map: {map}
-side: {side}
-type: {type}
-click: lmb            # lmb | rmb | both —— 三字段必填，投法徽章由它们拼出
-move: stand           # stand | w | walk-step | shift | shift-w | run（自定义值在查看器设置里定义）
-action: direct        # direct | jump | crouch-jump
-origin: 待补中文地标     # 术语表里的名字
-target: 待补            # 单个报点名；多个用行内数组 [点名1, 点名2]
-title: 待补标题
-oneline: 一句话怎么扔（卡片上最大字号的一行）
-difficulty: normal      # easy 简单 | normal 中等 | hard 困难（I51 三档枚举，中文只在显示层）
-phase: [default]
-status: draft
-tags: []
-sets: []              # 战术包（可选）：自由中文名数组，如 [A区爆弹]；留空 = 不属于任何套装
-related: []
----
+def _yaml_inline(v):
+    """模板用小型行内值序列化（注册表 default/new_value 均为简单标量或标量数组）。"""
+    if isinstance(v, list):
+        return "[" + ", ".join(str(x) for x in v) + "]"
+    return str(v)
 
-> 待补：站位 / 瞄点 / 效果三图 → media/{map}/{id}/（命名 1-stand / 2-aim / 4-result）。
+
+def _template_from_registry(kind, overrides):
+    """R1-C：new 模板由字段注册表生成（键序/默认值/占位/注释=cn+枚举），加字段模板自动跟随。"""
+    lines = ["---"]
+    for f in FIELD_REGISTRY[kind]:
+        k = f["key"]
+        if k in overrides:
+            v = overrides[k]
+        elif "new_value" in f:
+            v = f["new_value"]
+        elif "default" in f:
+            v = f["default"]
+        elif f.get("dump_empty_array"):
+            v = []
+        else:
+            continue   # source/checked/coords/pin_*/spots 等不进模板
+        comment = ""
+        if f.get("enum"):
+            comment = " | ".join(f"{p[0]} {p[1]}" for p in f["enum"]) + "——" + f["cn"]
+        else:
+            comment = f.get("cn", "")
+        lines.append(f"{k}: {_yaml_inline(v)}   # {comment}" if comment else f"{k}: {_yaml_inline(v)}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+ENTRY_TEMPLATE = None   # R1-C：由 _template_from_registry("entry", ...) 现生成（保留名字防外部引用）
+TACTIC_TEMPLATE = None
+
+
+def _entry_template(sid, map_, side, typ):
+    body = _template_from_registry("entry", {"id": sid, "map": map_, "side": side, "type": typ})
+    return body + f"""
+
+> 待补：站位 / 瞄点 / 效果三图 → media/{map_}/{sid}/（命名 1-stand / 2-aim / 4-result）。
 > 正文只写 ≤5 行注意事项（缝在哪、什么时候别用）。
 """
 
-TACTIC_TEMPLATE = """---
-id: {id}
-map: {map}
-side: {side}
-title: 待补标题
-window: "全程"        # 适用回合时间窗
-status: draft
-uses: []              # 引用的道具 id，必须真实存在
----
+
+def _tactic_template(sid, map_, side):
+    body = _template_from_registry("tactic", {"id": sid, "map": map_, "side": side})
+    return body + """
 
 ## 用法
 
@@ -981,8 +1106,7 @@ def cmd_new(args):
         if dest.exists():
             print(f"[ERROR] 条目已存在: {dest}")
             return 1
-        dest.write_text(ENTRY_TEMPLATE.format(id=sid, map=map_, side=side, type=typ),
-                        encoding="utf-8", newline="\n")
+        dest.write_text(_entry_template(sid, map_, side, typ), encoding="utf-8", newline="\n")
         media = ROOT / "media" / map_ / sid
         media.mkdir(parents=True, exist_ok=True)
         print(f"已生成条目 {dest}\n已建图片目录 {media}")
@@ -994,8 +1118,7 @@ def cmd_new(args):
         if dest.exists():
             print(f"[ERROR] 战术板已存在: {dest}")
             return 1
-        dest.write_text(TACTIC_TEMPLATE.format(id=sid, map=map_, side=side),
-                        encoding="utf-8", newline="\n")
+        dest.write_text(_tactic_template(sid, map_, side), encoding="utf-8", newline="\n")
         print(f"已生成战术板 {dest}")
     return 0
 
