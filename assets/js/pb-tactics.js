@@ -850,6 +850,7 @@ function tacticCard(t) {
       <h2>${escapeHtml(t.title)}</h2>
       <span class="badge-status ${t.status}">${STATUS_CN[t.status] || t.status}</span>
       <span class="badge-phase">${escapeHtml(mapInfo.cn || t.map)} · ${SIDE_CN[t.side] || t.side} · 时间窗 ${escapeHtml(t.window)}</span>
+      <button class="editor-btn runbook-tbtn" data-trunbook="${t.id}" title="按时间轴开战：逐张翻看时间轴上的道具（Esc 退出）">🚀 按时间轴开战</button>
       <button class="editor-btn" data-tedit="${t.id}" title="网页内编辑这块板">⚙ 编辑</button>
     </div>`;
 
@@ -897,6 +898,9 @@ function tacticCard(t) {
 
   $$(".use-chip", el).forEach(chip =>
     chip.addEventListener("click", () => jumpToEntry(chip.dataset.target, "tactics")));
+  $("[data-trunbook]", el).addEventListener("click", () => {
+    openTacticRunbook(t.id);   // R2-B：按时间轴开战
+  });
   $("[data-tedit]", el).addEventListener("click", () => {
     state.tacticEditId = t.id;
     state.tab = "tactics";

@@ -2009,3 +2009,61 @@ min-height 兜底，带图条目不受影响）；无「需要 hidden 被压制�
 存量作用域守卫（#chip-filter/#lightbox/.viewer-empty/.callout-label/#anchor-nav）
 就此冗余但保留。 */
 [hidden] { display: none !important; }
+
+/* ---------- R2-B：开战连翻（全屏沉浸视图） ---------- */
+#runbook {
+  position: fixed;
+  inset: 0;
+  z-index: 60;   /* 压过 topbar(z=50) */
+  background: var(--bg);
+  overflow-y: auto;
+}
+.runbook-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(18, 23, 31, 0.96);
+  border-bottom: 1px solid var(--line);
+}
+.runbook-src { font-size: 16px; font-weight: 700; color: var(--accent); }
+.runbook-num { font-size: 16px; color: var(--text-dim); font-family: Consolas, monospace; }
+.runbook-body { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
+.runbook-card { margin: 0; }
+.runbook-step { font-size: 15px; color: var(--text-dim); margin: 4px 0; }
+.runbook-badges { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+.runbook-oneline { font-size: 22px; font-weight: 700; color: #fff; margin: 8px 0 14px; }
+.runbook-img {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  margin: 8px 0;
+  border: 1px solid var(--line);
+}
+.runbook-loc { font-size: 15px; color: var(--text-dim); margin: 14px 0 10px; }
+.runbook-beat {
+  max-width: 720px;
+  margin: 20px auto;
+  padding: 16px 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.runbook-beat-line { font-size: 17px; color: var(--text); padding: 3px 0; }
+.runbook-btn {
+  font-size: 13px;
+  padding: 2px 10px;
+  background: rgba(90, 162, 247, 0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  margin-left: 8px;
+}
+.runbook-btn:hover { background: var(--accent); color: #fff; }
+.runbook-tbtn { white-space: nowrap; }

@@ -543,7 +543,7 @@ def r2a_modes(page, base):
 @case("R2A/待写徽标两模式恒可见")
 def r2a_badge(page, base):
     goto(page, base)
-    # 种一条暂存修改（不落盘：rootPerm 为 none）→ 待写徽标出现
+    # 在当前页面种一条暂存修改（不 reload——init script 会清 localStorage）→ 手动刷新徽标
     page.evaluate("""() => {
       const ov = { edited: {}, added: [], deleted: [], savedAt: {}, written: {} };
       const e = JSON.parse(JSON.stringify(PLAYBOOK.entries[0]));
@@ -552,11 +552,10 @@ def r2a_badge(page, base):
       ov.savedAt[e.id] = '2000-01-01T00:00:00Z';
       ov.written[e.id] = false;
       localStorage.setItem('pb-entries-v1', JSON.stringify(ov));
+      applyEntryOverrides();
+      refreshSyncBadge();
     }""")
-    page.reload()
-    page.wait_for_load_state("domcontentloaded")
-    H.wait_boot(page)
-    page.wait_for_timeout(600)   # autoSyncOnBoot 尝试补写（rootPerm=none 不写，保持待写）
+    page.wait_for_timeout(600)   # refreshSyncBadge 是 async
     b1 = page.evaluate(
         """() => { const b = document.getElementById('sync-badge');
              return { hidden: b.hidden, manage: state.manage }; }""")
@@ -568,9 +567,8 @@ def r2a_badge(page, base):
              return { hidden: b.hidden, manage: state.manage }; }""")
     assert b2["hidden"] is False and b2["manage"] is True, f"管理模式待写徽标应可见: {b2}"
     page.evaluate("() => localStorage.removeItem('pb-entries-v1')")
-    page.reload()
-    page.wait_for_load_state("domcontentloaded")
-    H.wait_boot(page)
+    page.evaluate("() => { applyEntryOverrides(); refreshSyncBadge(); }")
+    page.wait_for_timeout(300)
 
 
 @case("R2A/筛选带两行制与灰阶")
@@ -599,6 +597,140 @@ def r2a_band(page, base):
     page.wait_for_timeout(200)
     assert not page.evaluate("() => document.getElementById('sets-toggle').hidden"), \
         "道具 Tab 下 📦 应显示"
+
+
+# ---------------------------------------------------------------- R2-B 开战连翻
+@case("R2B/📦 开战进入→J/K 翻→序号包名→Esc 回列表")
+def r2b_set_runbook(page, base):
+    goto(page, base)
+    go_entries(page)
+    page.wait_for_timeout(500)   # 等列表渲染完（含套装行）
+    set_name = page.evaluate("() => document.querySelector('.pkg-row')?.dataset.setrow")
+    assert set_name, f"Mirage 应有套装"
+    page.evaluate("() => document.querySelector('[data-setrunbook]').click()")
+    page.wait_for_timeout(400)
+    assert not page.evaluate("() => document.getElementById('runbook').hidden"), "开战后 runbook 应可见"
+    # 顶栏被覆盖（chrome 不存在）
+    tb_visible = page.evaluate(
+        """() => { const tb = document.getElementById('topbar');
+             const rb = document.getElementById('runbook');
+             const tr = rb.getBoundingClientRect();
+             return tr.top <= 0 && tr.height >= window.innerHeight; }""")
+    assert tb_visible, "runbook 应覆盖整个视口"
+    # 序号 1/N + 包名
+    num1 = page.evaluate("() => document.querySelector('.runbook-num').textContent")
+    assert num1.startswith("1 /"), f"序号应 1/N，实际 {num1!r}"
+    src = page.evaluate("() => document.querySelector('.runbook-src').textContent")
+    assert set_name in src, f"来源名应含 {set_name!r}，实际 {src!r}"
+    # J 翻页 → 2/N
+    H.doc_press(page, "j")
+    page.wait_for_timeout(500)   # 图片加载门控
+    num2 = page.evaluate("() => document.querySelector('.runbook-num').textContent")
+    assert num2.startswith("2 /"), f"J 后序号应 2/N，实际 {num2!r}"
+    # → 翻页 → 3/N（如有）
+    total = int(num1.split("/")[1].strip())
+    if total >= 3:
+        H.doc_press(page, "ArrowRight")
+        page.wait_for_timeout(500)
+        num3 = page.evaluate("() => document.querySelector('.runbook-num').textContent")
+        assert num3.startswith("3 /"), f"→ 后序号应 3/N，实际 {num3!r}"
+    # Esc 退出回列表
+    H.doc_press(page, "Escape")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => document.getElementById('runbook').hidden"), "Esc 应回列表"
+    assert page.evaluate("() => state.runbook === null"), "state.runbook 应回 null"
+    # 列表还在（来源视图未动）
+    assert H.mw_count(page, ".pkg-row") >= 1, "来源列表应保留"
+
+
+@case("R2B/战术板时间轴开战→首张=最早步骤道具")
+def r2b_tactic_runbook(page, base):
+    goto(page, base)
+    # 注入临时板（de_dust2）带 use 步骤——倒计时降序 = 1:40 → 0:30
+    ids = page.evaluate(
+        """() => { const es = PLAYBOOK.entries.filter(e => e.map === 'de_dust2'
+              && !['broken','retired'].includes(e.status));
+              return es.length >= 2 ? [es[0].id, es[1].id] : null; }"""
+    )
+    assert ids, "Dust2 应有可用条目做时间轴夹具"
+    page.evaluate("""(ids) => {
+      PLAYBOOK.tactics.push({
+        id: 'dust2-plan-98', map: 'de_dust2', side: 'T',
+        title: 'R2B开战测试板', window: '整局', status: 'draft', uses: ids,
+        roles: [], timeline: [
+          { t: '0:30', use: ids[1], text: '三十秒动作' },
+          { t: '1:40', use: ids[0], text: '开局动作' },
+        ],
+        sections: [],
+      });
+      render();
+    }""", ids)
+    set_map(page, "de_dust2")
+    page.wait_for_timeout(250)
+    # 找到测试板卡片并点开战
+    page.evaluate(
+        """() => { const btn = document.querySelector('[data-trunbook][data-trunbook="dust2-plan-98"]')
+              || [...document.querySelectorAll('[data-trunbook]')]
+                   .find(b => b.closest('.card')?.textContent.includes('R2B开战测试板'));
+             btn.click(); }"""
+    )
+    page.wait_for_timeout(500)
+    assert not page.evaluate("() => document.getElementById('runbook').hidden"), "开战后 runbook 应可见"
+    # 首张 = 最早步骤（1:40）的道具
+    first_id = page.evaluate(
+        "() => state.runbook.items[0].entry.id")
+    assert first_id == ids[0], f"首张应为 1:40 步骤的道具 {ids[0]}，实际 {first_id}"
+    # K 回不行（已在首张）→ J 到 0:30 步骤
+    H.doc_press(page, "j")
+    page.wait_for_timeout(400)
+    second_id = page.evaluate("() => state.runbook.items[1].entry.id")
+    assert second_id == ids[1], f"第二张应为 0:30 步骤的道具 {ids[1]}，实际 {second_id}"
+    # K 回到首张
+    H.doc_press(page, "k")
+    page.wait_for_timeout(400)
+    back_id = page.evaluate("() => state.runbook.items[state.runbook.idx].entry.id")
+    assert back_id == ids[0], "K 应回首张"
+    # Esc 退出
+    H.doc_press(page, "Escape")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => document.getElementById('runbook').hidden"), "Esc 应回战术板"
+    page.reload()   # 清注入
+    page.wait_for_load_state("domcontentloaded")
+    H.wait_boot(page)
+
+
+@case("R2B/数字键 1-9 按顶栏序切图")
+def r2b_num_keys(page, base):
+    goto(page, base)
+    # 按 2 → 切到 mapOrder()[1]
+    expected = page.evaluate("() => mapOrder()[1]")
+    page.evaluate(
+        "() => document.dispatchEvent(new KeyboardEvent('keydown', {key: '2', bubbles: true}))")
+    page.wait_for_timeout(300)
+    actual = page.evaluate("() => state.map")
+    assert actual == expected, f"按 2 应切到 {expected}，实际 {actual}"
+    # pb-map 持久化
+    stored = page.evaluate("() => localStorage.getItem('pb-map')")
+    assert stored == expected, f"pb-map 应持久化 {expected}"
+    # 按 1 → 回第一位
+    first = page.evaluate("() => mapOrder()[0]")
+    page.evaluate(
+        "() => document.dispatchEvent(new KeyboardEvent('keydown', {key: '1', bubbles: true}))")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => state.map") == first, f"按 1 应切到 {first}"
+    # 编辑器打开时数字键不切图（难度键优先）
+    H.mw_click(page, '#tabs button[data-tab="entries"]')
+    page.wait_for_timeout(250)
+    page.evaluate("() => document.querySelector('.entry-row').click()")
+    page.wait_for_timeout(300)
+    page.evaluate("() => document.querySelector('.entry.card .entry-edit').click()")
+    page.wait_for_timeout(300)
+    page.evaluate(
+        "() => document.dispatchEvent(new KeyboardEvent('keydown', {key: '2', bubbles: true}))")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => state.map") == first, "编辑器打开时按 2 不应切图（难度键优先）"
+    page.evaluate("() => document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}))")
+    page.wait_for_timeout(200)
 
 
 
@@ -656,6 +788,7 @@ CASES = [
     s4_editor_write,
     s5_layers, s5_timeline_sort,
     r2a_modes, r2a_badge, r2a_band,
+    r2b_set_runbook, r2b_tactic_runbook, r2b_num_keys,
     s6_pixels,
 ]
 
@@ -683,10 +816,7 @@ def main():
         browser = pw.chromium.launch()
         context = browser.new_context()
         context.add_init_script(
-            """() => { try {
-              localStorage.clear();
-              localStorage.setItem('pb-map', 'de_mirage');   // 确定起点：套装所在图
-            } catch {} }"""
+            "try { localStorage.clear(); localStorage.setItem('pb-map', 'de_mirage'); } catch(e) {}"
         )
         page = context.new_page()
         errors = []

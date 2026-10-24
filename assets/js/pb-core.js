@@ -96,6 +96,7 @@ const state = {
   picking: false,      // 地图选点弹窗打开中（I13，Esc 由弹窗捕获消费）
   setsOnly: false,     // 📦 只看战术包（套装折叠视图，会话内有效，默认关，I47）
   manage: false,       // R2-A：管理模式（false=查阅，显示全部编辑入口；每次打开默认查阅，不持久化）
+  runbook: null,       // R2-B：开战连翻（null=关闭；活跃时 {source, name, idx, items}，不持久化）
   filterChips: new Set(),  // 快捷筛选 chips 选中的 id（I50，会话内不持久化，刷新即清）
 };
 

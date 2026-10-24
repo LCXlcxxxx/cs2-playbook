@@ -333,4 +333,113 @@ function inInputCheck() {
   return /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName);
 }
 
+/* ---------------- R2-B：开战连翻（全屏沉浸视图，覆盖一切 chrome） ----------------
+   复用 pb-data 的徽章函数与 pb-tactics 的 stepDisplayText/parseCountdown（全局作用域运行时解析），
+   布局为大图竖排（实战节奏），不复制 entryCard 模板。data 侧零改动，不持久化浏览位置。 */
+const TYPE_SORT = { smoke: 0, flash: 1, molotov: 2, he: 3 };   // 烟→闪→火→雷 投掷类型序
+let runbookLoading = false;   // 图片加载门控：加载完成前不接受下次翻页
+
+function openSetRunbook(name) {
+  const items = data.entries
+    .filter(e => (e.sets || []).includes(name) && !["broken", "retired"].includes(e.status))
+    .sort((a, b) => (TYPE_SORT[a.type] - TYPE_SORT[b.type]) || a.title.localeCompare(b.title, "zh"));
+  if (!items.length) { toast("这个套装没有可用道具"); return; }
+  state.runbook = {
+    source: "set", name, idx: 0,
+    items: items.map(e => ({ type: "card", entry: e })),
+  };
+  renderRunbook();
+}
+
+function openTacticRunbook(boardId) {
+  const board = data.tactics.find(t => t.id === boardId);
+  if (!board || !Array.isArray(board.timeline) || !board.timeline.length) {
+    toast("这块板还没有时间轴步骤"); return;
+  }
+  const ordered = board.timeline
+    .map((st, oi) => ({ st, oi, sec: parseCountdown(st.t) }))
+    .sort((a, b) => (b.sec ?? -1) - (a.sec ?? -1));   // 倒计时大→小=时间推进序
+  const items = [];
+  let beatBuf = [];
+  for (const x of ordered) {
+    const entry = x.st.use ? data.entries.find(e => e.id === x.st.use) : null;
+    if (entry && !["broken", "retired"].includes(entry.status)) {
+      if (beatBuf.length) { items.push({ type: "beat", texts: beatBuf }); beatBuf = []; }
+      items.push({ type: "card", entry, stepText: stepDisplayText(x.st) });
+    } else {
+      beatBuf.push((x.st.t ? x.st.t + " " : "") + (stepDisplayText(x.st) || "…"));
+    }
+  }
+  if (beatBuf.length) items.push({ type: "beat", texts: beatBuf });
+  if (!items.length) { toast("这块板时间轴上没有可用道具"); return; }
+  state.runbook = { source: "tactic", name: board.title || board.id, idx: 0, items };
+  renderRunbook();
+}
+
+function runbookStep(dir) {
+  if (runbookLoading) return;   // 图片加载门控（防白屏闪烁）
+  const rb = state.runbook;
+  if (!rb) return;
+  const next = rb.idx + dir;
+  if (next < 0 || next >= rb.items.length) return;   // 不回绕（实战从头开始）
+  rb.idx = next;
+  renderRunbook();
+}
+
+function closeRunbook() {
+  state.runbook = null;
+  const el = document.getElementById("runbook");
+  if (el) { el.hidden = true; el.innerHTML = ""; }
+  document.body.style.overflow = "";
+}
+
+function renderRunbook() {
+  const rb = state.runbook;
+  const el = document.getElementById("runbook");
+  if (!rb || !el) return;
+  const item = rb.items[rb.idx];
+  el.innerHTML = `
+    <div class="runbook-head">
+      <span class="runbook-src">🚀 ${escapeHtml(rb.name)}</span>
+      <span class="runbook-num">${rb.idx + 1} / ${rb.items.length}</span>
+    </div>
+    <div class="runbook-body">${item.type === "card" ? runbookCard(item.entry, item.stepText) : runbookBeat(item.texts)}</div>`;
+  el.hidden = false;
+  document.body.style.overflow = "hidden";
+  // 图片加载门控：加载完成才接受下次翻页
+  runbookLoading = true;
+  const imgs = [...el.querySelectorAll("img")];
+  if (!imgs.length) { runbookLoading = false; return; }
+  Promise.all(imgs.map(img => img.complete
+    ? Promise.resolve()
+    : new Promise(r => { img.onload = img.onerror = r; })
+  )).then(() => { runbookLoading = false; });
+}
+
+function runbookCard(entry, stepText) {
+  const imgs = (entry.images || [])
+    .filter(im => BASE_SLOTS.includes(im.slot))
+    .sort((a, b) => BASE_SLOTS.indexOf(a.slot) - BASE_SLOTS.indexOf(b.slot));
+  const imgHtml = imgs.map(im =>
+    `<img class="runbook-img" src="${im.path}" alt="${escapeHtml(im.label || im.slot)}" draggable="false">`
+  ).join("");
+  const step = stepText ? `<div class="runbook-step">${escapeHtml(stepText)}</div>` : "";
+  return `
+    <div class="runbook-card">
+      ${step}
+      <div class="runbook-badges">
+        <span class="badge-throw">${escapeHtml(entry.throw_badge)}</span>
+        ${difficultyBadge(entry.difficulty, true)}
+      </div>
+      <div class="runbook-oneline">${escapeHtml(entry.oneline)}</div>
+      ${imgHtml}
+      <div class="runbook-loc">${escapeHtml(entry.origin)} → ${escapeHtml(targetDisplay(entry))}</div>
+    </div>`;
+}
+
+function runbookBeat(texts) {
+  return `<div class="runbook-beat">${texts.map(t =>
+    `<div class="runbook-beat-line">${escapeHtml(t)}</div>`).join("")}</div>`;
+}
+
 PB.files.push("pb-detail.js");   // R1-B 模块登记

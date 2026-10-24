@@ -133,6 +133,7 @@ function setRowHtml(name, items) {
     <button class="pkg-row ${open ? "open" : ""}" data-setrow="${escapeHtml(name)}">
       <span class="set-fold">${open ? "▾" : "▸"}</span>
       <span class="row-title">📦 ${escapeHtml(name)}</span>
+      <span class="runbook-btn" data-setrunbook="${escapeHtml(name)}" title="开战连翻：逐张翻看这套道具（Esc 退出）">🚀 开战</span>
       <span class="set-count">${items.length} 个道具</span>
     </button>
     ${open ? `<div class="set-members">${items.map(rowHtml).join("")}</div>` : ""}`;
@@ -205,7 +206,9 @@ function entryListPanel(visible) {
       row.classList.add("hl");
     }
   });
-  $$(".pkg-row", wrap).forEach(row => row.addEventListener("click", () => {
+  $$(".pkg-row", wrap).forEach(row => row.addEventListener("click", ev => {
+    const rbtn = ev.target.closest("[data-setrunbook]");
+    if (rbtn) { openSetRunbook(rbtn.dataset.setrunbook); return; }   // R2-B：开战连翻
     const name = row.dataset.setrow;
     setsExpanded.has(name) ? setsExpanded.delete(name) : setsExpanded.add(name);
     render();

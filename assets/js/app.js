@@ -273,6 +273,14 @@ function focusCard(idx) {
 function onKey(ev) {
   const inInput = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName);
 
+  // R2-B：开战连翻——全屏沉浸，吞掉所有按键（J/K 或 ←/→ 翻卡，Esc 退出回来源视图）
+  if (state.runbook) {
+    if (ev.key === "Escape") { ev.preventDefault(); closeRunbook(); return; }
+    if (["j", "J", "ArrowRight"].includes(ev.key)) { ev.preventDefault(); runbookStep(1); return; }
+    if (["k", "K", "ArrowLeft"].includes(ev.key)) { ev.preventDefault(); runbookStep(-1); return; }
+    return;   // 连翻模式吞掉其余按键（防穿透到下方视图）
+  }
+
   // lightbox 打开时：←/→ 切图，Esc 关闭
   if (!$("#lightbox").hidden) {
     if (ev.key === "ArrowLeft") { ev.preventDefault(); lightboxStep(-1); return; }
@@ -317,6 +325,21 @@ function onKey(ev) {
     if (state.tab === "entries") { state.drillTarget = null; state.tab = "tactics"; render(); return; }
   }
   if (inInput) return;
+
+  // R2-B：数字键 1-9 按顶栏地图顺序直接切图（编辑器/战术板编辑器/报点编辑器/分拣台关闭时）
+  if (/^[1-9]$/.test(ev.key) && !state.editingId && !state.tacticEditId && !state.editor
+      && !sortSt.open && !state.picking) {
+    const mi = parseInt(ev.key, 10) - 1;
+    const order = mapOrder();
+    if (mi < order.length && order[mi] !== state.map) {
+      ev.preventDefault();
+      state.map = order[mi];
+      localStorage.setItem("pb-map", state.map);
+      $("#map-filter").value = state.map;
+      render();
+      return;
+    }
+  }
 
   // I51：编辑器难度快捷键 1/2/3——编辑器打开且焦点不在输入控件时；复用按钮 click（自带手动锁定语义）
   if (state.editingId && ["1", "2", "3"].includes(ev.key)) {
