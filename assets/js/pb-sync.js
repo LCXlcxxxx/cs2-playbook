@@ -781,21 +781,22 @@ async function doExportShare(nick) {
   toast(msg);
 }
 
-// 非标准投法值提示（lint 会给 WARN 不挡门，队长预览里可见）
+// 非标准投法值提示（lint 会给 WARN 不挡门，队长预览里可见）——枚举值读注册表（R1-C）
 function throwWarns(e) {
   const warns = [];
-  if (!["lmb", "rmb", "both"].includes(e.click)) warns.push(`键位「${e.click}」非标准`);
-  if (!["direct", "jump", "crouch-jump"].includes(e.action)) warns.push(`投掷「${e.action}」非标准`);
-  if (!["stand", "crouch", "w", "walk-step", "shift", "shift-w", "run", ...moveExtra()].includes(e.move)) warns.push(`移动「${e.move}」非标准`);
+  if (!schemaEnumValues("entry", "click").includes(e.click)) warns.push(`键位「${e.click}」非标准`);
+  if (!schemaEnumValues("entry", "action").includes(e.action)) warns.push(`投掷「${e.action}」非标准`);
+  if (!schemaEnumValues("entry", "move").includes(e.move) && !moveExtra().includes(e.move)) warns.push(`移动「${e.move}」非标准`);
   return warns;
 }
 
 // 导入前数据净化：枚举外的值落回默认，difficulty 兜底归一三档（I51：数字旧值按 1-2/3/4-5 折算）——保证导入后 pb lint 0 ERROR
+// 枚举值读注册表（R1-C）；phase 仍走 PHASE_ORDER（显示分组序，与枚举序不同面）
 function sanitizeImportEntry(e) {
-  if (!["T", "CT", "both"].includes(e.side)) e.side = "T";
-  if (!["smoke", "flash", "molotov", "he"].includes(e.type)) e.type = "smoke";
-  if (!["lmb", "rmb", "both"].includes(e.click)) e.click = "lmb";
-  if (!["direct", "jump", "crouch-jump"].includes(e.action)) e.action = "direct";
+  if (!schemaEnumValues("entry", "side").includes(e.side)) e.side = "T";
+  if (!schemaEnumValues("entry", "type").includes(e.type)) e.type = "smoke";
+  if (!schemaEnumValues("entry", "click").includes(e.click)) e.click = "lmb";
+  if (!schemaEnumValues("entry", "action").includes(e.action)) e.action = "direct";
   e.phase = (Array.isArray(e.phase) ? e.phase : [e.phase]).filter(p => PHASE_ORDER.includes(p));
   if (!e.phase.length) e.phase = ["default"];
   e.difficulty = diffEnum(e.difficulty);   // I51：三档枚举（数字/未知值归一）
@@ -899,7 +900,7 @@ async function runImport(plan) {
       if (!item.checked) break;
       const { entry: f, cur } = item;
       const merged = { ...cur };
-      for (const k of ["title", "oneline", "origin", "target", "click", "move", "action", "difficulty", "type", "phase", "tags", "sets", "spots", "notes", "related"]) {
+      for (const k of schemaImportMergeKeys()) {   // R1-C：合并清单由注册表 import_merge 驱动（含 notes 正文）
         if (f[k] !== undefined) merged[k] = f[k];
       }
       merged.status = cur.status;                    // 铁律：不覆盖队长侧实测状态

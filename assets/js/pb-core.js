@@ -59,6 +59,42 @@ const setsExpanded = new Set();   // 展开的套装名（会话内保持，不�
 
 const data = window.PLAYBOOK;
 
+/* ---------------- SCHEMA 消费助手（R1-C：字段知识单一真相源在 pb.py 注册表） ----------------
+   build 把注册表注入 window.PLAYBOOK.SCHEMA；此处只做读取与兜底——
+   SCHEMA 缺失（旧 data.js）时 warn 一次并回落调用方内置兜底，不做整份镜像，防两份真相。 */
+let __schemaWarned = false;
+function schemaWarnOnce() {
+  if (!__schemaWarned) {
+    __schemaWarned = true;
+    console.warn("PLAYBOOK.SCHEMA 缺失——字段清单回落内置兜底（旧 build？请双击「同步并打包.bat」刷新）");
+  }
+}
+function schemaFields(kind) {
+  const sc = window.PLAYBOOK?.SCHEMA?.[kind];
+  if (!Array.isArray(sc) || !sc.length) { schemaWarnOnce(); return null; }
+  return sc;
+}
+function schemaField(kind, key) {
+  return (schemaFields(kind) || []).find(f => f.key === key) || null;
+}
+// [值, 中文名] 对；SCHEMA 缺失返回 null（调用方回落硬编码对）
+function schemaEnumPairs(kind, key) {
+  const f = schemaField(kind, key);
+  return f && Array.isArray(f.enum) ? f.enum : null;
+}
+function schemaEnumValues(kind, key) {
+  const pairs = schemaEnumPairs(kind, key);
+  return pairs ? pairs.map(p => p[0]) : null;
+}
+// 朋友导入合并清单：注册表 import_merge 字段 + notes（正文，非 frontmatter 字段恒在清单）
+const SCHEMA_IMPORT_MERGE_FALLBACK = ["title", "oneline", "origin", "target", "click", "move",
+  "action", "difficulty", "type", "phase", "tags", "sets", "spots", "related"];
+function schemaImportMergeKeys() {
+  const fs = schemaFields("entry");
+  const keys = fs ? fs.filter(f => f.import_merge).map(f => f.key) : SCHEMA_IMPORT_MERGE_FALLBACK;
+  return [...keys, "notes"];
+}
+
 /* ---------------- 道具条目：本地覆盖层 + 文件写入 ---------------- */
 /* 编辑结果先写 data/entries/*.md（已关联项目文件夹时），并即时存 localStorage
    让本次浏览生效；跑 pb build 后 data.js 与文件一致，覆盖层内容相同故无副作用。

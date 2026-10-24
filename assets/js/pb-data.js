@@ -162,14 +162,20 @@ function mdInline(v) {
   return mdScalar(v);
 }
 function dumpEntryMd(e) {
-  const order = ["id", "map", "side", "type", "click", "move", "action",
+  // R1-C：键序由注册表 dump_order 升序驱动（含原 tailOrder 四键，序号 19-22 相接）；
+  // SCHEMA 缺失回落内置序（与注册表逐键一致）。source/checked 为特判序列化（registry dump 标记）。
+  const _fs = schemaFields("entry");
+  const allKeys = _fs
+    ? _fs.filter(f => f.dump_order).sort((a, b) => a.dump_order - b.dump_order).map(f => f.key)
+    : null;
+  const order = allKeys || ["id", "map", "side", "type", "click", "move", "action",
     "origin", "target", "title", "oneline", "difficulty", "phase",
-    "status", "spots", "tags", "sets", "related"];
-  const tailOrder = ["coords", "pin_origin", "pin_target", "pin_targets"];   // I41：pin 显示坐标覆写（coords 顺手入序防保存丢失）
+    "status", "spots", "tags", "sets", "related", "coords", "pin_origin", "pin_target", "pin_targets"];
+  const emptyArr = _fs ? _fs.filter(f => f.dump_empty_array).map(f => f.key) : ["tags", "sets", "related"];
   const lines = ["---"];
-  for (const k of [...order, ...tailOrder]) {
+  for (const k of order) {
     if (e[k] === undefined || e[k] === null) continue;
-    if (Array.isArray(e[k]) && !e[k].length && ["tags", "sets", "related"].includes(k)) { lines.push(`${k}: []`); continue; }
+    if (Array.isArray(e[k]) && !e[k].length && emptyArr.includes(k)) { lines.push(`${k}: []`); continue; }
     if (e[k] && typeof e[k] === "object" && !Array.isArray(e[k]) && !Object.keys(e[k]).length) continue;   // 空 dict（pin_targets: {}）不落盘
     lines.push(`${k}: ${mdInline(e[k])}`);
   }
@@ -234,9 +240,10 @@ function parseEntryMd(text) {
   return e;
 }
 
-// I51：难度三档——数据枚举 easy|normal|hard（与 pb.py ENUMS 同源），中文只在上屏层
-const DIFF_ORDER = ["easy", "normal", "hard"];
-const DIFF_CN = { easy: "简单", normal: "中等", hard: "困难" };
+// I51：难度三档——数据枚举 easy|normal|hard，值序与中文名由注册表（SCHEMA entry.difficulty）驱动
+const _diffPairs = schemaEnumPairs("entry", "difficulty");
+const DIFF_ORDER = _diffPairs ? _diffPairs.map(p => p[0]) : ["easy", "normal", "hard"];
+const DIFF_CN = _diffPairs ? Object.fromEntries(_diffPairs) : { easy: "简单", normal: "中等", hard: "困难" };
 // 兜底归一（I19 语义）：数字/数字串按 1-2→easy / 3→normal / 4-5→hard 折算，防旧覆盖层/旧修改包
 // 里的数字难度流进渲染与过滤；缺失/未知回落中等（与旧默认 difficulty:3 一致）
 function diffEnum(v) {

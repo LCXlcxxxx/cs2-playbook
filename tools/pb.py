@@ -42,7 +42,7 @@ FIELD_REGISTRY = {
         {"key": "map", "type": "scalar", "required": True, "dump_order": 2,
          "lint": "map_registered", "cn": "地图 key（maps.json）"},
         {"key": "side", "type": "scalar", "required": True, "enum_check": True, "dump_order": 3,
-         "default": "T", "import_merge": True,
+         "default": "T",
          "enum": [["T", "T 方"], ["CT", "CT 方"], ["both", "双方"]],
          "lint": "enum", "cn": "阵营（both 双方通用）"},
         {"key": "type", "type": "scalar", "required": True, "enum_check": True, "dump_order": 4,
