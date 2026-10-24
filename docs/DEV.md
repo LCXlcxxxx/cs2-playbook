@@ -1,6 +1,6 @@
 # CS2 Playbook — 开发会话工作手册（DEV.md）
 
-> 硬约束在 AGENTS.md；进度台账 docs/PROGRESS.md（先读后写）；查看器行为规格 docs/UI.md。
+> 硬约束在 AGENTS.md；硬约束在 AGENTS.md；进度台账 docs/PROGRESS.md（先读后写；历史行归档在 docs/PROGRESS-archive.md，只读）；查看器行为规格 docs/UI.md。
 > 本手册收编散在提示词与会话记忆里的开发约定，新会话先读这页再动手。
 
 ## 1. Shell 铁律（历史事故沉淀）
