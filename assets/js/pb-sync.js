@@ -520,6 +520,11 @@ async function onPaste(ev) {
   const blob = imgItem.getAsFile();
   if (!blob) return;
   ev.preventDefault();
+  // R2-A：查阅模式不提供修改入口（含粘贴上传）——数据状态指示不受影响
+  if (!state.manage) {
+    toast("查阅模式不支持粘贴上传——点顶栏「🔧 管理」切换后再试");
+    return;
+  }
   const file = new File([blob], "clipboard.png", { type: blob.type || "image/png" });
 
   // a) 道具编辑器打开 → 最后聚焦的槽位行（缺省=第一个缺失基础槽）

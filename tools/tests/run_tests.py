@@ -365,6 +365,24 @@ def s3_detail_nav(page, base):
     assert H.mw_count(page, ".entry-row") > 0, "Backspace 应回列表"
 
 
+def set_manage(page, on):
+    """R2-A：切换查阅/管理模式（幂等）。"""
+    page.evaluate(
+        """(on) => { if (state.manage !== on) document.getElementById('manage-toggle').click(); }""",
+        on,
+    )
+    page.wait_for_timeout(250)
+
+
+def display_of(page, selector):
+    """首匹配元素的计算 display（无元素返回 null）——查阅模式隐藏是 CSS display:none。"""
+    return page.evaluate(
+        """(sel) => { const el = document.querySelector(sel);
+             return el ? getComputedStyle(el).display : null; }""",
+        selector,
+    )
+
+
 # ---------------------------------------------------------------- S4 编辑器（mock FS）
 STUB_JS = """(() => {
   const writes = {}; window.__writes = writes;
@@ -393,6 +411,7 @@ STUB_JS = """(() => {
 def s4_editor_write(page, base):
     goto(page, base)
     go_entries(page)
+    set_manage(page, True)   # R2-A：编辑入口在管理模式
     page.evaluate(STUB_JS)
     H.mw_click(page, "#btn-add-entry")
     page.wait_for_timeout(300)
@@ -479,7 +498,110 @@ def s5_timeline_sort(page, base):
     H.wait_boot(page)
 
 
-# ---------------------------------------------------------------- S6 像素基线
+# ---------------------------------------------------------------- R2-A 两模式
+@case("R2A/查阅模式默认无修改入口，切管理齐全")
+def r2a_modes(page, base):
+    goto(page, base)   # 新载入默认查阅
+    # 道具 Tab
+    go_entries(page)
+    assert display_of(page, ".entries-toolbar") == "none", "查阅模式列表工具栏应 display:none"
+    # 详情页
+    page.evaluate("() => document.querySelector('.entry-row').click()")
+    page.wait_for_timeout(300)
+    assert display_of(page, ".entry-edit") == "none", "查阅模式详情编辑按钮应 display:none"
+    assert display_of(page, ".badge-status-btn") == "none", "查阅模式状态切换应 display:none"
+    assert display_of(page, ".viewer-tools") == "none", "查阅模式上传/替换应 display:none"
+    page.evaluate("() => { state.entryView = null; render(); }")
+    page.wait_for_timeout(250)
+    # 战术板 Tab
+    H.mw_click(page, '#tabs button[data-tab="tactics"]')
+    page.wait_for_timeout(300)
+    assert display_of(page, "#add-tactic") == "none", "查阅模式 ＋ 新增战术板应 display:none"
+    assert display_of(page, "#open-editor") == "none", "查阅模式 ⚙ 编辑报点应 display:none"
+    assert display_of(page, "[data-tedit]") == "none", "查阅模式战术板 ⚙ 编辑应 display:none"
+    # 切管理 → 全部出现（flex/block 正常渲染）
+    set_manage(page, True)
+    go_entries(page)
+    d = display_of(page, ".entries-toolbar")
+    assert d == "flex", f"管理模式工具栏应 display:flex，实际 {d}"
+    page.evaluate("() => document.querySelector('.entry-row').click()")
+    page.wait_for_timeout(300)
+    assert display_of(page, ".entry-edit") not in (None, "none"), "管理模式详情应有编辑按钮"
+    assert display_of(page, ".badge-status-btn") not in (None, "none"), "管理模式详情应有状态切换"
+    assert display_of(page, ".viewer-tools") not in (None, "none"), "管理模式详情应有上传/替换"
+    page.evaluate("() => { state.entryView = null; render(); }")
+    page.wait_for_timeout(250)
+    H.mw_click(page, '#tabs button[data-tab="tactics"]')
+    page.wait_for_timeout(300)
+    assert display_of(page, "#add-tactic") not in (None, "none"), "管理模式应有 ＋ 新增战术板"
+    assert display_of(page, "#open-editor") not in (None, "none"), "管理模式应有 ⚙ 编辑报点"
+    assert display_of(page, "[data-tedit]") not in (None, "none"), "管理模式应有战术板 ⚙ 编辑"
+    set_manage(page, False)   # 还原查阅（像素基线用默认态）
+    page.wait_for_timeout(200)
+
+
+@case("R2A/待写徽标两模式恒可见")
+def r2a_badge(page, base):
+    goto(page, base)
+    # 种一条暂存修改（不落盘：rootPerm 为 none）→ 待写徽标出现
+    page.evaluate("""() => {
+      const ov = { edited: {}, added: [], deleted: [], savedAt: {}, written: {} };
+      const e = JSON.parse(JSON.stringify(PLAYBOOK.entries[0]));
+      e.title = e.title + '（暂存）';
+      ov.edited[e.id] = e;
+      ov.savedAt[e.id] = '2000-01-01T00:00:00Z';
+      ov.written[e.id] = false;
+      localStorage.setItem('pb-entries-v1', JSON.stringify(ov));
+    }""")
+    page.reload()
+    page.wait_for_load_state("domcontentloaded")
+    H.wait_boot(page)
+    page.wait_for_timeout(600)   # autoSyncOnBoot 尝试补写（rootPerm=none 不写，保持待写）
+    b1 = page.evaluate(
+        """() => { const b = document.getElementById('sync-badge');
+             return { hidden: b.hidden, manage: state.manage }; }""")
+    assert b1["hidden"] is False, f"查阅模式待写徽标应可见: {b1}"
+    page.evaluate("() => document.getElementById('manage-toggle').click()")
+    page.wait_for_timeout(250)
+    b2 = page.evaluate(
+        """() => { const b = document.getElementById('sync-badge');
+             return { hidden: b.hidden, manage: state.manage }; }""")
+    assert b2["hidden"] is False and b2["manage"] is True, f"管理模式待写徽标应可见: {b2}"
+    page.evaluate("() => localStorage.removeItem('pb-entries-v1')")
+    page.reload()
+    page.wait_for_load_state("domcontentloaded")
+    H.wait_boot(page)
+
+
+@case("R2A/筛选带两行制与灰阶")
+def r2a_band(page, base):
+    goto(page, base)
+    go_entries(page)
+    band = page.evaluate(
+        """() => { const b = document.getElementById('filter-band');
+             return { exists: !!b, idle: b?.classList.contains('pb-idle'),
+                      rows: document.querySelectorAll('#topbar .tb-row').length }; }""")
+    assert band["exists"] and band["rows"] == 2, f"顶栏应为两行制: {band}"
+    assert band["idle"], "无筛选时应灰阶（pb-idle）"
+    H.mw_click(page, '#type-filter button[data-type="smoke"]')
+    page.wait_for_timeout(250)
+    assert page.evaluate(
+        """() => !document.getElementById('filter-band').classList.contains('pb-idle')"""), \
+        "激活类型筛选后应去灰阶"
+    H.mw_click(page, '#type-filter button[data-type="smoke"]')   # 还原
+    page.wait_for_timeout(200)
+    # 战术板 Tab：📦 隐藏（只对道具列表有效）
+    H.mw_click(page, '#tabs button[data-tab="tactics"]')
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => document.getElementById('sets-toggle').hidden"), \
+        "战术板 Tab 下 📦 应隐藏"
+    H.mw_click(page, '#tabs button[data-tab="entries"]')
+    page.wait_for_timeout(200)
+    assert not page.evaluate("() => document.getElementById('sets-toggle').hidden"), \
+        "道具 Tab 下 📦 应显示"
+
+
+
 def _open_first_row(pg):
     first = pg.evaluate("() => document.querySelector('.entry-row')?.dataset.id")
     assert first, "列表无行可开详情"
@@ -533,6 +655,7 @@ CASES = [
     s3_detail_lightbox, s3_detail_nav,
     s4_editor_write,
     s5_layers, s5_timeline_sort,
+    r2a_modes, r2a_badge, r2a_band,
     s6_pixels,
 ]
 

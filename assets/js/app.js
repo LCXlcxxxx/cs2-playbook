@@ -86,6 +86,26 @@ function init() {
 
   $("#btn-settings").addEventListener("click", openSettings);   // 全局设置（I17）
 
+  // R2-A：查阅/管理模式切换——管理模式显示录入与编辑入口；切回查阅自动取消进行中的编辑；
+  // 模式不持久化（每次打开默认查阅）；数据状态指示（待写徽标/搁置区/授权）两模式恒可见
+  $("#manage-toggle").addEventListener("click", () => {
+    state.manage = !state.manage;
+    if (!state.manage) {
+      state.editingId = null;
+      state.tacticEditId = null;
+      state.editor = false;
+    }
+    document.body.classList.toggle("pb-manage", state.manage);
+    $("#manage-toggle").classList.toggle("active", state.manage);
+    render();
+    toast(state.manage ? "管理模式：已显示录入与编辑入口" : "查阅模式：编辑入口已收纳（数据状态恒可见）");
+  });
+  // R2-A：sticky 高度随顶栏两行自适应——组头 sticky 与锚点滚动偏移统一取 --tb-h
+  const syncTbH = () => document.documentElement.style.setProperty(
+    "--tb-h", ($("#topbar").offsetHeight + 8) + "px");
+  syncTbH();
+  window.addEventListener("resize", syncTbH);
+
   document.addEventListener("keydown", onKey);
   document.addEventListener("paste", onPaste);   // I40：Ctrl+V 贴图进图槽
   // I44：全局兜底——异步静默失败显性化（落 I13 教训「unhandledrejection 是抓 async 静默失败的唯一手段」）
@@ -127,8 +147,10 @@ function render() {
   const cards = $("#cards");
   cards.innerHTML = "";
   state.focusIdx = -1;
+  document.body.classList.toggle("pb-manage", !!state.manage);   // R2-A：模式类随渲染同步
   refreshSetsToggle();   // 📦 开关视觉态与 state 同步（I47，程序化切换后也正确）
   refreshChipFilter();   // chips 行显隐/选中态/清除钮（I50）
+  refreshFilterBand();   // R2-A：筛选带灰阶/📦 显隐随 Tab 与筛选态
 
   let visible;
   let mapCard = null;
@@ -327,6 +349,17 @@ function onKey(ev) {
 }
 
 function bootLightboxZoom() { initLightboxZoom(); }
+
+/* R2-A：筛选带状态——未激活任何筛选时灰阶弱化（激活项恢复高亮）；
+   📦 只对道具列表有效，战术板 Tab 下隐藏（筛选语义本身零变化） */
+function refreshFilterBand() {
+  const band = document.getElementById("filter-band");
+  if (!band) return;
+  const idle = !state.types.size && !state.side && !state.filterChips.size && !state.setsOnly;
+  band.classList.toggle("pb-idle", idle);
+  const st = document.getElementById("sets-toggle");
+  if (st) st.hidden = state.tab !== "entries";
+}
 
 /* ---------------- 启动（必须在所有常量与函数定义之后） ---------------- */
 if (!window.PLAYBOOK) {

@@ -644,11 +644,11 @@ function openSettings() {
         <input type="checkbox" id="set-archived" ${state.showArchived ? "checked" : ""}>
         显示失效与弃用条目
       </label>
-      <div class="set-row">
+      <div class="set-row pb-mng">
         <div class="set-label">地图排序<span class="set-tip">第一位＝打开时的默认地图；顶栏下拉按此顺序显示</span></div>
         <div id="set-map-order" class="map-order"></div>
       </div>
-      <div class="set-row">
+      <div class="set-row pb-mng">
         <div class="set-label">自定义移动方式<span class="set-tip">出现在编辑器「移动」下拉与投法徽章里</span></div>
         <span class="chips-row" id="set-moves"></span>
         <span class="pick-row">
@@ -663,7 +663,7 @@ function openSettings() {
           <button type="button" class="editor-btn danger" id="set-retired-clear">清空搁置区</button>
         </span>
       </div>
-      <div class="set-row">
+      <div class="set-row pb-mng">
         <div class="set-label">📤 分享我的修改<span class="set-tip">把本浏览器里录的道具/改动打包成 JSON 发给队长，收进大家的册子</span></div>
         <span class="pick-row">
           <button type="button" class="editor-btn" id="set-share" disabled>📤 把我的修改分享给队长</button>
@@ -674,7 +674,7 @@ function openSettings() {
           <button type="button" class="editor-btn primary" id="set-share-export">⬇ 导出修改包</button>
         </span>
       </div>
-      <div class="set-row">
+      <div class="set-row pb-mng">
         <div class="set-label">📥 导入朋友的修改<span class="set-tip">选朋友发来的修改包 JSON，预览勾选后收编（导入一律「待验证」）</span></div>
         <span class="pick-row">
           <button type="button" class="editor-btn" id="set-import">📥 导入朋友的修改</button>

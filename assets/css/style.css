@@ -47,15 +47,49 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 50;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  padding: 12px 20px;
+  padding: 10px 20px 8px;
   background: rgba(18, 23, 31, 0.96);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(4px);
 }
+/* R2-A：顶栏两行制——行 1 主行（Tab/地图/搜索/管理），行 2 筛选带 */
+.tb-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.tb-row + .tb-row { margin-top: 8px; }
+.manage-btn {
+  font-size: 16px;
+  padding: 6px 14px;
+  background: var(--panel);
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.manage-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* 未激活任何筛选时筛选带灰阶弱化；激活项恢复高亮（现有高亮保留） */
+.tb-filters.pb-idle .type-icons,
+.tb-filters.pb-idle #sets-toggle,
+.tb-filters.pb-idle .seg,
+.tb-filters.pb-idle #chip-filter { opacity: 0.45; filter: grayscale(0.85); }
+.tb-filters.pb-idle .type-icons button.active,
+.tb-filters.pb-idle .seg button.active,
+.tb-filters.pb-idle .sets-btn.active { opacity: 1; filter: none; }
+/* R2-A：查阅模式收纳全部修改类入口（数据状态指示不受影响，恒可见） */
+body:not(.pb-manage) .entries-toolbar,
+body:not(.pb-manage) .entry-edit,
+body:not(.pb-manage) .badge-status-btn,
+body:not(.pb-manage) .viewer-tools,
+body:not(.pb-manage) #add-tactic,
+body:not(.pb-manage) #open-editor,
+body:not(.pb-manage) #pin-edit,
+body:not(.pb-manage) [data-tedit],
+body:not(.pb-manage) .pb-mng { display: none !important; }
 
 .brand {
   font-size: 21px;
@@ -131,7 +165,8 @@ html, body {
 
 /* 快捷筛选 chips（I50）：搜索框正下方整行，横向滑动不换行，溢出时两端渐隐提示可滑动 */
 #chip-filter {
-  flex: 0 0 100%;
+  flex: 1 1 260px;
+  min-width: 0;   /* R2-A：筛选带内自适应伸缩（原独立整行 0 0 100%） */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -839,7 +874,7 @@ html, body {
   color: var(--accent);
   padding: 14px 6px 6px;
   position: sticky;
-  top: 64px;
+  top: var(--tb-h, 108px);   /* R2-A：随顶栏两行制自适应（JS 量 topbar 实高写入 --tb-h） */
   background: var(--bg);
   z-index: 5;
 }

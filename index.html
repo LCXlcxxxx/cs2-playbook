@@ -5,44 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CS2 Playbook — 道具速查与战术板</title>
 <link rel="icon" href="assets/icons/icon-smoke.svg">
-<link rel="stylesheet" href="assets/css/style.css?v=167">
+<link rel="stylesheet" href="assets/css/style.css?v=171">
 </head>
 <body>
 
 <header id="topbar">
-  <div class="brand">CS2<span>道具速查</span></div>
+  <div class="tb-row" id="tb-main">
+    <div class="brand">CS2<span>道具速查</span></div>
 
-  <nav class="tabs" id="tabs">
-    <button data-tab="tactics" class="active">战术板</button>
-    <button data-tab="entries">道具</button>
-  </nav>
+    <nav class="tabs" id="tabs">
+      <button data-tab="tactics" class="active">战术板</button>
+      <button data-tab="entries">道具</button>
+    </nav>
 
-  <select id="map-filter" title="地图"></select>
+    <select id="map-filter" title="地图"></select>
 
-  <div class="type-icons" id="type-filter" title="道具类型过滤（可多选，战术板地图同步生效）">
-    <button data-type="smoke"   title="烟雾"><img src="assets/icons/icon-smoke.svg"   alt="烟雾"></button>
-    <button data-type="flash"   title="闪光"><img src="assets/icons/icon-flash.svg"   alt="闪光"></button>
-    <button data-type="molotov" title="燃烧"><img src="assets/icons/icon-molotov.svg" alt="燃烧"></button>
-    <button data-type="he"      title="高爆"><img src="assets/icons/icon-he.svg"      alt="高爆"></button>
+    <input id="search" type="search" placeholder="搜索标题/点位/地标，支持拼音首字母（按 / 聚焦）" autocomplete="off">
+
+    <button id="manage-toggle" class="manage-btn" title="切换查阅/管理模式：管理模式显示录入与编辑入口（数据状态两模式恒可见）；每次打开默认查阅">🔧 管理</button>
+
+    <button id="btn-settings" title="全局设置">⚙ 设置</button>
+
+    <span id="topbar-auth"></span>
+
+    <button id="sync-badge" class="sync-badge" hidden title="待写：点这里写回项目文件（未授权会提示先🔑授权）；搁置：打开设置查看/导出">● 修改待写入</button>
   </div>
 
-  <button id="sets-toggle" class="sets-btn" title="📦 只看战术包：按套装折叠显示道具（再点还原普通列表）">📦</button>
+  <div class="tb-row tb-filters" id="filter-band">
+    <div class="type-icons" id="type-filter" title="道具类型过滤（可多选，战术板地图同步生效）">
+      <button data-type="smoke"   title="烟雾"><img src="assets/icons/icon-smoke.svg"   alt="烟雾"></button>
+      <button data-type="flash"   title="闪光"><img src="assets/icons/icon-flash.svg"   alt="闪光"></button>
+      <button data-type="molotov" title="燃烧"><img src="assets/icons/icon-molotov.svg" alt="燃烧"></button>
+      <button data-type="he"      title="高爆"><img src="assets/icons/icon-he.svg"      alt="高爆"></button>
+    </div>
 
-  <div class="seg" id="side-filter" title="阵营过滤（双方通用道具在 T/CT 下都显示）">
-    <button data-side="" class="active">全部</button>
-    <button data-side="T">T</button>
-    <button data-side="CT">CT</button>
+    <button id="sets-toggle" class="sets-btn" title="📦 只看战术包：按套装折叠显示道具（再点还原普通列表）">📦</button>
+
+    <div class="seg" id="side-filter" title="阵营过滤（双方通用道具在 T/CT 下都显示）">
+      <button data-side="" class="active">全部</button>
+      <button data-side="T">T</button>
+      <button data-side="CT">CT</button>
+    </div>
+
+    <div id="chip-filter" class="chip-filter" hidden></div>
   </div>
-
-  <input id="search" type="search" placeholder="搜索标题/点位/地标，支持拼音首字母（按 / 聚焦）" autocomplete="off">
-
-  <button id="btn-settings" title="全局设置">⚙ 设置</button>
-
-  <span id="topbar-auth"></span>
-
-  <button id="sync-badge" class="sync-badge" hidden title="待写：点这里写回项目文件（未授权会提示先🔑授权）；搁置：打开设置查看/导出">● 修改待写入</button>
-
-  <div id="chip-filter" class="chip-filter" hidden></div>
 </header>
 
 <main id="main">
@@ -70,17 +76,17 @@
   <span id="lightbox-zoom" title="滚轮缩放 · 双击复位 · +/-/0">100%</span>
 </div>
 
-<script src="build/data.js?v=167"></script>
-<script src="assets/js/pb-core.js?v=167"></script>
-<script src="assets/js/pb-data.js?v=167"></script>
-<script src="assets/js/pb-filter.js?v=167"></script>
-<script src="assets/js/pb-sync.js?v=167"></script>
-<script src="assets/js/pb-list.js?v=167"></script>
-<script src="assets/js/pb-detail.js?v=167"></script>
-<script src="assets/js/pb-tactics.js?v=167"></script>
-<script src="assets/js/pb-editor.js?v=167"></script>
-<script src="assets/js/pb-sortdesk.js?v=167"></script>
-<script src="assets/js/app.js?v=167"></script>
+<script src="build/data.js?v=171"></script>
+<script src="assets/js/pb-core.js?v=171"></script>
+<script src="assets/js/pb-data.js?v=171"></script>
+<script src="assets/js/pb-filter.js?v=171"></script>
+<script src="assets/js/pb-sync.js?v=171"></script>
+<script src="assets/js/pb-list.js?v=171"></script>
+<script src="assets/js/pb-detail.js?v=171"></script>
+<script src="assets/js/pb-tactics.js?v=171"></script>
+<script src="assets/js/pb-editor.js?v=171"></script>
+<script src="assets/js/pb-sortdesk.js?v=171"></script>
+<script src="assets/js/app.js?v=171"></script>
 <script>
   // 顶栏徽标（I19）：待写 → 授权后全量写回项目文件；仅搁置 → 打开设置查看/导出
   document.getElementById("sync-badge").addEventListener("click", () => onSyncBadgeClick());
