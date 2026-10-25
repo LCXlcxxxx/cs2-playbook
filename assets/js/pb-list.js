@@ -92,15 +92,21 @@ function rowHtml(e) {
   const info = TYPE_INFO[e.type] || {};
   const star = isFav(e.id) ? "★" : "☆";
   const tags = (e.tags || []).filter(Boolean);
+  // R3-L2①：三簇重排——左(图标+标题+标签)/中(起点→目标)/右(投法+难度+状态+星)，
+  // space-between 把原中段 ~40% 空白均分成两段，观感从「中间镂空」变「三栏对齐」。
   return `
     <button class="entry-row" data-id="${e.id}">
-      <img class="type-ico" src="${info.icon || "assets/icons/icon-he.svg"}" alt="${info.cn}">
-      <span class="row-main"><span class="row-title">${entryTitleHtml(e.title)}</span>${rowTagsHtml(tags)}</span>
-      <span class="badge-throw ${throwBadgeClass(e)}">${escapeHtml(e.throw_badge)}</span>
-      ${difficultyBadge(e.difficulty, false, true)}
-      <span class="row-loc">${escapeHtml(e.origin)} → ${escapeHtml(targetDisplay(e))}</span>
-      <span class="badge-status ${e.status}">${STATUS_CN[e.status] || e.status}</span>
-      <span class="fav-btn ${isFav(e.id) ? "on" : ""}" data-fav="${e.id}" title="${isFav(e.id) ? "取消收藏" : "收藏置顶"}">${star}</span>
+      <span class="row-left">
+        <img class="type-ico" src="${info.icon || "assets/icons/icon-he.svg"}" alt="${info.cn}">
+        <span class="row-main"><span class="row-title">${entryTitleHtml(e.title)}</span>${rowTagsHtml(tags)}</span>
+      </span>
+      <span class="row-mid"><span class="row-loc">${escapeHtml(e.origin)} → ${escapeHtml(targetDisplay(e))}</span></span>
+      <span class="row-right">
+        <span class="badge-throw ${throwBadgeClass(e)}">${escapeHtml(e.throw_badge)}</span>
+        ${difficultyBadge(e.difficulty, false, true)}
+        <span class="badge-status ${e.status}">${STATUS_CN[e.status] || e.status}</span>
+        <span class="fav-btn ${isFav(e.id) ? "on" : ""}" data-fav="${e.id}" title="${isFav(e.id) ? "取消收藏" : "收藏置顶"}">${star}</span>
+      </span>
     </button>`;
 }
 
@@ -109,6 +115,85 @@ function rowTagsHtml(tags) {
   if (!tags || !tags.length) return "";
   return `<span class="row-tags">${tags.map(t => `<i class="row-tag">${escapeHtml(t)}</i>`).join("")}</span>`;
 }
+
+/* ---------------- R3-L2②：缩略图墙（快速浏览视图） ----------------
+   列表页 ☰/▦ 切换（查阅/管理两模式均可见——实战阅读功能）；状态存本模块 + localStorage，
+   不进 pb-core 的 state（零共享文件红线）。分组/组头/锚点导航/过滤照旧，组内行改网格卡片；
+   封面=落点&效果图（缺则站位图）；点卡片直达 lightbox（复用 I12 缩放）+ J/K 跨条目连翻。 */
+let wallView = localStorage.getItem("pb-list-view") === "wall";
+
+function listViewToggleHtml() {
+  return `<div class="pb-view-bar" title="▦=一眼看全部道具效果图，点击放大（滚轮缩放）、J/K 连翻">
+    <button type="button" class="pb-view-btn ${wallView ? "" : "on"}" data-view="list">☰ 列表</button>
+    <button type="button" class="pb-view-btn ${wallView ? "on" : ""}" data-view="wall">▦ 缩略图</button>
+  </div>`;
+}
+
+function entryItemHtml(e) {
+  return wallView ? wallCellHtml(e) : rowHtml(e);
+}
+
+// 分组内容包装（R3-L2②）：墙模式整组包 .pb-wall-grid 网格；列表模式平铺行
+function groupItemsHtml(items) {
+  if (!wallView) return items.map(rowHtml).join("");
+  return `<div class="pb-wall-grid">${items.map(wallCellHtml).join("")}</div>`;
+}
+
+function wallCellHtml(e) {
+  const info = TYPE_INFO[e.type] || {};
+  const imgs = e.images || [];
+  const cover = imgs.find(i => i.slot === "4-result") || imgs.find(i => i.slot === "1-stand");
+  return `
+    <button class="pb-wall-cell card" data-id="${e.id}" title="${escapeHtml(e.title)}——点击放大（滚轮缩放）">
+      ${cover ? `<img src="${cover.path}" loading="lazy" alt="" draggable="false">`
+        : `<span class="pb-wall-noimg"><img src="${info.icon || "assets/icons/icon-he.svg"}" alt="">无图</span>`}
+      <span class="pb-wall-dots" title="状态 ${STATUS_CN[e.status] || e.status} · 难度${DIFF_CN[e.difficulty] || "中等"}">
+        <i class="pb-dot st-${e.status}"></i><i class="pb-dot df-${e.difficulty || "normal"}"></i>
+      </span>
+      <span class="pb-wall-bar">
+        <span class="pb-wall-title">${entryTitleHtml(e.title)}</span>
+        <span class="badge-throw ${throwBadgeClass(e)}">${escapeHtml(e.throw_badge)}</span>
+      </span>
+    </button>`;
+}
+
+/* R3-L2③：lightbox 跨条目连翻——按 entryRows 数据序（≠DOM 分组序，坑⑨），
+   到头 clamp+toast；跳过无图条目。 */
+function wallNextEntry(curId, dir) {
+  const order = entryRows.length ? entryRows : data.entries;
+  const i = order.findIndex(x => x.id === curId);
+  if (i < 0) return null;
+  for (let s = i + dir; s >= 0 && s < order.length; s += dir) {
+    if ((order[s].images || []).length) return order[s];
+  }
+  return null;
+}
+
+function openWallLightbox(e) {
+  const show = ent => {
+    openLightboxCtx((ent.images || []).map(i => i.path), 0, ent.title, {
+      onStep(dir) {
+        const nxt = wallNextEntry(ent.id, dir);
+        if (!nxt) { toast(dir > 0 ? "已是最后一条" : "已是第一条"); return; }
+        show(nxt);
+      },
+    });
+  };
+  show(e);
+}
+
+// 墙模式下 lightbox 的 J/K 跨条目：capture 监听（先于 app.js onKey）。
+// stopImmediatePropagation 兼容「事件派发在 document 上」的合成场景；真实按键 stopPropagation
+// 已够——Esc/←/→ 仍走 app.js 既有分支零回归。
+document.addEventListener("keydown", ev => {
+  if ($("#lightbox").hidden || !lbCtx || !lbCtx.nav) return;
+  const k = ev.key.toLowerCase();
+  if (k !== "j" && k !== "k") return;
+  ev.preventDefault();
+  if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+  else ev.stopPropagation();
+  lbCtx.nav.onStep(k === "j" ? 1 : -1);
+}, true);
 
 // I47：套装收集——完全由可见条目的 sets 字段派生（不建注册表）：套装名 → 成员条目（按 id 去重），
 // 名称 zh 序排序。成员跟着当前过滤走（搜索/类型/阵营过滤下套装只显示命中的成员）。
@@ -136,7 +221,7 @@ function setRowHtml(name, items) {
       <span class="runbook-btn" data-setrunbook="${escapeHtml(name)}" title="开战连翻：逐张翻看这套道具（Esc 退出）">🚀 开战</span>
       <span class="set-count">${items.length} 个道具</span>
     </button>
-    ${open ? `<div class="set-members">${items.map(rowHtml).join("")}</div>` : ""}`;
+    ${open ? `<div class="set-members">${groupItemsHtml(items)}</div>` : ""}`;
 }
 
 function entryListPanel(visible) {
@@ -172,7 +257,7 @@ function entryListPanel(visible) {
     if (rest.length) groups.push({ ph: "other", items: rest });
   }
 
-  wrap.innerHTML = groups.map(g => {
+  wrap.innerHTML = listViewToggleHtml() + groups.map(g => {
     if (g.setsZone) {
       return `<div class="list-group-head">📦 战术包</div>` +
         g.setsZone.map(([name, items]) => setRowHtml(name, items)).join("");
@@ -181,7 +266,7 @@ function entryListPanel(visible) {
     const head = g.ph === "__fav" ? "⭐ 收藏"
       : g.ph === "__noset" ? "未分组"
       : g.ph === "other" ? "其他" : PHASE_CN[g.ph] || g.ph;
-    return `<div class="list-group-head">${head}</div>${g.items.map(rowHtml).join("")}`;
+    return `<div class="list-group-head">${head}</div>${groupItemsHtml(g.items)}`;
   }).join("") +
     `<div class="list-foot">${visible.length} 条 · ${visible.filter(x => x.status === "verified").length} 条已实测</div>`;
 
@@ -216,6 +301,21 @@ function entryListPanel(visible) {
   $$(".fav-btn", wrap).forEach(st => st.addEventListener("click", () => {
     toggleFav(st.dataset.fav);
     render();
+  }));
+  // R3-L2②：视图切换（☰/▦，记忆偏好）+ 墙卡片交互（点卡片直达 lightbox；无图卡进详情=现状语义）
+  $$(".pb-view-btn", wrap).forEach(btn => btn.addEventListener("click", () => {
+    const v = btn.dataset.view === "wall" ? "wall" : "list";
+    if (v === (wallView ? "wall" : "list")) return;
+    wallView = v === "wall";
+    localStorage.setItem("pb-list-view", v);
+    render();
+  }));
+  $$(".pb-wall-cell", wrap).forEach(cell => cell.addEventListener("click", () => {
+    const e = entryRows.find(x => x.id === cell.dataset.id)
+      || data.entries.find(x => x.id === cell.dataset.id);
+    if (!e) return;
+    if (!(e.images || []).length) { openEntryDetail(e.id); return; }
+    openWallLightbox(e);
   }));
   return wrap;
 }

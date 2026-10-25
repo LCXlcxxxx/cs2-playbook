@@ -105,3 +105,4 @@ assets/css/style.css、tools/tests/run_tests.py、docs/UI.md、docs/iterations/I
 | 日期 | 内容 |
 | --- | --- |
 | 2026-10-24 | 创建（R3 规划会话，用户带截图拍板「写包吧」）：① 道具行三簇重排（左=图标标题标签/中=起点→目标/右=投法难度状态星，space-between 空白均分两段，修 ~40% 中段空白）② 缩略图墙视图（列表页 ☰/▦ 切换、分组照旧、封面=落点&效果图、点击直达 lightbox 复用 I12 缩放）③ lightbox J/K 跨条目连翻（lbCtx.nav 轻量扩展 + capture 监听，零共享文件）；基线仅 entries 两张重生成。同会话修订 ITER-R3.md 第五节（冻结例外增第 7 项）并更新台账 |
+| 2026-10-26 | 开发 | **执行完成（深夜批处理会话，?v=177）**：三簇+墙+lightbox 连翻全落地；**pb test 30/30**（新增 r3l2_row3cluster/wall/lb 三用例）；entries 两基线删除重生成、连续两轮 0 漂移（改行为守则执行），tactics/detail 四基线未动零漂移；零共享文件红线达成（视图状态存 pb-list 模块 + localStorage；J/K 拦截用 capture 监听 + stopImmediatePropagation）。落地口径：.row-left/.row-mid/.row-right 采用 .entry-row 作用域 row-* 家族命名（grep 全库确认无冲突后使用，与 .row-main/.row-loc 家族一致——R1-D pb- 前缀规矩在此让位家族一致性，仅限本作用域族）；墙格分组级包 .pb-wall-grid（新增 groupItemsHtml）；墙卡片带 .card 类使 J/K focusCard 续用 |

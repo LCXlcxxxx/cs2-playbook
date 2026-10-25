@@ -2143,3 +2143,69 @@ min-height 兜底，带图条目不受影响）；无「需要 hidden 被压制�
 .picker-quick .pb-qk.reuse { border-color: var(--accent); color: var(--accent); }
 .picker-quick .pb-qk-cap { font-size: 12px; color: var(--text-dim); }
 #draft-restore .ir-foot { justify-content: center; gap: 12px; }
+
+/* ================= R3-L2：道具行三簇 + 缩略图墙 ================= */
+/* 三簇（R3-L2①）：左簇吃自由空间（标题/tags 省略），中簇路径 15px + max-width，
+   右簇不收缩；space-between 把剩余空白均分成两段——修「中段 ~40% 空白」观感。
+   新类 .row-left/.row-mid/.row-right 属 .entry-row 作用域家族命名（与 .row-main/.row-loc
+   一致，落地前已 grep 全库确认无冲突——R1-D 前缀规矩在此让位家族一致性，仅限 row-* 族）。 */
+.entry-row { justify-content: space-between; }
+.entry-row .row-left { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.entry-row .row-mid { flex: 0 1 auto; min-width: 0; max-width: 38%; }
+.entry-row .row-mid .row-loc { display: block; font-size: 15px; }
+.entry-row .row-right { display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* 视图切换条（R3-L2②） */
+.pb-view-bar { display: flex; gap: 0; margin: 2px 0 10px; }
+.pb-view-btn {
+  font-size: 14px;
+  padding: 4px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+}
+.pb-view-btn:first-child { border-radius: 8px 0 0 8px; }
+.pb-view-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+.pb-view-btn.on { color: var(--accent); border-color: var(--accent); background: rgba(90, 162, 247, 0.12); }
+.pb-view-btn.on + .pb-view-btn { border-left: none; }
+
+/* 缩略图墙网格与卡片 */
+.pb-wall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 6px 0 14px; }
+.pb-wall-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.pb-wall-cell:hover, .pb-wall-cell.hl { border-color: var(--accent); background: #20293a; }
+.pb-wall-cell > img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.pb-wall-noimg {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 15px;
+}
+.pb-wall-noimg img { width: 32px; height: 32px; }
+.pb-wall-dots { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+.pb-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.pb-dot.st-verified { background: var(--c-verified); }
+.pb-dot.st-draft { background: var(--c-draft); }
+.pb-dot.st-broken, .pb-dot.st-retired { background: var(--c-broken); }
+.pb-dot.df-easy { background: #3fd68f; }
+.pb-dot.df-normal { background: #e8c15a; }
+.pb-dot.df-hard { background: #ff7a72; }
+.pb-wall-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; min-width: 0; }
+.pb-wall-title { font-weight: 700; color: #fff; font-size: 14px; min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pb-wall-cell .badge-throw { flex: none; font-size: 13px; padding: 2px 8px; }

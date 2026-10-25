@@ -243,8 +243,9 @@ function lbZoomAt(mx, my, factor) {
   lbApplyTransform();
 }
 
-function openLightboxCtx(imgs, idx, title) {
-  lbCtx = { imgs, idx, title: title || "" };
+function openLightboxCtx(imgs, idx, title, nav) {
+  // R3-L2③：nav={onStep(dir)} 可选（缩略图墙传，lightbox 内 J/K 跨条目连翻）；不传的全部既有调用零变化
+  lbCtx = { imgs, idx, title: title || "", nav: nav || null };
   lbResetZoom();
   renderLightbox();
   $("#lightbox").hidden = false;

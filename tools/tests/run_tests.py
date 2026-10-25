@@ -952,6 +952,113 @@ def r3l1_bulkcol(page, base):
       localStorage.removeItem('pb-sort-draft-v1'); }""")
 
 
+# ---------------------------------------------------------------- R3-L2 行三簇 + 缩略图墙
+
+@case("R3L2/行三簇：.row-left/.row-mid/.row-right 顺序与元素集合、两段空隙")
+def r3l2_row3cluster(page, base):
+    goto(page, base); go_entries(page)
+    r = page.evaluate("""() => {
+      const row = document.querySelector('.entry-row');
+      return {
+        order: [...row.children].map(c => c.className.split(' ')[0]),
+        locInMid: !!row.querySelector('.row-mid .row-loc'),
+        statusInRight: !!row.querySelector('.row-right .badge-status'),
+        throwInRight: !!row.querySelector('.row-right .badge-throw'),
+        favInRight: !!row.querySelector('.row-right .fav-btn'),
+        icoInLeft: !!row.querySelector('.row-left .type-ico'),
+        diffBtn: !!row.querySelector('[data-diffbtn]'),
+      };
+    }""")
+    assert r["order"] == ["row-left", "row-mid", "row-right"], f"三簇顺序错误: {r['order']!r}"
+    for k in ("locInMid", "statusInRight", "throwInRight", "favInRight", "icoInLeft", "diffBtn"):
+        assert r[k], f"元素集合不齐（{k}）: {r!r}"
+    gaps = page.evaluate("""() => {
+      const row = document.querySelector('.entry-row');
+      const L = row.children[0].getBoundingClientRect(), M = row.children[1].getBoundingClientRect(),
+            R = row.children[2].getBoundingClientRect();
+      return { g1: M.left - L.right, g2: R.left - M.right };
+    }""")
+    assert gaps["g1"] > 8 and gaps["g2"] > 8, f"两段空隙应均为正且可见: {gaps!r}"
+
+
+@case("R3L2/缩略图墙：切换/封面优先/网格容器/过滤联动/切回与记忆")
+def r3l2_wall(page, base):
+    goto(page, base); go_entries(page)
+    n_rows = page.evaluate("() => document.querySelectorAll('.entry-row').length")
+    assert n_rows > 0
+    first_row_id = page.evaluate("() => document.querySelector('.entry-row').dataset.id")
+    expect_cover = page.evaluate("""() => {
+      const e = PLAYBOOK.entries.find(x => x.id === document.querySelector('.entry-row').dataset.id);
+      const c = (e.images || []).find(i => i.slot === '4-result') || (e.images || [])[0];
+      return c ? c.path : '';
+    }""")
+    page.evaluate("""() => [...document.querySelectorAll('.pb-view-btn')].find(b => b.dataset.view === 'wall').click()""")
+    page.wait_for_timeout(300)
+    n_cells = page.evaluate("() => document.querySelectorAll('.pb-wall-cell').length")
+    assert n_cells == n_rows, f"墙格数应等于行数: rows={n_rows} cells={n_cells}"
+    assert page.evaluate("() => !!document.querySelector('.pb-wall-grid')"), "墙格应包在 .pb-wall-grid 网格内"
+    assert page.evaluate("() => document.querySelector('.pb-wall-cell').dataset.id") == first_row_id
+    got_cover = page.evaluate("""() => {
+      const img = document.querySelector('.pb-wall-cell img');
+      return img ? img.getAttribute('src') : '';
+    }""")
+    assert got_cover == expect_cover, f"封面应优先 4-result: {got_cover!r} vs {expect_cover!r}"
+    assert page.evaluate("() => localStorage.getItem('pb-list-view')") == "wall", "视图偏好应写入 localStorage"
+    # 过滤联动：类型=烟 → 格数=entryMatch 数
+    page.evaluate("""() => document.querySelector('#type-filter button[data-type="smoke"]').click()""")
+    page.wait_for_timeout(300)
+    expected = page.evaluate("() => data.entries.filter(entryMatch).length")
+    got = page.evaluate("() => document.querySelectorAll('.pb-wall-cell').length")
+    assert got == expected and 0 < expected < n_rows, f"类型过滤应联动墙: got={got} expected={expected} n={n_rows}"
+    # 切回列表：行数一致、偏好写回 list
+    page.evaluate("""() => [...document.querySelectorAll('.pb-view-btn')].find(b => b.dataset.view === 'list').click()""")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => document.querySelectorAll('.entry-row').length") == expected, "切回列表应恢复行视图"
+    assert page.evaluate("() => localStorage.getItem('pb-list-view')") == "list"
+    # 清类型过滤（防污染后续用例）
+    page.evaluate("""() => document.querySelector('#type-filter button[data-type="smoke"]').click()""")
+    page.wait_for_timeout(200)
+
+
+@case("R3L2/墙点图直达 lightbox + J/K 跨条目连翻 + Esc 关闭")
+def r3l2_lb(page, base):
+    goto(page, base); go_entries(page)
+    page.evaluate("""() => [...document.querySelectorAll('.pb-view-btn')].find(b => b.dataset.view === 'wall').click()""")
+    page.wait_for_timeout(300)
+    first = page.evaluate("""() => {
+      const c = document.querySelector('.pb-wall-cell');
+      const e = entryRows.find(x => x.id === c.dataset.id) || PLAYBOOK.entries.find(x => x.id === c.dataset.id);
+      let next = null;
+      for (let i = 1; i < entryRows.length; i++) {
+        if ((entryRows[i].images || []).length && entryRows[i].id !== e.id) { next = entryRows[i].title; break; }
+      }
+      return { id: e.id, title: e.title, img0: (e.images || [])[0].path, next };
+    }""")
+    assert first and first["img0"], "首卡片应有图"
+    page.evaluate("() => document.querySelector('.pb-wall-cell').click()")
+    page.wait_for_timeout(400)
+    lb = page.evaluate("""() => ({ open: !document.getElementById('lightbox').hidden,
+        src: document.getElementById('lightbox-img').getAttribute('src'),
+        label: document.getElementById('lightbox-label').textContent })""")
+    assert lb["open"], "点墙卡片应打开 lightbox"
+    assert lb["src"] == first["img0"], f"lightbox 应显示该条目第一张: {lb['src']!r} vs {first['img0']!r}"
+    assert first["title"] in lb["label"], f"label 应含条目名: {lb['label']!r}"
+    # J 跨条目（capture 拦截，不落 focusCard）
+    page.evaluate("() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', bubbles: true, cancelable: true }))")
+    page.wait_for_timeout(250)
+    lb2 = page.evaluate("() => document.getElementById('lightbox-label').textContent")
+    assert first["next"] and first["next"] in lb2, f"J 后应为下一条 {first['next']!r}: {lb2!r}"
+    # K 回第一条
+    page.evaluate("() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true }))")
+    page.wait_for_timeout(250)
+    lb3 = page.evaluate("() => document.getElementById('lightbox-label').textContent")
+    assert first["title"] in lb3, f"K 后应回到第一条: {lb3!r}"
+    # Esc 关闭零回归
+    page.evaluate("() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => document.getElementById('lightbox').hidden"), "Esc 应关 lightbox"
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1001,6 +1108,7 @@ CASES = [
     r2b_set_runbook, r2b_tactic_runbook, r2b_num_keys,
     r3_i42_archive,
     r3l1_source, r3l1_draft, r3l1_autogroup, r3l1_bulkcol,
+    r3l2_row3cluster, r3l2_wall, r3l2_lb,
     s6_pixels,
 ]
 
