@@ -113,3 +113,4 @@ tools/tests/run_tests.py、docs/UI.md、docs/iterations/ITER-R3-L1.md（变更�
 | 日期 | 内容 |
 | --- | --- |
 | 2026-10-24 | 创建（R3 规划会话，用户拍板「按推荐组合来」）：范围=①本批来源批量设置（修 source 硬编码 self 的署名缺口，视频档自动禁实测全 draft）②行草稿暂存（pb-sort-draft-v1，池图槽 poolKey 重挂）③智能三连成组（文件名序每 3 张自动建行入坑）④选点提速（openSpotPicker 加 reusePrev/recent 向后兼容 + callouts 拼音注入 + 抄上一行）⑤表头批量设列 ⑥导入进度；可选=重复提醒。同会话修订 ITER-R3.md 第五节（冻结例外增第 6 项）并更新台账 |
+| 2026-10-26 | 开发 | **执行完成（深夜批处理会话；功能提交 eb84fb4 + 本收尾提交）**：六功能点+可选⑦重复提醒全落地；27 用例全绿（新增 r3l1_source/draft/autogroup/bulkcol 四用例）；?v=176；lint 0E/0W；像素基线未动。落地口径备注：视频档「抄上一行」实测勾不抄（保持一律待验证语义）；选点弹窗拼音经 build 注入 callouts pyf/pyi（用户自加点无拼音自动跳过）；测试桩两处自纠（7 张=3+3+1 缺两槽断言、mock 池 key 须循「组名/文件名」约定）|

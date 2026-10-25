@@ -778,6 +778,180 @@ def _open_first_row(pg):
     H.wait_all_images(pg)
 
 
+# ---------------------------------------------------------------- R3-L1 分拣台体验
+
+@case("R3L1/本批来源：视频档禁实测+署名写入，自己档回归")
+def r3l1_source(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      localStorage.removeItem('pb-entries-v1');
+      localStorage.removeItem('pb-sort-draft-v1');
+      sortSt.globalMap = 'de_dust2';
+      sortSt.rows = [];
+      sortSt.srcMode = 'self'; sortSt.srcCreator = ''; sortSt.srcUrl = '';
+      const r = sortAddRow();
+      r.title = '来源测试A门烟'; r.origin = '匪家'; r.targets = ['A门'];
+      r.type = 'smoke'; r.side = 'T'; r.verified = true;
+      openSortStation();
+    }""")
+    page.wait_for_timeout(250)
+    # 切视频档：实测勾自动取消并禁用
+    page.evaluate("""() => {
+      const rb = document.querySelector('input[name="pb-sort-src"][value="video"]');
+      rb.checked = true; rb.dispatchEvent(new Event('change', { bubbles: true }));
+    }""")
+    page.wait_for_timeout(200)
+    dis = page.evaluate("""() => {
+      const cb = document.querySelector('.sort-table input[data-k="verified"]');
+      return { checked: cb.checked, disabled: cb.disabled };
+    }""")
+    assert dis == {"checked": False, "disabled": True}, f"视频档实测勾应取消+禁用，实际 {dis!r}"
+    # 空 UP 主 → 拦截导入（一条都不进）
+    page.evaluate("() => sortImportAll()")
+    page.wait_for_timeout(300)
+    blocked = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-entries-v1') || '{\"added\":[]}').added || []).length"
+    )
+    assert blocked == 0, f"空 UP 主应拦截导入，实际新增 {blocked} 条"
+    # 填 UP 主 → 导入成功，source 署名 + draft 无 checked
+    page.evaluate("() => { sortSt.srcCreator = '冷锋'; sortSt.srcUrl = 'BV测试'; }")
+    page.evaluate("() => sortImportAll()")
+    page.wait_for_timeout(500)
+    added = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-entries-v1') || '{\"added\":[]}').added || []).at(-1) || null"
+    )
+    assert added, "视频档导入未产生条目"
+    assert added["source"]["kind"] == "video" and added["source"]["creator"] == "冷锋", \
+        f"署名错误: {added['source']!r}"
+    assert added["status"] == "draft" and not added.get("checked"), "视频档必须 draft 且无 checked"
+    assert added["oneline"], "oneline 应自动生成"
+    # 自己档回归：source=self + 勾实测=verified+checked
+    page.evaluate("""() => {
+      closeSortStation();
+      sortSt.rows = []; sortSt.srcMode = 'self'; sortSt.srcCreator = ''; sortSt.srcUrl = '';
+      const r = sortAddRow();
+      r.title = '来源测试B门烟'; r.origin = '匪家'; r.targets = ['B门']; r.verified = true;
+      openSortStation();
+    }""")
+    page.wait_for_timeout(250)
+    page.evaluate("() => sortImportAll()")
+    page.wait_for_timeout(400)
+    added2 = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-entries-v1') || '{\"added\":[]}').added || []).at(-1) || null"
+    )
+    assert added2 and added2["source"]["kind"] == "self", f"自己档 source 应为 self: {added2 and added2['source']!r}"
+    assert added2["status"] == "verified" and added2.get("checked"), "自己档勾实测应 verified+checked"
+    page.evaluate("""() => { closeSortStation();
+      localStorage.removeItem('pb-entries-v1'); localStorage.removeItem('pb-sort-draft-v1'); }""")
+
+
+@case("R3L1/草稿暂存：保存→重开恢复字段/丢弃清键")
+def r3l1_draft(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      localStorage.removeItem('pb-sort-draft-v1');
+      openSortStation();
+      sortSt.rows = [];
+      const r1 = sortAddRow();
+      r1.title = '草稿行1'; r1.origin = '警家'; r1.targets = ['中门']; r1.type = 'smoke';
+      const r2 = sortAddRow();
+      r2.title = '草稿行2'; r2.origin = 'A大'; r2.type = 'flash'; r2.verified = false;
+      drawSortStation();
+    }""")
+    page.wait_for_timeout(300)
+    page.evaluate("() => saveSortDraftNow()")
+    saved = page.evaluate("""() => {
+      const d = JSON.parse(localStorage.getItem('pb-sort-draft-v1') || 'null');
+      return d ? { n: d.rows.length, t1: d.rows[0].title } : null;
+    }""")
+    assert saved and saved["n"] == 2 and saved["t1"] == "草稿行1", f"草稿未正确保存: {saved!r}"
+    # 模拟误关重开：内存行清空，靠 localStorage 草稿恢复
+    page.evaluate("""() => { closeSortStation(); sortSt.rows = []; openSortStation(); }""")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => !!document.getElementById('draft-restore')"), "重开分拣台未出现草稿恢复确认"
+    page.evaluate("() => document.getElementById('dr-keep').click()")
+    page.wait_for_timeout(300)
+    restored = page.evaluate("""() => ({ n: sortSt.rows.length,
+        t1: sortSt.rows[0] && sortSt.rows[0].title, t2: sortSt.rows[1] && sortSt.rows[1].title,
+        o1: sortSt.rows[0] && sortSt.rows[0].origin })""")
+    assert restored["n"] == 2 and restored["t1"] == "草稿行1" and restored["t2"] == "草稿行2" \
+        and restored["o1"] == "警家", f"恢复内容不对: {restored!r}"
+    # 丢弃路径：清键
+    page.evaluate("() => saveSortDraftNow()")
+    page.evaluate("""() => { closeSortStation(); sortSt.rows = []; openSortStation(); }""")
+    page.wait_for_timeout(250)
+    page.evaluate("() => document.getElementById('dr-drop') && document.getElementById('dr-drop').click()")
+    assert page.evaluate("() => localStorage.getItem('pb-sort-draft-v1')") is None, "丢弃后草稿应清除"
+    page.evaluate("""() => { closeSortStation(); sortSt.rows = [];
+      localStorage.removeItem('pb-entries-v1'); }""")
+
+
+@case("R3L1/自动成组：7 张→3 行（2 满 1 缺），槽序 1/2/4，池清空")
+def r3l1_autogroup(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      // 压缩桩：跳过 canvas 压缩（本用例只验证成组编排逻辑）
+      window._realCompress = compressToSlot;
+      compressToSlot = async (f) => ({ blob: f, ext: 'jpg' });
+      openSortStation();
+      sortSt.rows = [];
+      sortSt.pool = new Map();
+      for (let i = 1; i <= 7; i++) {
+        // 池 key 必须遵循「组名/文件名」约定——sortPutToSlot 按重建的 poolKey 删池
+        sortSt.pool.set('测试组/img' + i + '.png', { group: '测试组', name: 'img' + i + '.png',
+          handle: { getFile: async () => new Blob(['x']) }, parentDir: null, url: null });
+      }
+    }""")
+    page.wait_for_timeout(250)
+    page.evaluate("() => sortAutoGroup('测试组')")
+    page.wait_for_timeout(300)
+    res = page.evaluate("""() => ({
+      rows: sortSt.rows.length,
+      slots: sortSt.rows.map(r => [!!r.slots['1-stand'], !!r.slots['2-aim'], !!r.slots['4-result']]),
+      poolLeft: [...sortSt.pool.values()].filter(v => v.group === '测试组').length })""")
+    assert res["rows"] == 3, f"7 张应成 3 行，实际 {res['rows']}"
+    assert res["slots"][0] == [True, True, True] and res["slots"][1] == [True, True, True], \
+        f"前两行应满配: {res['slots']!r}"
+    assert res["slots"][2] == [True, False, False], f"第三行应只有站位槽（3+3+1）: {res['slots']!r}"
+    assert res["poolLeft"] == 0, "成组后组内池应清空"
+    page.evaluate("""() => { compressToSlot = window._realCompress; closeSortStation();
+      sortSt.rows = []; sortSt.pool = new Map(); localStorage.removeItem('pb-sort-draft-v1'); }""")
+
+
+@case("R3L1/表头批量设列：类型=闪全表生效+id 重生成；视频档实测▾禁用")
+def r3l1_bulkcol(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      openSortStation();
+      sortSt.rows = []; sortSt.srcMode = 'self';
+      const r1 = sortAddRow(); r1.title = 'A'; r1.type = 'smoke';
+      const r2 = sortAddRow(); r2.title = 'B'; r2.type = 'molotov';
+      const r3 = sortAddRow(); r3.title = 'C'; r3.type = 'he'; r3.idTouched = true; r3.id = 'keep-my-id';
+      drawSortStation();
+    }""")
+    page.wait_for_timeout(200)
+    page.evaluate("""() => document.querySelector('.pb-th-set[data-bulkcol="type"]').click()""")
+    page.wait_for_timeout(150)
+    page.evaluate("""() => {
+      const b = [...document.querySelectorAll('#pb-bulk-menu [data-bulkval]')]
+        .find(x => x.dataset.bulkval === 'flash');
+      b.click();
+    }""")
+    page.wait_for_timeout(250)
+    res = page.evaluate("""() => sortSt.rows.map(r => [r.type, r.id])""")
+    assert all(t == "flash" for t, _ in res), f"全表类型应为 flash: {res!r}"
+    ids = [i for _, i in res]
+    assert "-flash-" in ids[0] and "-flash-" in ids[1] and ids[0] != ids[1], f"非手改行 id 应按 flash 重生成: {ids!r}"
+    assert ids[2] == "keep-my-id", f"手改 id 行不应被重写: {ids!r}"
+    # 视频档下「已实测」▾ 禁用
+    page.evaluate("""() => { sortSt.srcMode = 'video'; drawSortStation(); }""")
+    assert page.evaluate(
+        "() => document.querySelector('.pb-th-set[data-bulkcol=\"verified\"]').disabled"
+    ) is True, "视频档「已实测」批量▾应禁用"
+    page.evaluate("""() => { sortSt.srcMode = 'self'; closeSortStation(); sortSt.rows = [];
+      localStorage.removeItem('pb-sort-draft-v1'); }""")
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -826,6 +1000,7 @@ CASES = [
     r2a_modes, r2a_badge, r2a_band,
     r2b_set_runbook, r2b_tactic_runbook, r2b_num_keys,
     r3_i42_archive,
+    r3l1_source, r3l1_draft, r3l1_autogroup, r3l1_bulkcol,
     s6_pixels,
 ]
 
