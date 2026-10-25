@@ -85,6 +85,8 @@ docs/iterations/ITER-R3.md 第五节）。开工三查：pb test 22/22 全绿 / 
 3. I42 归档判定修法（批次 0 核查后决定修或销账）
 4. Cache 注册基建：maps.json 登记 + 雷达入库（来源许可写 maps.json）+ 报点表（批次 5）
 5. 素材抽帧批量入库 agent 通道（docs/RECORD.md 既有通道，批次 3/4 使用）
+6. 分拣台录入体验优化（**ITER-R3-L1，单包封顶**：只碰 pb-sortdesk.js + pb-editor.js 选点扩展点 +
+   pb.py callouts 拼音注入 + style.css + tests + UI.md；2026-10-24 用户拍板，批次 3/4 前磨快管线）
 
 R3 收官（里程碑 A）后解冻，回到小步功能迭代。
 
@@ -107,3 +109,4 @@ R3 收官（里程碑 A）后解冻，回到小步功能迭代。
 | 日期 | 内容 |
 | --- | --- |
 | 2026-10-24 | 创建（R3 规划会话）：现状盘点 80 条 = verified 66（82%）/ draft 14（全 Dust2）；套装仅 1 个；Mirage CT 3 / Inferno CT 4；Ancient/Nuke/Anubis/Cache 零覆盖。定批次 0-5 与里程碑 A/B、冻结例外允许清单；同会话补记 R2-B 台账行（该会话漏记）、刷新 PROGRESS.md 当前状态 |
+| 2026-10-24 | 第五节增第 6 项：分拣台录入体验优化（ITER-R3-L1，单包封顶）——用户拍板「按推荐组合来」；含 source 署名缺口修复（视频素材此前被硬编码标自录）；详见 ITER-R3-L1.md 变更记录 |
