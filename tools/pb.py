@@ -923,6 +923,24 @@ def build_data(entries, tactics, maps, callouts):
         mm["radar_exists"] = radar.is_file()
         maps_out[key] = mm
 
+    # R3-L1④：报点拼音索引（name+search 别名，与条目 pyf/pyi 同法）——选点弹窗搜索支持全拼/首字母
+    callouts_out = {}
+    for key, pts in callouts.items():
+        if key.startswith("_"):
+            continue
+        outs = []
+        for c in pts:
+            cc = dict(c)
+            pyf_all, pyi_all = [], []
+            for seg in [c.get("name")] + list(c.get("search") or []):
+                f1, i1 = py_fields(seg)
+                pyf_all += f1
+                pyi_all += i1
+            cc["pyf"] = pyf_all
+            cc["pyi"] = pyi_all
+            outs.append(cc)
+        callouts_out[key] = outs
+
     return {
         "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
         # 数据一致性铁律（I19）：builtAt 是浏览器暂存退役对账的基准，格式必须保持
@@ -934,7 +952,7 @@ def build_data(entries, tactics, maps, callouts):
         "maps": maps_out,
         "entries": entry_list,
         "tactics": tactic_list,
-        "callouts": {k: v for k, v in callouts.items() if not k.startswith("_")},
+        "callouts": callouts_out,
     }, {"entries": len(entry_list), "uncov": sorted(uncov)}
 
 

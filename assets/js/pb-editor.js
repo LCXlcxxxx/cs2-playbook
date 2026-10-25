@@ -509,7 +509,28 @@ function persistEntryEdits(entry, orig) {
 const PICK_TABS = [["origin", "起点（单选）"], ["target", "目标（多选）"], ["spots", "关联（多选）"]];
 let pickerClose = null;   // 当前弹窗关闭函数（捕获阶段 Esc 先于全局 onKey 消费掉）
 
-function openCalloutPicker({ map, startTab, origin, targets, spots, onDone, onCancel, tabs }) {
+// R3-L1④：最近报点（每图取 5 个展示；选点确认时更新——分拣台与条目编辑器两条链路共用此弹窗）
+function recentSpotsFor(mapKey) {
+  try {
+    const all = JSON.parse(localStorage.getItem("pb-recent-spots") || "{}");
+    return (all[mapKey] || []).slice(0, 5);
+  } catch { return []; }
+}
+function pushRecentSpots(mapKey, res) {
+  try {
+    const all = JSON.parse(localStorage.getItem("pb-recent-spots") || "{}");
+    const arr = all[mapKey] || [];
+    for (const n of [res.origin, ...(res.target || [])].filter(Boolean)) {
+      const i = arr.indexOf(n);
+      if (i >= 0) arr.splice(i, 1);
+      arr.unshift(n);
+    }
+    all[mapKey] = arr.slice(0, 8);
+    localStorage.setItem("pb-recent-spots", JSON.stringify(all));
+  } catch { /* 忽略 */ }
+}
+
+function openCalloutPicker({ map, startTab, origin, targets, spots, onDone, onCancel, tabs, reusePrev }) {
   if (pickerClose) pickerClose();
   const list = allCallouts()[map] || [];
   const mapInfo = data.maps[map] || {};
@@ -527,8 +548,9 @@ function openCalloutPicker({ map, startTab, origin, targets, spots, onDone, onCa
       <div class="picker-head">
         <div class="picker-tabs">${TABS.map(([k, cn]) =>
           `<button type="button" class="picker-tab" data-tab="${k}">${cn}</button>`).join("")}</div>
-        <input class="picker-search" placeholder="搜索报点名（实时过滤）">
+        <input class="picker-search" placeholder="搜索报点名（拼音首字母也行，实时过滤）">
       </div>
+      <div class="picker-quick" id="picker-quick" hidden></div>
       <div class="picker-map">
         <img class="radar" src="${mapInfo.radar}" alt="雷达底图" draggable="false">
         ${list.map((c, i) => `
@@ -555,15 +577,34 @@ function openCalloutPicker({ map, startTab, origin, targets, spots, onDone, onCa
     return parts.join(" · ") || "";
   };
 
+  // R3-L1④：快捷行——「沿用上一行」+ 最近报点 chips（起点=直接选定；目标=加入；只加不删）
+  function applyQuick(name) {
+    if (curTab === "origin") sel.origin = name;
+    else if (sel[curTab]) sel[curTab].add(name);
+    refresh();
+  }
+  function drawQuick() {
+    const box = $("#picker-quick", ov);
+    if (!box) return;
+    const rec = recentSpotsFor(map);
+    let html = "";
+    if (reusePrev && reusePrev.value) html += `<button type="button" class="pb-qk reuse" data-qk="${escapeHtml(reusePrev.value)}" title="一键沿用上一行的起点">⧉ 沿用上一行：${escapeHtml(reusePrev.label || reusePrev.value)}</button>`;
+    if (rec.length) html += `<span class="pb-qk-cap">最近</span>` + rec.map(n => `<button type="button" class="pb-qk" data-qk="${escapeHtml(n)}">${escapeHtml(n)}</button>`).join("");
+    box.innerHTML = html;
+    box.hidden = !html;
+  }
+
   function refresh() {
     $$(".picker-tab", ov).forEach(b => b.classList.toggle("active", b.dataset.tab === curTab));
     const kw = ($(".picker-search", ov).value || "").trim().toLowerCase();
     $$(".callout-label", ov).forEach(btn => {
       const c = list[Number(btn.dataset.pi)];
-      const hay = [c.name, ...(c.search || [])].join(" ").toLowerCase();
+      // R3-L1④：hay 加拼音全拼/首字母（build 注入 pyf/pyi；用户自加点无拼音自动跳过）
+      const hay = [c.name, ...(c.search || []), ...(c.pyf || []), ...(c.pyi || [])].join(" ").toLowerCase();
       btn.hidden = !!kw && !hay.includes(kw);
       btn.classList.toggle("picked", isPicked(c.name));
     });
+    drawQuick();
     $(".picker-status", ov).textContent = statusText();
   }
 
@@ -590,11 +631,14 @@ function openCalloutPicker({ map, startTab, origin, targets, spots, onDone, onCa
       refresh();
       return;
     }
+    const qk = ev.target.closest("[data-qk]");
+    if (qk) { applyQuick(qk.dataset.qk); return; }
     const tab = ev.target.closest(".picker-tab");
     if (tab) { curTab = tab.dataset.tab; refresh(); return; }
     if (ev.target.closest("[data-pok]")) {
       const res = { origin: sel.origin, target: [...sel.target], spots: [...sel.spots] };
       confirmed = true;   // I33：确认关闭不触发 onCancel
+      pushRecentSpots(map, res);   // R3-L1④：最近报点随确认更新（两条链路共用此弹窗）
       close();
       onDone(res);
       return;
@@ -613,7 +657,7 @@ function openCalloutPicker({ map, startTab, origin, targets, spots, onDone, onCa
 // 起点非空写起点、目标非空数组写目标（弹窗内一次选全，修「切页签选的目标丢失」）。
 // 页签白名单固定 origin+target（「关联」在分拣台导入时自动=起点+目标去重，展示纯误导）。
 // 条目编辑器继续用 openCalloutPicker 三页签形态（行为不变）。
-function openSpotPicker(mapKey, { mode = "origin", initial = "", onDone, onCancel }) {
+function openSpotPicker(mapKey, { mode = "origin", initial = "", onDone, onCancel, reusePrev = null }) {
   openCalloutPicker({
     map: mapKey,
     startTab: mode === "target" ? "target" : "origin",
@@ -621,6 +665,7 @@ function openSpotPicker(mapKey, { mode = "origin", initial = "", onDone, onCance
     targets: mode === "target" ? [].concat(initial || []) : [],
     spots: [],
     tabs: ["origin", "target"],
+    reusePrev,   // R3-L1④：分拣台起点选择时传「沿用上一行」（不传=现行为零变化）
     onDone: res => onDone?.(res),
     onCancel,
   });

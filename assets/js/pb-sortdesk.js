@@ -13,6 +13,8 @@ const sortSt = {
   preview: null,           // 当前大图预览的池 key（I24）
   importing: false, skipNoImg: false, sortEl: null,
   globalMap: localStorage.getItem("pb-sort-map") ?? "",   // ""=全部素材；具体地图=池过滤+行兜底（I29）
+  srcMode: "self", srcCreator: "", srcUrl: "",   // R3-L1①：本批来源 self|video（视频档禁实测、写署名）
+  draftTimer: null,
 };
 
 // I35：media 目录改名迁移（逐文件读→写新路径→删旧→删空目录；幂等：旧目录不存在即完成）。
@@ -190,7 +192,7 @@ function sortAddRow() {
     uid: "r" + Date.now() + Math.random().toString(36).slice(2, 6),
     title: "", origin: "", targets: [], id: "", idTouched: false, adv: false,
     side: "T", type: "smoke", click: "lmb", move: "stand", action: "jump",
-    phase: "default", verified: true, notes: "",
+    phase: "default", verified: sortSt.srcMode !== "video", notes: "",   // R3-L1①：视频档新行默认不勾实测
     slots: { "1-stand": null, "2-aim": null, "4-result": null },
   };
   sortAutoId(row);
@@ -247,6 +249,170 @@ function sortRemoveRow(uid) {  const i = sortSt.rows.findIndex(r => r.uid === ui
   }
   if (sortSt.selectedUid === uid) sortSt.selectedUid = null;
   sortSt.rows.splice(i, 1);
+}
+
+/* ---------------- R3-L1②：行数据草稿暂存（误关页面不丢整批录入） ----------------
+   图在磁盘素材文件夹安全；池图槽存 poolKey 恢复时重挂（重读文件+压缩+从池移除），
+   file 上传槽 blob 不可恢复→清空标注。清除时机=全部导入成功/丢弃/恢复后零有效行。 */
+const SORT_DRAFT_KEY = "pb-sort-draft-v1";
+
+function sortStripRow(row) {
+  const slots = {};
+  for (const [slot, s] of Object.entries(row.slots || {})) {
+    slots[slot] = s ? { src: s.src, group: s.group || "", name: s.name || "", poolKey: s.poolKey || null, ext: s.ext || "jpg" } : null;
+  }
+  return { uid: row.uid, title: row.title, origin: row.origin, targets: row.targets, id: row.id,
+    idTouched: row.idTouched, adv: row.adv, side: row.side, type: row.type, click: row.click,
+    move: row.move, action: row.action, phase: row.phase, verified: row.verified, notes: row.notes, slots };
+}
+
+function saveSortDraftNow() {
+  try {
+    const payload = { savedAt: Date.now(), globalMap: sortSt.globalMap,
+      src: { mode: sortSt.srcMode, creator: sortSt.srcCreator, url: sortSt.srcUrl },
+      rows: sortSt.rows.map(sortStripRow) };
+    localStorage.setItem(SORT_DRAFT_KEY, JSON.stringify(payload));
+  } catch { /* 序列化失败静默跳过——不因草稿坏主流程 */ }
+}
+
+function scheduleSortDraft() {
+  clearTimeout(sortSt.draftTimer);
+  sortSt.draftTimer = setTimeout(saveSortDraftNow, 800);
+}
+
+function clearSortDraft() {
+  clearTimeout(sortSt.draftTimer);
+  localStorage.removeItem(SORT_DRAFT_KEY);
+}
+
+function sortRowsEmpty() {
+  return sortSt.rows.every(r => !String(r.title || "").trim() && !String(r.origin || "").trim()
+    && !(r.targets || []).length && !Object.values(r.slots || {}).some(Boolean));
+}
+
+async function restoreSortDraft(draft) {
+  const missing = [];
+  const rows = [];
+  for (const dr of draft.rows || []) {
+    const row = { ...dr, slots: { "1-stand": null, "2-aim": null, "4-result": null } };
+    row.targets = Array.isArray(row.targets) ? row.targets : [];
+    for (const [slot, meta] of Object.entries(dr.slots || {})) {
+      if (!meta) continue;
+      if (meta.src === "pool" && meta.poolKey && sortSt.pool.has(meta.poolKey)) {
+        const item = sortSt.pool.get(meta.poolKey);
+        try {
+          const f = await item.handle.getFile();
+          const { blob, ext } = await compressToSlot(f);
+          row.slots[slot] = { src: "pool", group: item.group, name: item.name, blob, ext,
+            url: URL.createObjectURL(blob), poolKey: meta.poolKey, poolItem: item };
+          sortSt.pool.delete(meta.poolKey);   // 重新入坑（一图一坑语义保持）
+          continue;
+        } catch { /* 读文件失败按缺图处理 */ }
+      }
+      missing.push(`${row.title || row.id || "未命名行"}的${slotLabel(slot)}${meta.src === "pool" ? "（已不在素材池）" : "（本地上传图无法恢复）"}`);
+    }
+    rows.push(row);
+  }
+  const replace = sortSt.rows.length === 1 && sortRowsEmpty();
+  sortSt.rows = replace || !sortSt.rows.length ? rows : [...sortSt.rows, ...rows];
+  if (draft.globalMap !== undefined) { sortSt.globalMap = draft.globalMap; localStorage.setItem("pb-sort-map", draft.globalMap); }
+  if (draft.src) {
+    sortSt.srcMode = draft.src.mode === "video" ? "video" : "self";
+    sortSt.srcCreator = draft.src.creator || "";
+    sortSt.srcUrl = draft.src.url || "";
+    const gi = $("#sort-global-map", sortSt.sortEl);
+    if (gi) gi.value = sortSt.globalMap;
+    const cr = $("#pb-src-creator", sortSt.sortEl), ur = $("#pb-src-url", sortSt.sortEl);
+    if (cr) cr.value = sortSt.srcCreator;
+    if (ur) ur.value = sortSt.srcUrl;
+    const sv = $("#pb-src-video", sortSt.sortEl);
+    if (sv) sv.hidden = sortSt.srcMode !== "video";
+    $$(`input[name="pb-sort-src"]`, sortSt.sortEl || document).forEach(r => { r.checked = (r.value === sortSt.srcMode); });
+  }
+  if (!rows.length) clearSortDraft();
+  if (missing.length) sortSt.lastProblems = missing.map(m => `草稿恢复：${m}，请重配该槽`);
+  drawSortStation();
+}
+
+function maybeOfferDraftRestore() {
+  let draft = null;
+  try { draft = JSON.parse(localStorage.getItem(SORT_DRAFT_KEY) || "null"); } catch { draft = null; }
+  if (!draft || !Array.isArray(draft.rows) || !draft.rows.length) return;
+  const when = new Date(draft.savedAt || Date.now()).toLocaleString("zh-CN", { hour12: false });
+  const ovEl = document.createElement("div");
+  ovEl.className = "sort-preview";
+  ovEl.id = "draft-restore";
+  ovEl.innerHTML = `<div class="import-result-card">
+    <div class="ir-head">检测到上次未导入的 ${draft.rows.length} 行草稿</div>
+    <div class="ir-sub">保存于 ${when}——恢复后继续录，或丢弃重新开始</div>
+    <div class="ir-foot">
+      <button type="button" class="editor-btn" id="dr-drop">丢弃</button>
+      <button type="button" class="editor-btn primary" id="dr-keep">恢复</button>
+    </div></div>`;
+  document.body.appendChild(ovEl);
+  $("#dr-keep", ovEl).addEventListener("click", () => { ovEl.remove(); restoreSortDraft(draft); });
+  $("#dr-drop", ovEl).addEventListener("click", () => { ovEl.remove(); clearSortDraft(); });
+  ovEl.addEventListener("click", ev => { if (ev.target === ovEl) { ovEl.remove(); } });
+}
+
+/* ---------------- R3-L1③：智能三连成组（只排图不填字段） ---------------- */
+
+async function sortAutoGroup(group) {
+  const keys = [...sortSt.pool.entries()].filter(([, it]) => it.group === group).map(([k]) => k);
+  if (!keys.length) { toast("该组没有可成组的图"); return; }
+  const slotOrder = ["1-stand", "2-aim", "4-result"];
+  let full = 0, partial = 0;
+  for (let i = 0; i < keys.length; i += 3) {
+    const chunk = keys.slice(i, i + 3);
+    const row = sortAddRow();
+    for (let j = 0; j < chunk.length; j++) {
+      const item = sortSt.pool.get(chunk[j]);
+      if (!item) continue;
+      await sortPutToSlot(row, slotOrder[j], { kind: "pool", item });
+    }
+    chunk.length === 3 ? full++ : partial++;
+  }
+  drawSortStation();
+  toast(`已按序成组 ${full + partial} 行（其中 ${partial} 行缺图）——逐行补起点/目标后导入`);
+}
+
+/* ---------------- R3-L1⑤：表头批量设列（▾ 小菜单应用到全表） ---------------- */
+
+function openBulkMenu(col, anchorBtn) {
+  document.getElementById("pb-bulk-menu")?.remove();
+  const OPTS = {
+    side: [["T", "T"], ["CT", "CT"], ["both", "双方通用"]],
+    type: [["smoke", "烟"], ["flash", "闪"], ["molotov", "火"], ["he", "雷"]],
+    phase: PHASE_OPTS,
+    verified: [["true", "全部勾选（已实测）"], ["false", "全部取消"]],
+  };
+  const menu = document.createElement("div");
+  menu.id = "pb-bulk-menu";
+  menu.className = "pb-bulk-menu";
+  menu.innerHTML = `<div class="pb-bulk-title">应用到全表（${sortSt.rows.length} 行）</div>` +
+    (OPTS[col] || []).map(([v, cn]) => `<button type="button" class="editor-btn" data-bulkval="${v}">${escapeHtml(cn)}</button>`).join("");
+  document.body.appendChild(menu);
+  const r = anchorBtn.getBoundingClientRect();
+  menu.style.left = Math.max(8, Math.min(r.left, innerWidth - 240)) + "px";
+  menu.style.top = (r.bottom + 6) + "px";
+  const close = () => menu.remove();
+  menu.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-bulkval]");
+    if (!b) return;
+    const v = b.dataset.bulkval;
+    for (const row of sortSt.rows) {
+      if (col === "verified") { if (sortSt.srcMode !== "video") row.verified = v === "true"; }
+      else if (col === "type") { row.type = v; if (!row.idTouched) row.id = ""; }
+      else row[col] = v;
+    }
+    if (col === "type") for (const row of sortSt.rows) if (!row.idTouched) sortAutoId(row);
+    close();
+    drawSortStation();
+  });
+  setTimeout(() => document.addEventListener("click", function h(ev) {
+    if (!menu.isConnected) { document.removeEventListener("click", h); return; }
+    if (!menu.contains(ev.target)) { close(); document.removeEventListener("click", h); }
+  }), 0);
 }
 
 // 行校验：返回问题文案数组（空 = 可导）。id 全自动生成（I24），只拦手改冲突与缺起点
@@ -307,10 +473,18 @@ async function sortImportAll() {
   sortSt.importing = true;
   try {
     await initRootHandle();   // I44：先刷新权限旗标——过期提前暴露，走优雅降级而非中途炸
+    if (sortSt.srcMode === "video" && !sortSt.srcCreator.trim()) {
+      toast("视频来源要先填 UP 主名（顶栏「本批来源」）——素材署名是硬规矩");
+      return;
+    }
     const problems = [];
     const usedIds = new Set(data.entries.map(x => x.id));
     const doneGroups = [];
     let ok = 0, skip = 0, autoOnelineN = 0;
+    const total = sortSt.rows.length;   // R3-L1⑥：导入进度
+    const btnImp = document.getElementById("sort-import");
+    let doneN = 0;
+    if (btnImp) { btnImp.disabled = true; btnImp.textContent = `导入中 0/${total}`; }
     const ov = entryOverrides();
     ov.added = ov.added || [];
     ov.savedAt = ov.savedAt || {};
@@ -351,7 +525,9 @@ async function sortImportAll() {
         oneline,
         difficulty: "normal", phase: [row.phase], status: row.verified ? "verified" : "draft",
         spots, tags: [], related: [],
-        source: { kind: "self", creator: "自己", url: "" },
+        source: sortSt.srcMode === "video"   // R3-L1①：本批来源（修硬编码 self 的署名缺口）
+          ? { kind: "video", creator: sortSt.srcCreator.trim(), url: sortSt.srcUrl.trim() }
+          : { kind: "self", creator: "自己", url: "" },
         notes: "",
       };
       if (autoOneline) autoOnelineN++;
@@ -395,7 +571,11 @@ async function sortImportAll() {
         skip++;
         problems.push(`「${row.title || row.id || "未命名行"}」导入失败：${err?.message || err}`);
       }
+      doneN++;   // R3-L1⑥：逐行进度
+      if (btnImp) btnImp.textContent = `导入中 ${doneN}/${total}`;
     }
+    if (btnImp) { btnImp.disabled = false; btnImp.textContent = "全部导入"; }
+    if (!sortSt.rows.length) clearSortDraft();   // R3-L1②：全部导入成功即清草稿
     saveEntryOverrides(ov);
     applyEntryOverrides();
     // 组收尾：素材已空的子文件夹移入 已录入/
@@ -475,6 +655,14 @@ function openSortStation() {
       <label class="sort-global-map">素材范围／行地图兜底
         <select id="sort-global-map"></select>
       </label>
+      <span class="pb-sort-src">本批来源
+        <label class="chk"><input type="radio" name="pb-sort-src" value="self" ${sortSt.srcMode !== "video" ? "checked" : ""}>自己</label>
+        <label class="chk"><input type="radio" name="pb-sort-src" value="video" ${sortSt.srcMode === "video" ? "checked" : ""}>视频</label>
+        <span id="pb-src-video" ${sortSt.srcMode !== "video" ? "hidden" : ""}>
+          <input id="pb-src-creator" placeholder="UP 主名（必填）" value="${escapeHtml(sortSt.srcCreator)}">
+          <input id="pb-src-url" placeholder="BV/链接（建议）" value="${escapeHtml(sortSt.srcUrl)}">
+        </span>
+      </span>
       <span class="sort-pool-state" id="sort-pool-state"></span>
     </div>
     <div class="sort-pool" id="sort-pool"></div>
@@ -501,6 +689,20 @@ function openSortStation() {
     for (const row of sortSt.rows) if (!row.idTouched) { row.id = ""; sortAutoId(row); }
     drawSortStation();
   });
+
+  // R3-L1①：本批来源——视频档自动禁「已实测」（全 draft 导入）、UP 主必填
+  $$(`input[name="pb-sort-src"]`, el).forEach(r => r.addEventListener("change", () => {
+    sortSt.srcMode = r.value;
+    $("#pb-src-video", el).hidden = sortSt.srcMode !== "video";
+    if (sortSt.srcMode === "video") {
+      for (const row of sortSt.rows) row.verified = false;
+      toast("视频来源：全部按「待验证」导入——实测过才能转绿");
+    }
+    drawSortStation();
+    scheduleSortDraft();
+  }));
+  $("#pb-src-creator", el).addEventListener("input", ev => { sortSt.srcCreator = ev.target.value; scheduleSortDraft(); });
+  $("#pb-src-url", el).addEventListener("input", ev => { sortSt.srcUrl = ev.target.value; scheduleSortDraft(); });
 
   $("#sort-back", el).addEventListener("click", closeSortStation);
   $("#sort-add-row", el).addEventListener("click", () => { sortAddRow(); drawSortStation(); });
@@ -545,6 +747,25 @@ function openSortStation() {
       drawSortStation();
       return;
     }
+    // R3-L1③：智能三连成组
+    const ag = ev.target.closest("[data-autogroup]");
+    if (ag) { sortAutoGroup(ag.dataset.autogroup); return; }
+    // R3-L1⑤：表头批量设列
+    const bsBtn = ev.target.closest(".pb-th-set");
+    if (bsBtn && !bsBtn.disabled) { openBulkMenu(bsBtn.dataset.bulkcol, bsBtn); return; }
+    // R3-L1④：抄上一行（起点/投法/阶段/阵营；视频档实测勾保持禁用语义）
+    const cpv = ev.target.closest("[data-copyprev]");
+    if (cpv) {
+      const i = sortSt.rows.findIndex(r => r.uid === cpv.dataset.copyprev);
+      if (i > 0) {
+        const prev = sortSt.rows[i - 1], row = sortSt.rows[i];
+        row.origin = prev.origin; row.click = prev.click; row.move = prev.move; row.action = prev.action;
+        row.phase = prev.phase; row.side = prev.side;
+        row.verified = sortSt.srcMode === "video" ? false : prev.verified;
+        drawSortStation();
+      }
+      return;
+    }
     // 查看大图（I33）：只读层，Esc/遮罩关闭；槽内图不动
     const vw = ev.target.closest("[data-viewslot]");
     if (vw) {
@@ -579,25 +800,29 @@ function openSortStation() {
     }
     const del = ev.target.closest("[data-delrow]");
     if (del) { sortRemoveRow(del.dataset.delrow); drawSortStation(); return; }
-    const pick = ev.target.closest("[data-pickrow]");
-    if (pick) {
-      const row = sortSt.rows.find(r => r.uid === pick.dataset.pickrow);
-      if (!row) return;
-      const { map } = sortRowMap(row);
-      if (!map || !data.maps[map]?.radar_exists) { toast("该行还没有确定地图：先放一张带子文件夹的素材图，或用顶部全局地图"); return; }
-      // 共用选点组件（I33 双向写回）：mode 只决定初始页签，起点/目标一次选全不丢
-      openSpotPicker(map, {
-        mode: pick.dataset.mode === "target" ? "target" : "origin",
-        initial: pick.dataset.mode === "target" ? [...row.targets] : row.origin,
-        onDone: res => {
-          if (res.origin) row.origin = res.origin;
-          if (Array.isArray(res.target) && res.target.length) row.targets = res.target;
-          drawSortStation();
-        },
-        onCancel: () => drawSortStation(),
-      });
-      return;
-    }
+      const pick = ev.target.closest("[data-pickrow]");
+      if (pick) {
+        const row = sortSt.rows.find(r => r.uid === pick.dataset.pickrow);
+        if (!row) return;
+        const { map } = sortRowMap(row);
+        if (!map || !data.maps[map]?.radar_exists) { toast("该行还没有确定地图：先放一张带子文件夹的素材图，或用顶部全局地图"); return; }
+        const ri0 = sortSt.rows.findIndex(r => r.uid === row.uid);
+        const prevRow = ri0 > 0 ? sortSt.rows[ri0 - 1] : null;
+        // 共用选点组件（I33 双向写回）：mode 只决定初始页签，起点/目标一次选全不丢
+        openSpotPicker(map, {
+          mode: pick.dataset.mode === "target" ? "target" : "origin",
+          initial: pick.dataset.mode === "target" ? [...row.targets] : row.origin,
+          reusePrev: pick.dataset.mode !== "target" && prevRow?.origin   // R3-L1④：起点选择可一键沿用上一行
+            ? { label: prevRow.origin, value: prevRow.origin } : null,
+          onDone: res => {
+            if (res.origin) row.origin = res.origin;
+            if (Array.isArray(res.target) && res.target.length) row.targets = res.target;
+            drawSortStation();
+          },
+          onCancel: () => drawSortStation(),
+        });
+        return;
+      }
     const adv = ev.target.closest("[data-advanced]");
     if (adv) {
       const row = sortSt.rows.find(r => r.uid === adv.dataset.advrow);
@@ -657,10 +882,15 @@ function openSortStation() {
       const idTag = el.querySelector(`[data-idtag="${row.uid}"]`);
       if (idTag) idTag.textContent = row.id;
     }
+    scheduleSortDraft();   // R3-L1②：字段变化即暂存
+  });
+  el.addEventListener("input", ev => {
+    if (ev.target.matches("input[data-row][data-k='title'],input[data-row][data-k='notes']")) scheduleSortDraft();
   });
 
   drawSortStation();
-  sortScanPool().then(() => { if (sortSt.open) drawSortStation(); });   // 扫描完成后刷新素材池
+  // R3-L1②：池扫描完成后刷新 + 检测未导入草稿（恢复/丢弃确认）
+  sortScanPool().then(() => { if (sortSt.open) { drawSortStation(); maybeOfferDraftRestore(); } });   // 扫描完成后刷新素材池
 }
 
 /* ---- 槽位大图复看（I33）：只读层，Esc/遮罩/关闭均可 ---- */
@@ -750,9 +980,13 @@ async function sortPreviewAssign(slotName) {
   const needTarget = slotName === "4-result" && !(row.targets?.length);
   const { map } = sortRowMap(row);
   if ((needOrigin || needTarget) && map && data.maps[map]?.radar_exists) {
+    const ri0 = sortSt.rows.findIndex(r => r.uid === row.uid);
+    const prevRow = ri0 > 0 ? sortSt.rows[ri0 - 1] : null;
     openSpotPicker(map, {
       mode: needOrigin ? "origin" : "target",
       initial: needOrigin ? row.origin : [...row.targets],
+      reusePrev: needOrigin && prevRow?.origin   // R3-L1④：入坑即选点弹窗同样可沿用上一行
+        ? { label: prevRow.origin, value: prevRow.origin } : null,
       onDone: res => {
         if (res.origin) row.origin = res.origin;
         if (Array.isArray(res.target) && res.target.length) row.targets = res.target;
@@ -847,8 +1081,9 @@ async function drawSortStation() {
   let poolHtml = "";
   for (const [group, items] of groups) {
     const mapKey = sortMapFromGroup(group);
-    poolHtml += `<div class="pool-group"><div class="pool-group-name">${escapeHtml(group || "（根目录）")}` +
-      (mapKey ? `<span class="pool-map-tag">→ ${escapeHtml(data.maps[mapKey]?.cn || mapKey)}</span>` : `<span class="pool-map-tag warn">地图未识别</span>`) + `</div><div class="pool-grid">` +
+    poolHtml += `<div class="pool-group"><div class="pool-group-name"><span>${escapeHtml(group || "（根目录）")}` +
+      (mapKey ? `<span class="pool-map-tag">→ ${escapeHtml(data.maps[mapKey]?.cn || mapKey)}</span>` : `<span class="pool-map-tag warn">地图未识别</span>`) +
+      `</span><button type="button" class="editor-btn mini pb-autogroup" data-autogroup="${escapeHtml(group)}" title="按现有顺序每 3 张自动建行入坑（站位/瞄点/落点&效果）——只排图不填字段，余数建缺槽行">⏩ 成组</button></div><div class="pool-grid">` +
       (await Promise.all(items.map(async ([key, item]) => {
         // I44：缩略图读取失败不产生 src=""（file:// 下会被当请求页面自身，控制台红字噪音）
         const thumb = await sortPoolThumb(item);
@@ -872,7 +1107,7 @@ async function drawSortStation() {
 
   // 表格
   const tableEl = $("#sort-table", el);
-  const rowsHtml = sortSt.rows.map(row => {
+  const rowsHtml = sortSt.rows.map((row, idx) => {
     const { group } = sortRowMap(row);
     const cells = SORT_SLOTS.map(([slot, label]) => {
       const s = row.slots[slot];
@@ -892,6 +1127,7 @@ async function drawSortStation() {
       <td class="cell-pickrow">
         <button class="row-pick ${sortSt.selectedUid === row.uid ? "on" : ""}" data-rowpick="${row.uid}"
                 title="${sortSt.selectedUid === row.uid ? "取消选中（再点行首圆圈）" : "选中为快速分拣目标行"}">${sortSt.selectedUid === row.uid ? "●" : "○"}</button>
+        ${idx > 0 ? `<button class="editor-btn mini" data-copyprev="${row.uid}" title="抄上一行：起点/键位/移动/投掷/阶段/阵营（标题、目标、图不抄）">⧉</button>` : ""}
         <button class="editor-btn danger mini" data-delrow="${row.uid}" title="删除该行（素材图归还池）">删</button>
       </td>
       <td><input class="cell" data-row="${row.uid}" data-k="title" value="${escapeHtml(row.title)}" placeholder="标题">${idHtml}</td>
@@ -903,7 +1139,7 @@ async function drawSortStation() {
       <td>${sortCellSelect(row.move, moveChoices([["stand", "原地"], ["crouch", "蹲下"], ["w", "W"], ["walk-step", "W一步"], ["shift", "Shift"], ["shift-w", "Shift+W"], ["run", "跑"]]), "move", row)}</td>
       <td>${sortCellSelect(row.action, [["direct", "直投"], ["jump", "跳投"], ["crouch-jump", "蹲跳投"]], "action", row)}</td>
       <td>${sortCellSelect(row.phase, PHASE_OPTS, "phase", row)}</td>
-      <td class="cell-v"><input type="checkbox" data-row="${row.uid}" data-k="verified" ${row.verified ? "checked" : ""} title="勾选=导入即「已实测」（记今天日期）"></td>
+      <td class="cell-v"><input type="checkbox" data-row="${row.uid}" data-k="verified" ${row.verified ? "checked" : ""}${sortSt.srcMode === "video" ? " disabled" : ""} title="${sortSt.srcMode === "video" ? "视频抽帧一律待验证——实测过才能转绿" : "勾选=导入即「已实测」（记今天日期）"}"></td>
       <td><input class="cell wide" data-row="${row.uid}" data-k="notes" value="${escapeHtml(row.notes)}" placeholder="一句话怎么扔（卡片大字）"></td>
       ${cells}
     </tr>`;
@@ -913,7 +1149,11 @@ async function drawSortStation() {
     <table class="sort-table">
       <thead><tr>
         <th></th><th>标题</th><th>起点</th><th>目标</th>
-        <th>阵营</th><th>类型</th><th>键位</th><th>移动</th><th>投掷</th><th>阶段</th><th>已实测✓</th><th>备注(一句话)</th>
+        <th>阵营<button type="button" class="pb-th-set" data-bulkcol="side" title="一键设置全表">▾</button></th>
+        <th>类型<button type="button" class="pb-th-set" data-bulkcol="type" title="一键设置全表">▾</button></th>
+        <th>键位</th><th>移动</th><th>投掷</th>
+        <th>阶段<button type="button" class="pb-th-set" data-bulkcol="phase" title="一键设置全表">▾</button></th>
+        <th>已实测✓<button type="button" class="pb-th-set" data-bulkcol="verified" ${sortSt.srcMode === "video" ? "disabled" : ""} title="${sortSt.srcMode === "video" ? "视频来源一律待验证" : "一键设置全表"}">▾</button></th><th>备注(一句话)</th>
         <th>站位</th><th>瞄点</th><th>落点&效果</th>
       </tr></thead>
       <tbody>${rowsHtml}</tbody>
@@ -929,9 +1169,28 @@ async function drawSortStation() {
     else if (!sortRowHasAllImages(row)) lines.push(`「${row.title || row.id}」：缺图${sortSt.skipNoImg ? "（将跳过）" : "（仍会导入，可之后补图）"}`);
   }
   if (sortSt.lastProblems?.length) { lines.push(...sortSt.lastProblems); sortSt.lastProblems = null; }
-  probEl.innerHTML = lines.length
+  // R3-L1⑦：重复提醒——同 map+type+起点+目标 与库内或表内已有重复（黄条提示，不拦导入）
+  const dupLines = [];
+  const sigOfRow = r => [sortRowMap(r).map, r.type, (r.origin || "").trim(), (r.targets || []).slice().sort().join("|")].join("§");
+  const sigOfEntry = e => [e.map, e.type, (e.origin || "").trim(), [].concat(e.target || []).filter(Boolean).slice().sort().join("|")].join("§");
+  const libSigs = new Set(data.entries.map(sigOfEntry));
+  const rowSigCount = new Map();
+  for (const r of sortSt.rows) {
+    if (!(r.origin || "").trim()) continue;
+    const k = sigOfRow(r);
+    rowSigCount.set(k, (rowSigCount.get(k) || 0) + 1);
+  }
+  for (const r of sortSt.rows) {
+    if (!(r.origin || "").trim()) continue;
+    const k = sigOfRow(r);
+    if (libSigs.has(k)) dupLines.push(`「${r.title || r.id}」与已入库条目同图同点位同类型——确认不是重复再导`);
+    else if ((rowSigCount.get(k) || 0) > 1) dupLines.push(`「${r.title || r.id}」与表内另一行同图同点位——确认不是重复再导`);
+  }
+  probEl.innerHTML = (lines.length
     ? lines.map(l => `<div class="sort-problem">⚠ ${escapeHtml(l)}</div>`).join("")
-    : `<div class="sort-problem ok">✓ 当前行都可以导入</div>`;
+    : `<div class="sort-problem ok">✓ 当前行都可以导入</div>`)
+    + dupLines.map(l => `<div class="sort-problem pb-dup">⧉ ${escapeHtml(l)}</div>`).join("");
+  scheduleSortDraft();   // R3-L1②：任何重渲（增删行/入坑/换图）后防抖暂存
 }
 
 PB.files.push("pb-sortdesk.js");   // R1-B 模块登记

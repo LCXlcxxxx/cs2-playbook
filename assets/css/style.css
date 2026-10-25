@@ -2067,3 +2067,79 @@ min-height 兜底，带图条目不受影响）；无「需要 hidden 被压制�
 }
 .runbook-btn:hover { background: var(--accent); color: #fff; }
 .runbook-tbtn { white-space: nowrap; }
+
+/* ================= R3-L1：分拣台录入体验 ================= */
+.sort-head .pb-sort-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.pb-sort-src .chk { margin: 0 2px; color: var(--text); }
+.pb-sort-src #pb-src-video { display: inline-flex; gap: 6px; }
+.pb-sort-src #pb-src-video input {
+  width: 132px;
+  padding: 3px 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+.pool-group-name { display: flex; align-items: center; gap: 8px; }
+.pool-group-name > span:first-child { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.pb-autogroup { flex: none; }
+.pb-th-set {
+  margin-left: 4px;
+  padding: 0 5px;
+  font-size: 11px;
+  line-height: 16px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  vertical-align: middle;
+}
+.pb-th-set:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.pb-th-set:disabled { opacity: 0.35; cursor: not-allowed; }
+.pb-bulk-menu {
+  position: fixed;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+.pb-bulk-menu .pb-bulk-title { font-size: 12px; color: var(--text-dim); }
+.pb-bulk-menu .editor-btn { width: 100%; }
+.sort-problem.pb-dup { color: var(--c-flash); }
+.picker-quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 2px;
+}
+.picker-quick .pb-qk {
+  font-size: 13px;
+  padding: 3px 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+}
+.picker-quick .pb-qk:hover { border-color: var(--accent); color: var(--accent); }
+.picker-quick .pb-qk.reuse { border-color: var(--accent); color: var(--accent); }
+.picker-quick .pb-qk-cap { font-size: 12px; color: var(--text-dim); }
+#draft-restore .ir-foot { justify-content: center; gap: 12px; }
