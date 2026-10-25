@@ -87,6 +87,9 @@ docs/iterations/ITER-R3.md 第五节）。开工三查：pb test 22/22 全绿 / 
 5. 素材抽帧批量入库 agent 通道（docs/RECORD.md 既有通道，批次 3/4 使用）
 6. 分拣台录入体验优化（**ITER-R3-L1，单包封顶**：只碰 pb-sortdesk.js + pb-editor.js 选点扩展点 +
    pb.py callouts 拼音注入 + style.css + tests + UI.md；2026-10-24 用户拍板，批次 3/4 前磨快管线）
+7. 道具行三簇重排 + 缩略图墙（**ITER-R3-L2，单包封顶**：只碰 pb-list.js + pb-detail.js 的 lbCtx.nav
+   轻量扩展 + style.css + tests + UI.md，零共享文件；2026-10-24 用户带截图拍板。**与 L1 串行执行**——
+   两包共享 style.css 与 run_tests.py）
 
 R3 收官（里程碑 A）后解冻，回到小步功能迭代。
 
@@ -110,3 +113,4 @@ R3 收官（里程碑 A）后解冻，回到小步功能迭代。
 | --- | --- |
 | 2026-10-24 | 创建（R3 规划会话）：现状盘点 80 条 = verified 66（82%）/ draft 14（全 Dust2）；套装仅 1 个；Mirage CT 3 / Inferno CT 4；Ancient/Nuke/Anubis/Cache 零覆盖。定批次 0-5 与里程碑 A/B、冻结例外允许清单；同会话补记 R2-B 台账行（该会话漏记）、刷新 PROGRESS.md 当前状态 |
 | 2026-10-24 | 第五节增第 6 项：分拣台录入体验优化（ITER-R3-L1，单包封顶）——用户拍板「按推荐组合来」；含 source 署名缺口修复（视频素材此前被硬编码标自录）；详见 ITER-R3-L1.md 变更记录 |
+| 2026-10-24 | 第五节增第 7 项：道具行三簇重排 + 缩略图墙（ITER-R3-L2，单包封顶）——用户带截图拍板（行中段 ~40% 空白 + 实战要缩略图快速浏览）；与 L1 串行执行；详见 ITER-R3-L2.md 变更记录 |
