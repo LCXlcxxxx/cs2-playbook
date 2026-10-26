@@ -1059,6 +1059,38 @@ def r3l2_lb(page, base):
     assert page.evaluate("() => document.getElementById('lightbox').hidden"), "Esc 应关 lightbox"
 
 
+# ---------------------------------------------------------------- R3 图片体积上限
+
+@case("R3/图片写入压缩：>600KB 压进 600KB 内且宽 ≤1920，小图原样保留")
+def r3_compress(page, base):
+    goto(page, base)
+    r = page.evaluate("""async () => {
+      // 大图：2400x1400 噪声（JPEG 最坏情况，逼出降质+缩宽全链）
+      const c = document.createElement('canvas'); c.width = 2400; c.height = 1400;
+      const ctx = c.getContext('2d');
+      const im = ctx.createImageData(2400, 1400);
+      for (let i = 0; i < im.data.length; i += 4) {
+        im.data[i] = Math.random() * 255; im.data[i + 1] = Math.random() * 255;
+        im.data[i + 2] = Math.random() * 255; im.data[i + 3] = 255;
+      }
+      ctx.putImageData(im, 0, 0);
+      const bigPng = await new Promise(res => c.toBlob(res, 'image/png'));
+      const big = await compressToSlot(new File([bigPng], 'big.png', { type: 'image/png' }));
+      const bigW = (await createImageBitmap(big.blob)).width;
+      // 小图：200x120 纯色 png（远小于 600KB）——必须原样返回不转格式
+      const c2 = document.createElement('canvas'); c2.width = 200; c2.height = 120;
+      c2.getContext('2d').fillRect(0, 0, 200, 120);
+      const smallPng = await new Promise(res => c2.toBlob(res, 'image/png'));
+      const small = await compressToSlot(new File([smallPng], 's.png', { type: 'image/png' }));
+      return { bigIn: bigPng.size, bigOut: big.blob.size, bigExt: big.ext, bigW,
+               smallSame: small.blob.size === smallPng.size, smallExt: small.ext };
+    }""")
+    assert r["bigIn"] > 600 * 1024, f"测试前置：噪声 PNG 应超 600KB（实际 {r['bigIn']}）"
+    assert r["bigOut"] <= 600 * 1024, f"大图应压到 600KB 内: {r['bigOut']}"
+    assert r["bigExt"] == "jpg" and r["bigW"] <= 1920, f"格式/宽度不对: {r!r}"
+    assert r["smallSame"] and r["smallExt"] == "png", f"小图应原样保留: {r!r}"
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1109,6 +1141,7 @@ CASES = [
     r3_i42_archive,
     r3l1_source, r3l1_draft, r3l1_autogroup, r3l1_bulkcol,
     r3l2_row3cluster, r3l2_wall, r3l2_lb,
+    r3_compress,
     s6_pixels,
 ]
 

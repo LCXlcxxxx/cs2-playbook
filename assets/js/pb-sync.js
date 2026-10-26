@@ -404,19 +404,34 @@ function idbObjectURL(key) {
   return "assets/icons/icon-he.svg";   // 加载占位
 }
 
+const IMG_MAX_BYTES = 600 * 1024;   // 单图上限（AGENTS 四：目标 300-600KB，看得清为准）
+
 async function compressToSlot(file) {
-  // 宽 >1920 等比压到 1920 输出 jpg(0.85)；否则保留原文件
+  // 宽 >1920 等比压到 1920 输出 jpg(0.85)；任何图 >600KB 再降质量（0.85→0.4 步进 0.15）、
+  // 仍超则缩宽（×0.8，下限 960）重编码直到 ≤600KB；≤600KB 的小图原样保留（不重压不转格式）
   let blob = file, ext = extFromFile(file);
   try {
     const bmp = await createImageBitmap(file);
-    if (bmp.width > 1920) {
-      const scale = 1920 / bmp.width;
-      const canvas = document.createElement("canvas");
-      canvas.width = 1920;
-      canvas.height = Math.round(bmp.height * scale);
-      canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
-      blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
+    if (file.size > IMG_MAX_BYTES || bmp.width > 1920) {
+      const baseW = Math.min(bmp.width, 1920);
+      const draw = async (w, q) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = Math.round(bmp.height * (w / bmp.width));
+        canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+        return await new Promise(res => canvas.toBlob(res, "image/jpeg", q));
+      };
+      let w = baseW, q = 0.85;
+      blob = await draw(w, q);
       ext = "jpg";
+      while (blob.size > IMG_MAX_BYTES && q > 0.4) {
+        q = Math.max(0.4, q - 0.15);
+        blob = await draw(w, q);
+      }
+      while (blob.size > IMG_MAX_BYTES && w > 960) {
+        w = Math.round(w * 0.8);
+        blob = await draw(w, q);
+      }
     }
   } catch { /* 解码失败按原文件存 */ }
   return { blob, ext };
