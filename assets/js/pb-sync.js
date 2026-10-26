@@ -404,11 +404,11 @@ function idbObjectURL(key) {
   return "assets/icons/icon-he.svg";   // 加载占位
 }
 
-const IMG_MAX_BYTES = 600 * 1024;   // 单图上限（AGENTS 四：目标 300-600KB，看得清为准）
+const IMG_MAX_BYTES = 1024 * 1024;   // 单图上限 1MB（AGENTS 四；2026-10-26 定稿：600KB 会逼烟雾/暗部场景质量跌破 0.6，放大出块）
 
 async function compressToSlot(file) {
-  // 宽 >1920 等比压到 1920 输出 jpg(0.85)；任何图 >600KB 再降质量（0.85→0.4 步进 0.15）、
-  // 仍超则缩宽（×0.8，下限 960）重编码直到 ≤600KB；≤600KB 的小图原样保留（不重压不转格式）
+  // 宽 >1920 等比压到 1920 输出 jpg(0.85)；任何图 >1MB 再降质量（0.85→0.4 步进 0.15）、
+  // 仍超则缩宽（×0.8，下限 960）重编码直到 ≤1MB；≤1MB 的小图原样保留（不重压不转格式）
   let blob = file, ext = extFromFile(file);
   try {
     const bmp = await createImageBitmap(file);
