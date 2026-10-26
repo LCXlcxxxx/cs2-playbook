@@ -692,24 +692,12 @@ function setupTimelineLayer(el, mapKey) {
   // R3-L8：划线目标失效（换板/步骤改挂道具/取消指派）自动退出划线模式
   if (tlLineDraw && tlLineDraw.oi != null) {
     const st0 = ordered[tlLineDraw.oi];
-    if (!st0 || st0.st.use || !st0.st.role) tlLineDraw = null;
+    if (!st0 || !st0.st.role) tlLineDraw = null;   // 已指派角色的步骤（挂不挂道具）都可划走位线
   }
 
-  // 步骤动线端点（pin 感知；解析不到=不上图）
-  function stepCoords(st) {
-    if (!st.use) return null;
-    const e = data.entries.find(x => x.id === st.use);
-    if (!e) return null;
-    let tgt = null;
-    for (const tv of targetVals(e)) {
-      const c = calloutFor(tv);
-      if (c) { tgt = pinOrCallout(e, "target", tv) || { u: c.u, v: c.v }; break; }
-    }
-    const oc = pinOrCallout(e, "origin") || calloutFor(e.origin);
-    if (!tgt || !oc) return null;
-    return { o: oc, t: tgt };
-  }
-  const coords = ordered.map(x => stepCoords(x.st));
+  // R3-L8 修正（用户指正「时间轴动线和道具线不是一回事」）：时间轴不再自动画道具弹道
+  // （起点→落点是道具线，归道具层 💥）——时间轴动线=角色走位，全部由「✍️ 划动线」自定义。
+  // stepCoords/coords 已删（其唯一用途就是画弹道）。
 
   // 角色标位置（I42 唯一规则）：该角色时间序第一个含 use 步骤的道具起点（origin pin 优先，报点兜底）
   function roleAnchor(n) {
@@ -730,26 +718,12 @@ function setupTimelineLayer(el, mapKey) {
     if (a) anchors[n] = a;
   }
 
-  // 动线：指派角色且含 use 且两端可解析才画；同起终点第二条起错开 1-2%
-  const linesDrawn = {};
+  // 动线：R3-L8 起只有自定义走位线（role+anchor+line 齐备才画；点线即高亮联动 setSel）
   let linesHtml = "";
-  ordered.forEach((x, i) => {
-    const c = coords[i];
-    if (!c || !x.st.role || !anchors[x.st.role]) return;
-    let x1 = c.o.u * 100, y1 = c.o.v * 100, x2 = c.t.u * 100, y2 = c.t.v * 100;
-    const key = `${x1.toFixed(1)},${y1.toFixed(1)},${x2.toFixed(1)},${y2.toFixed(1)}`;
-    const dup = linesDrawn[key] || 0;
-    linesDrawn[key] = dup + 1;
-    if (dup) { x1 = +(x1 + 1.5 * dup).toFixed(2); y1 = +(y1 - 1.2 * dup).toFixed(2);
-               x2 = +(x2 + 1.5 * dup).toFixed(2); y2 = +(y2 - 1.2 * dup).toFixed(2); }
-    linesHtml += `<line class="tl-line" data-step="${i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-      marker-end="url(#tl-arrow)" style="color:${roleColor(x.st.role)}"/>`;
-  });
-  // R3-L8：不挂道具步骤的自定义虚线（role+anchor+line 齐备才画；点线即高亮联动 setSel）
   const lineOf = st => (st.line && Array.isArray(st.line.from) && Array.isArray(st.line.to)
     && st.line.from.length === 2 && st.line.to.length === 2) ? st.line : null;
   ordered.forEach((x, i) => {
-    if (x.st.use || !x.st.role || !anchors[x.st.role]) return;
+    if (!x.st.role || !anchors[x.st.role]) return;
     const ln = lineOf(x.st);
     if (!ln) return;
     const col = roleColor(x.st.role);
@@ -807,8 +781,8 @@ function setupTimelineLayer(el, mapKey) {
         ${state.manage ? (() => {
           // R3-L8：划动线（管理模式）——不挂道具的步骤在地图上两点取线
           const armed = tlLineDraw && ordered[tlLineDraw.oi];
-          const tip = !tlLineDraw ? "开启后点一条不挂道具的步骤，再在地图上点起点、终点"
-            : !armed ? "先点下方一条不挂道具的步骤卡（或角色旁的文字 chip）"
+          const tip = !tlLineDraw ? "开启后点一条已指派角色的步骤，再在地图上点起点、终点"
+            : !armed ? "先点下方一条已指派角色的步骤卡（或角色旁的 chip）"
             : !tlLineDraw.from ? `已选「${stepDisplayText(ordered[tlLineDraw.oi].st).slice(0, 14)}…」——在地图上点【起点】`
             : "在地图上点【终点】完成（Esc 取消）";
           return `<div class="tl-role-filter">
@@ -818,7 +792,6 @@ function setupTimelineLayer(el, mapKey) {
           </div>`;
         })() : ""}
         ${ordered.map((x, i) => {
-          const c = coords[i];
           const chained = !!(x.st.role && anchors[x.st.role]);
           const dimmed = tlRoleFilter && x.st.role && x.st.role !== tlRoleFilter;   // R3-L7：非选中角色弱化
           return `
@@ -829,13 +802,13 @@ function setupTimelineLayer(el, mapKey) {
             <span class="tl-text">${escapeHtml(stepDisplayText(x.st))}</span>
             ${x.st.use ? `<button class="use-chip mini-chip" data-jump="${escapeHtml(x.st.use)}"
               title="查看这颗道具">${escapeHtml(data.entries.find(e => e.id === x.st.use)?.title || x.st.use)}</button>` : ""}
-            ${x.st.use && !c ? `<span class="set-tip" title="道具起/落点没对上报点，只列出不上图">不上图</span>` : ""}
+            ${x.st.line ? `<span class="set-tip" title="已自定义走位动线">↝ 已划线</span>` : ""}
           </div>`;
         }).join("")}
       </div>`;
   }
   if (note) {
-    note.innerHTML = "点角色旁的时间 chip 或下方步骤卡＝高亮动线；点道具名跳那颗道具。虚线从真实投掷起点到落点。";
+    note.innerHTML = "点角色旁的时间 chip 或下方步骤卡＝高亮走位动线；点道具名跳那颗道具。走位动线由「✍️ 划动线」自定义（道具的投掷弹道在 💥 道具层看）——两层不是一回事。";
   }
 
   function setSel(i) {
@@ -898,7 +871,7 @@ function setupTimelineLayer(el, mapKey) {
       row.addEventListener("click", ev => {
         if (ev.target.closest("[data-jump], [data-tlrf], [data-tlline], [data-tlline-clear]")) return;
         const x = ordered[Number(row.dataset.step)];
-        if (!x || x.st.use || !x.st.role) { toast("划动线只能给「不挂道具且已指派角色」的步骤——挂道具的用真实投掷动线"); return; }
+        if (!x || !x.st.role) { toast("划动线只能给「已指派角色」的步骤——先给这步分个角色"); return; }
         ev.stopPropagation();
         tlLineDraw = { oi: Number(row.dataset.step), from: null };
         render();
@@ -950,7 +923,7 @@ function setupTimelineLayer(el, mapKey) {
   layer.querySelectorAll(".tl-chip").forEach(b => b.addEventListener("click", ev => {
     if (!tlLineDraw) return;
     const x = ordered[Number(b.dataset.step)];
-    if (!x || x.st.use || !x.st.role) { ev.stopPropagation(); toast("划动线只能给「不挂道具且已指派角色」的步骤"); return; }
+    if (!x || !x.st.role) { ev.stopPropagation(); toast("划动线只能给「已指派角色」的步骤——先给这步分个角色"); return; }
     ev.stopPropagation();
     tlLineDraw = { oi: Number(b.dataset.step), from: null };
     render();

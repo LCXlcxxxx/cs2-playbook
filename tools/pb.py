@@ -785,7 +785,8 @@ def lint():
                     role = st.get("role")
                     if role not in (None, "") and (not isinstance(role, int) or not 1 <= role <= 5):
                         add("WARN", name, f"timeline 第 {k} 步 role 应为 1-5 整数: {role!r}")
-                    # R3-L8：自定义虚线动线（不挂道具步骤；0~1 坐标随底图）
+                    # R3-L8：自定义走位动线（0~1 坐标随底图）。时间轴动线=角色走位，与道具弹道
+                    # 是两回事（用户 2026-10-27 指正）——挂道具步骤划走位线合法，不再 WARN
                     line = st.get("line")
                     if line is not None:
                         def _uv(p):
@@ -794,9 +795,6 @@ def lint():
                         if not (isinstance(line, dict) and _uv(line.get("from")) and _uv(line.get("to"))):
                             add("WARN", name,
                                 f"timeline 第 {k} 步 line 应为 {{from: [u,v], to: [u,v]}}（0~1 坐标）: {line!r}")
-                        elif st.get("use"):
-                            add("WARN", name,
-                                f"timeline 第 {k} 步同时有 use 与 line——挂道具步骤用真实动线，line 仅不挂道具时生效")
         # I41：roles（可选，≤5 项角色配置 [{name}]）。I42：出生位（spawn）已移除——
         # 残留旧值不 WARN 不 ERROR，用户保存一次该板即自然清除。
         roles = fm.get("roles")

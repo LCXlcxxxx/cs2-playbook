@@ -1283,7 +1283,7 @@ def r3l7_roles(page, base):
     page.wait_for_timeout(300)
     assert page.evaluate("() => document.querySelectorAll('.tl-role').length") == 1, "筛选①后应只剩角色 1 标"
     n_lines = page.evaluate("() => document.querySelectorAll('.tl-line').length")
-    assert n_lines == 1, f"筛选①后动线应只剩该角色 1 条，实际 {n_lines}"
+    assert n_lines == 0, f"时间轴不画道具弹道（动线=自定义走位线，此板未划），实际 {n_lines}"
     off = page.evaluate("() => document.querySelectorAll('.tl-step.off').length")
     assert off == 1, f"步骤卡应弱化非选中角色 1 行，实际 {off}"
     page.evaluate("""() => [...document.querySelectorAll('.tl-rf')].find(b => b.dataset.tlrf === '0').click()""")
@@ -1302,7 +1302,7 @@ def r3l7_roles(page, base):
 
 # ---------------------------------------------------------------- R3-L8 自定义动线
 
-@case("R3L8/不挂道具步骤划虚线动线：两点取线/落盘/渲染/往返/编辑器透传")
+@case("R3L8/自定义走位动线：两点取线/落盘/渲染/往返/编辑器透传/挂道具步骤可用")
 def r3l8_drawline(page, base):
     goto(page, base)
     page.evaluate("""() => {
@@ -1360,15 +1360,27 @@ def r3l8_drawline(page, base):
       return parseTacticMd(dumpTacticMd(b)).timeline[1].line;
     }""")
     assert rt and rt.get("from") and rt.get("to"), f"dump/parse 往返应保留 line: {rt!r}"
-    # 挂道具步骤不可划（点它提示不选中）
+    # 挂道具步骤也可划走位线（时间轴动线≠道具弹道：两者独立，use 步骤同样支持）
     page.evaluate("() => { document.querySelector('[data-tlline]').click(); }")
     page.wait_for_timeout(200)
     page.evaluate("""() => {
-      const row = [...document.querySelectorAll('.tl-step')].find(r => r.textContent.includes('绕后转点') === false && r.querySelector('.use-chip'));
+      const row = [...document.querySelectorAll('.tl-step')].find(r => r.querySelector('.use-chip'));
       row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     }""")
     page.wait_for_timeout(200)
-    assert page.evaluate("() => tlLineDraw && tlLineDraw.oi == null"), "挂道具步骤不应被选中划线"
+    assert page.evaluate("() => tlLineDraw && tlLineDraw.oi === 0"), "挂道具步骤应可选中划走位线"
+    page.evaluate("""() => {
+      const el = document.querySelector('#cards .card');
+      const rect = document.querySelector('img.radar').getBoundingClientRect();
+      for (const [x, y] of [[rect.left + rect.width * 0.2, rect.top + rect.height * 0.2],
+                            [rect.left + rect.width * 0.4, rect.top + rect.height * 0.4]]) {
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: x, clientY: y }));
+      }
+    }""")
+    page.wait_for_timeout(400)
+    use_line = page.evaluate(
+        "() => data.tactics.find(x => x.id === 'tmp-plan-r8').timeline[0].line || null")
+    assert use_line and use_line.get("from"), f"挂道具步骤应存走位线: {use_line!r}"
     # 编辑器透传：打开编辑器直接保存，line 保留
     page.evaluate("""() => { tlLineDraw = null; state.tacticEditId = 'tmp-plan-r8'; render(); }""")
     page.wait_for_timeout(350)
