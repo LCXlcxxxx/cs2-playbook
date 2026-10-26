@@ -1286,7 +1286,8 @@ function tacticEditor(idOrNew) {
   let tlRows = (Array.isArray(t.timeline) ? t.timeline : []).map(s => {
     const raw = String(s.t || "").trim();
     const okT = /^([0-1]):([0-5]\d)$/.test(raw) && (() => { const m = raw.split(":"); return (+m[0] * 60 + +m[1]) <= 115; })();
-    return { t: okT ? raw : "", rawT: okT ? "" : (s.t || ""), role: s.role || 0, text: s.text || "", use: s.use || "" };
+    return { t: okT ? raw : "", rawT: okT ? "" : (s.t || ""), role: s.role || 0, text: s.text || "", use: s.use || "",
+      line: s.line || null };   // R3-L8：自定义动线透传（编辑器不画，保存保留）
   });
   let rolesRows = (Array.isArray(t.roles) ? t.roles : []).slice(0, 5).map(r => ({ name: r.name || "" }));   // I42：出生位已移除
   // R3-L7：timeline 已指派的 role 视为已配置——重开编辑器补空行（保存时自动补名），修「保存后角色区显示没配置」
@@ -1485,7 +1486,8 @@ function tacticEditor(idOrNew) {
       if (!tt && !text && !use && !role) continue;
       if (!tt) { toast("时间轴每一行都要选时间（滚轮）——不要的行直接 ✕ 删掉"); return; }
       if (role > rolesRows.length) { toast(`步骤指派了角色${role}，但「角色」区里只有 ${rolesRows.length} 个角色`); return; }
-      steps.push({ t: tt, ...(role ? { role } : {}), ...(text ? { text } : {}), ...(use ? { use } : {}) });
+      steps.push({ t: tt, ...(role ? { role } : {}), ...(text ? { text } : {}), ...(use ? { use } : {}),
+        ...(r.line ? { line: r.line } : {}) });   // R3-L8：自定义动线透传
     }
     if (steps.length > 20) { toast("时间轴最多 20 步"); return; }
     // R3-L7：角色行=最后一个有名字的行 ∪ timeline 指派的最大 role（自动补名「角色N」）——

@@ -1846,6 +1846,22 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 }
 .tl-step.off { opacity: 0.35; }
 
+/* R3-L8：不挂道具步骤的自定义虚线动线 */
+.tl-drawn { stroke-dasharray: 1 6; stroke-linecap: round; opacity: 0.85; }
+.tl-drawn-dot { fill: currentColor; opacity: 0.9; }
+.tl-lmark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  z-index: 4;
+  pointer-events: none;
+}
+.tl-chip.armed { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(90, 162, 247, 0.35); }
+
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {
   background: var(--panel);

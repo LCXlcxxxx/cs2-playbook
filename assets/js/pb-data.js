@@ -28,6 +28,11 @@ function dumpTacticMd(t) {
       if (s.role) parts.push(`role: ${mdScalar(s.role)}`);   // I41：角色 1-5
       if (s.text !== undefined && s.text !== null) parts.push(`text: ${mdScalar(s.text)}`);
       if (s.use) parts.push(`use: ${mdScalar(s.use)}`);
+      // R3-L8：自定义虚线动线（不挂道具步骤；0~1 坐标随底图）
+      if (s.line && Array.isArray(s.line.from) && Array.isArray(s.line.to)) {
+        const pt = p => `[${p.map(Number).map(x => +x.toFixed(4)).join(", ")}]`;
+        parts.push(`line: {from: ${pt(s.line.from)}, to: ${pt(s.line.to)}}`);
+      }
       lines.push(`  - {${parts.join(", ")}}`);
     }
   }

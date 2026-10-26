@@ -624,6 +624,11 @@ function setupNadeLayer(el, mapKey) {
 // R3-L7：时间轴动线按角色筛选（0=全部；会话内不持久化）——用户 2026-10-27 拍板「按角色分动线」
 let tlRoleFilter = 0;
 
+// R3-L8：不挂道具步骤的自定义虚线动线——划线模式 {oi: ordered 序号, from: {u,v}|null}；
+// 管理模式可用，两点取线存 step.line（0~1 坐标随底图），Esc 取消
+let tlLineDraw = null;
+let tlEscBound = false;
+
 // 倒计时解析："M:SS" → 秒数（0..115=1:55 上限）；非规范返回 null（显示 ⚠，滚轮重选即修复）
 function parseCountdown(s) {
   const m = /^(\d{1,2}):([0-5]\d)$/.exec(String(s || "").trim());
@@ -684,6 +689,11 @@ function setupTimelineLayer(el, mapKey) {
   // 步骤排序：倒计时大→小（剩得多=先发生），同刻按编辑顺序；非规范 t 排最后并标 ⚠
   const ordered = steps.map((st, oi) => ({ st, oi, sec: parseCountdown(st.t) }))
     .sort((a, b) => (b.sec ?? -1) - (a.sec ?? -1));
+  // R3-L8：划线目标失效（换板/步骤改挂道具/取消指派）自动退出划线模式
+  if (tlLineDraw && tlLineDraw.oi != null) {
+    const st0 = ordered[tlLineDraw.oi];
+    if (!st0 || st0.st.use || !st0.st.role) tlLineDraw = null;
+  }
 
   // 步骤动线端点（pin 感知；解析不到=不上图）
   function stepCoords(st) {
@@ -735,6 +745,19 @@ function setupTimelineLayer(el, mapKey) {
     linesHtml += `<line class="tl-line" data-step="${i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
       marker-end="url(#tl-arrow)" style="color:${roleColor(x.st.role)}"/>`;
   });
+  // R3-L8：不挂道具步骤的自定义虚线（role+anchor+line 齐备才画；点线即高亮联动 setSel）
+  const lineOf = st => (st.line && Array.isArray(st.line.from) && Array.isArray(st.line.to)
+    && st.line.from.length === 2 && st.line.to.length === 2) ? st.line : null;
+  ordered.forEach((x, i) => {
+    if (x.st.use || !x.st.role || !anchors[x.st.role]) return;
+    const ln = lineOf(x.st);
+    if (!ln) return;
+    const col = roleColor(x.st.role);
+    linesHtml += `<line class="tl-line tl-drawn" data-step="${i}" x1="${ln.from[0] * 100}" y1="${ln.from[1] * 100}"
+      x2="${ln.to[0] * 100}" y2="${ln.to[1] * 100}" style="color:${col}"/>`;
+    linesHtml += `<circle class="tl-drawn-dot" cx="${ln.from[0] * 100}" cy="${ln.from[1] * 100}" r="3.5" style="color:${col}"/>`;
+    linesHtml += `<circle class="tl-drawn-dot" cx="${ln.to[0] * 100}" cy="${ln.to[1] * 100}" r="3.5" style="color:${col}"/>`;
+  });
   svg.innerHTML = `<defs><marker id="tl-arrow" viewBox="0 0 10 10" refX="8" refY="5"
     markerWidth="5" markerHeight="5" orient="auto-start-reverse">
     <path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>${linesHtml}`;
@@ -757,7 +780,7 @@ function setupTimelineLayer(el, mapKey) {
       ${(piles[+n] || []).map(({ i, x }) => {
         const useE = x.st.use ? data.entries.find(e => e.id === x.st.use) : null;
         return `
-        <button class="tl-chip" data-step="${i}" title="${escapeHtml(stepDisplayText(x.st) || x.st.t || "")}">
+        <button class="tl-chip${tlLineDraw && tlLineDraw.oi === i ? " armed" : ""}" data-step="${i}" title="${escapeHtml(stepDisplayText(x.st) || x.st.t || "")}">
           <b>${escapeHtml(x.st.t || "")}</b>${x.sec == null ? `<span class="tl-warn" title="时间格式不是 M:SS（编辑器里滚轮重选即修复）">⚠</span>` : ""}
           ${useE ? `<img src="${(TYPE_INFO[useE.type] || {}).icon || "assets/icons/icon-he.svg"}" alt="">`
                  : `<span class="tl-chip-txt">${escapeHtml((stepDisplayText(x.st) || "…").slice(0, 6))}</span>`}
@@ -781,6 +804,19 @@ function setupTimelineLayer(el, mapKey) {
         <div class="tl-strip-head">${escapeHtml(board.title || board.id)}
           <span class="set-tip">${ordered.length} 步 · 时间窗 ${escapeHtml(board.window || "")} · 1:55=开局 0:00=回合结束</span></div>
         ${roleFilterChips}
+        ${state.manage ? (() => {
+          // R3-L8：划动线（管理模式）——不挂道具的步骤在地图上两点取线
+          const armed = tlLineDraw && ordered[tlLineDraw.oi];
+          const tip = !tlLineDraw ? "开启后点一条不挂道具的步骤，再在地图上点起点、终点"
+            : !armed ? "先点下方一条不挂道具的步骤卡（或角色旁的文字 chip）"
+            : !tlLineDraw.from ? `已选「${stepDisplayText(ordered[tlLineDraw.oi].st).slice(0, 14)}…」——在地图上点【起点】`
+            : "在地图上点【终点】完成（Esc 取消）";
+          return `<div class="tl-role-filter">
+            <button class="editor-btn mini ${tlLineDraw ? "primary" : ""}" data-tlline>✍️ ${tlLineDraw ? "划线中…" : "划动线"}</button>
+            ${armed && lineOf(armed.st) ? `<button class="editor-btn mini danger" data-tlline-clear title="删除这条自定义动线">↺ 清除动线</button>` : ""}
+            <span class="set-tip">${tip}</span>
+          </div>`;
+        })() : ""}
         ${ordered.map((x, i) => {
           const c = coords[i];
           const chained = !!(x.st.role && anchors[x.st.role]);
@@ -842,8 +878,83 @@ function setupTimelineLayer(el, mapKey) {
       tlRoleFilter = Number(btn.dataset.tlrf) || 0;
       render();
     }));
+    // R3-L8：划动线开关 / 清除
+    strips.querySelectorAll("[data-tlline]").forEach(btn => btn.addEventListener("click", ev => {
+      ev.stopPropagation();
+      tlLineDraw = tlLineDraw ? null : { oi: null, from: null };
+      render();
+    }));
+    strips.querySelectorAll("[data-tlline-clear]").forEach(btn => btn.addEventListener("click", ev => {
+      ev.stopPropagation();
+      const x = ordered[tlLineDraw.oi];
+      if (x) { delete x.st.line; persistTacticEdits(board, board); writeTacticFile(board).then(w => { if (w) { applyTacticOverrides(); refreshSyncBadge(); } }); }
+      tlLineDraw = null;
+      render();
+      toast("已清除这条自定义动线");
+    }));
+    // 划线中：点步骤卡=选中目标（仅不挂道具且有角色的步骤）
+    strips.querySelectorAll(".tl-step").forEach(row => {
+      if (!tlLineDraw) return;
+      row.addEventListener("click", ev => {
+        if (ev.target.closest("[data-jump], [data-tlrf], [data-tlline], [data-tlline-clear]")) return;
+        const x = ordered[Number(row.dataset.step)];
+        if (!x || x.st.use || !x.st.role) { toast("划动线只能给「不挂道具且已指派角色」的步骤——挂道具的用真实投掷动线"); return; }
+        ev.stopPropagation();
+        tlLineDraw = { oi: Number(row.dataset.step), from: null };
+        render();
+      }, true);   // 捕获先于既有 setSel 监听，划线模式下接管
+    });
   }
   el.addEventListener("click", () => setSel(null));   // 点地图空白清高亮
+
+  // R3-L8：划线模式——地图捕获点击取点（按钮/步骤卡排除，各自处理器接管）；Esc 取消
+  if (!tlEscBound) {
+    tlEscBound = true;
+    document.addEventListener("keydown", ev => {
+      if (ev.key === "Escape" && tlLineDraw) {
+        tlLineDraw = null; render(); ev.stopPropagation();
+        toast("已退出划动线");
+      }
+    }, true);
+  }
+  el.addEventListener("click", ev => {
+    if (!tlLineDraw || tlLineDraw.oi == null) return;
+    if (ev.target.closest("button, .tl-step")) return;   // 各自处理器接管
+    const radar = $("img.radar", el);
+    if (!radar) return;
+    const rect = radar.getBoundingClientRect();
+    const u = (ev.clientX - rect.left) / rect.width, v = (ev.clientY - rect.top) / rect.height;
+    if (u < 0 || u > 1 || v < 0 || v > 1) return;
+    ev.stopPropagation(); ev.preventDefault();
+    if (!tlLineDraw.from) {
+      tlLineDraw.from = { u: +u.toFixed(4), v: +v.toFixed(4) };
+      const mk = document.createElement("div");
+      mk.className = "tl-lmark";
+      mk.style.left = `${tlLineDraw.from.u * 100}%`;
+      mk.style.top = `${tlLineDraw.from.v * 100}%`;
+      layer.appendChild(mk);
+      const tipEl = strips?.querySelector(".tl-role-filter .set-tip");
+      if (tipEl) tipEl.textContent = "在地图上点【终点】完成（Esc 取消）";
+    } else {
+      const x = ordered[tlLineDraw.oi];
+      if (!x) { tlLineDraw = null; return; }
+      x.st.line = { from: [tlLineDraw.from.u, tlLineDraw.from.v], to: [+u.toFixed(4), +v.toFixed(4)] };   // 数据模型=[u,v] 数组（与 pin 一致）
+      persistTacticEdits(board, board);
+      writeTacticFile(board).then(w => { if (w) { applyTacticOverrides(); refreshSyncBadge(); } });
+      tlLineDraw = null;
+      render();
+      toast("动线已画好并保存（0.8s 内写盘）✓");
+    }
+  }, true);
+  // 划线中：点角色旁文字 chip = 选中该步骤（chips 是 button，地图捕获排除，这里接管）
+  layer.querySelectorAll(".tl-chip").forEach(b => b.addEventListener("click", ev => {
+    if (!tlLineDraw) return;
+    const x = ordered[Number(b.dataset.step)];
+    if (!x || x.st.use || !x.st.role) { ev.stopPropagation(); toast("划动线只能给「不挂道具且已指派角色」的步骤"); return; }
+    ev.stopPropagation();
+    tlLineDraw = { oi: Number(b.dataset.step), from: null };
+    render();
+  }, true));
 }
 
 function filterByCallout(mapKey, callout) {

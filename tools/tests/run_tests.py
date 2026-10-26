@@ -1300,6 +1300,96 @@ def r3l7_roles(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3-L8 自定义动线
+
+@case("R3L8/不挂道具步骤划虚线动线：两点取线/落盘/渲染/往返/编辑器透传")
+def r3l8_drawline(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      state.map = 'de_dust2';
+      const e1 = PLAYBOOK.entries.find(x => x.map === 'de_dust2' && x.side !== 'CT');
+      data.tactics.push({ id: 'tmp-plan-r8', map: 'de_dust2', side: 'T', title: 'R8测试板',
+        window: '整局', status: 'draft', uses: [e1.id], roles: [{ name: '一号' }],
+        timeline: [
+          { t: '1:50', role: 1, use: e1.id },
+          { t: '1:30', role: 1, text: '绕后转点' },
+          { t: '1:00', role: 1, text: '回防补位' }],
+        body: '## 测试' });
+      state.manage = true;
+      document.body.classList.add('pb-manage');
+      state.mapLayer = 'timeline'; state.tlBoard = 'tmp-plan-r8'; render();
+    }""")
+    page.wait_for_timeout(350)
+    # 管理模式：✍️ 按钮在；开启划线 → 点纯文字步骤卡 → 地图两点
+    assert page.evaluate("() => !!document.querySelector('[data-tlline]')"), "管理模式应有划动线按钮"
+    page.evaluate("() => document.querySelector('[data-tlline]').click()")
+    page.wait_for_timeout(250)
+    page.evaluate("""() => {
+      // 点第二条步骤卡（纯文字），用捕获事件模拟（与真实点击同路径）
+      const row = [...document.querySelectorAll('.tl-step')].find(r => r.textContent.includes('绕后转点'));
+      row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }""")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => tlLineDraw && tlLineDraw.oi === 1"), "应已选中纯文字步骤"
+    # 地图两点：取 radar rect 计算坐标后对 el 派发（捕获监听）
+    page.evaluate("""() => {
+      const el = document.querySelector('.map-card') || document.querySelector('#cards .card');
+      const radar = document.querySelector('img.radar');
+      const rect = radar.getBoundingClientRect();
+      const pts = [[rect.left + rect.width * 0.3, rect.top + rect.height * 0.3],
+                   [rect.left + rect.width * 0.6, rect.top + rect.height * 0.55]];
+      for (const [x, y] of pts) {
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: x, clientY: y }));
+      }
+    }""")
+    page.wait_for_timeout(500)
+    saved = page.evaluate("""() => {
+      const b = data.tactics.find(x => x.id === 'tmp-plan-r8');
+      const ln = b.timeline[1].line;
+      return { ln, drawn: !!document.querySelector('.tl-drawn'),
+               dots: document.querySelectorAll('.tl-drawn-dot').length,
+               ov: (JSON.parse(localStorage.getItem('pb-tactics-v1') || '{"edited":{}}').edited || {})['tmp-plan-r8']?.timeline?.[1]?.line || null };
+    }""")
+    assert saved["ln"] and saved["ln"]["from"] and saved["ln"]["to"], f"line 应已存: {saved!r}"
+    assert abs(saved["ln"]["from"][0] - 0.3) < 0.01 and abs(saved["ln"]["to"][1] - 0.55) < 0.01, f"坐标不对: {saved!r}"
+    assert saved["drawn"] and saved["dots"] == 2, f"应画虚线+2 端点: {saved!r}"
+    assert saved["ov"], "覆盖层应含 line（I19 暂存）"
+    # dump/parse 往返
+    rt = page.evaluate("""() => {
+      const b = data.tactics.find(x => x.id === 'tmp-plan-r8');
+      return parseTacticMd(dumpTacticMd(b)).timeline[1].line;
+    }""")
+    assert rt and rt.get("from") and rt.get("to"), f"dump/parse 往返应保留 line: {rt!r}"
+    # 挂道具步骤不可划（点它提示不选中）
+    page.evaluate("() => { document.querySelector('[data-tlline]').click(); }")
+    page.wait_for_timeout(200)
+    page.evaluate("""() => {
+      const row = [...document.querySelectorAll('.tl-step')].find(r => r.textContent.includes('绕后转点') === false && r.querySelector('.use-chip'));
+      row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }""")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => tlLineDraw && tlLineDraw.oi == null"), "挂道具步骤不应被选中划线"
+    # 编辑器透传：打开编辑器直接保存，line 保留
+    page.evaluate("""() => { tlLineDraw = null; state.tacticEditId = 'tmp-plan-r8'; render(); }""")
+    page.wait_for_timeout(350)
+    page.evaluate("() => document.getElementById('tf-save').click()")
+    page.wait_for_timeout(400)
+    keep = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-tactics-v1') || '{\"edited\":{}}').edited || {})['tmp-plan-r8']?.timeline?.find(s => s.text === '绕后转点')?.line || null")
+    assert keep and keep.get("to"), f"编辑器保存应透传 line: {keep!r}"
+    # 清理
+    page.evaluate("""() => {
+      const ov = JSON.parse(localStorage.getItem('pb-tactics-v1') || '{}');
+      if (ov.edited) delete ov.edited['tmp-plan-r8'];
+      localStorage.setItem('pb-tactics-v1', JSON.stringify(ov));
+      data.tactics = data.tactics.filter(x => x.id !== 'tmp-plan-r8');
+      state.tacticEditId = null; state.manage = false;
+      document.body.classList.remove('pb-manage');
+      state.mapLayer = 'callouts'; state.map = 'de_mirage'; render();
+    }""")
+    page.wait_for_timeout(200)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1354,6 +1444,7 @@ CASES = [
     r3l4_primary,
     r3l6_delete_refs,
     r3l7_roles,
+    r3l8_drawline,
     s6_pixels,
 ]
 
