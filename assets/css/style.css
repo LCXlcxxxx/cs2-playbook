@@ -1811,6 +1811,28 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 .pin-reset-chip:hover { background: var(--accent); color: #10131a; }
+/* R3-L5：调点态选中标签=道具名（粗）+投法+「↺ 回报点」尾部小钮；只有 ↺ 区触发重置 */
+.pin-reset-chip.pin-name-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px;
+  font-size: 14px;
+  border-radius: 999px;
+  cursor: default;
+}
+.pin-name-chip b { font-weight: 700; color: #fff; }
+.pin-name-chip .pn-throw { font-size: 12px; color: var(--accent); }
+.pin-name-chip .pn-reset {
+  font-size: 12px;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.pin-name-chip .pn-reset:hover { border-color: var(--accent); color: var(--accent); }
+.pin-name-chip:hover { background: rgba(16, 20, 28, 0.94); color: inherit; }
 
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {

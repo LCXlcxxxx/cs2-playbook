@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-26T21:09:23",
- "builtAt": "2026-10-26T13:09:23Z",
+ "generated_at": "2026-10-26T23:26:37",
+ "builtAt": "2026-10-26T15:26:37Z",
  "SCHEMA": {
   "entry": [
    {
@@ -635,6 +635,16 @@ window.PLAYBOOK = {
    ],
    "tags": [],
    "related": [],
+   "pin_origin": [
+    0.841,
+    0.4029
+   ],
+   "pin_targets": {
+    "A大": [
+     0.8516,
+     0.4705
+    ]
+   },
    "source": {
     "kind": "self",
     "creator": "自己"
@@ -1429,10 +1439,14 @@ window.PLAYBOOK = {
    "tags": [
     "A区"
    ],
+   "pin_origin": [
+    0.6794,
+    0.6711
+   ],
    "pin_targets": {
     "A门内": [
-     0.677,
-     0.5604
+     0.6801,
+     0.5565
     ]
    },
    "source": {
@@ -1499,6 +1513,12 @@ window.PLAYBOOK = {
    "tags": [
     "A区"
    ],
+   "pin_targets": {
+    "大坑边": [
+     0.7735,
+     0.5507
+    ]
+   },
    "source": {
     "kind": "video",
     "creator": "冷锋",
@@ -1712,8 +1732,8 @@ window.PLAYBOOK = {
    ],
    "pin_targets": {
     "二箱": [
-     0.7699,
-     0.1446
+     0.7994,
+     0.1664
     ]
    },
    "source": {
@@ -1992,7 +2012,7 @@ window.PLAYBOOK = {
     ],
     "二箱": [
      0.7709,
-     0.1617
+     0.1827
     ]
    },
    "source": {

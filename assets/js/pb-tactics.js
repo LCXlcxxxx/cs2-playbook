@@ -400,15 +400,16 @@ function setupNadeLayer(el, mapKey) {
         h.title = `起点：${sel.e.origin} · 拖动＝调整这颗的起点显示位`;
         layer.appendChild(h);
       }
-      // I42 热修（用户实测：调点框遮挡地图）：调点态不弹底部大框（说明已在下方提示行），
-      // 「↺ 回报点」缩成小按钮挂在选中图标旁（贴右缘自动翻到左侧）
+      // R3-L5（用户反馈）：调点态选中后常显道具名——散开的图标圈不再靠猜；
+      // 「↺ 回报点」缩成小按钮挂在名称标签尾部（贴右缘自动翻到左侧，I42 既有翻转逻辑沿用）
       popup.hidden = true;
       layer.querySelectorAll(".pin-reset-chip").forEach(x => x.remove());
       const chip = document.createElement("button");
       chip.type = "button";
-      chip.className = "pin-reset-chip";
-      chip.textContent = "↺ 回报点";
-      chip.title = "这颗的起点+落点都恢复到报点坐标";
+      chip.className = "pin-reset-chip pin-name-chip";
+      chip.innerHTML = `<b>${escapeHtml(sel.e.title)}</b><span class="pn-throw">${escapeHtml(sel.e.throw_badge)}</span>` +
+        `<span class="pn-reset">↺ 回报点</span>`;
+      chip.title = `拖落点图标=调位置 · 拖白点手柄=调起点 · 点「↺ 回报点」=这颗恢复报点坐标`;
       chip.style.left = `${sel.u * 100}%`;
       chip.style.top = `${sel.v * 100}%`;
       chip.style.transform = sel.u > 0.78
@@ -485,8 +486,8 @@ function setupNadeLayer(el, mapKey) {
       document.addEventListener("pointerup", up);
     });
     layer.addEventListener("click", ev => {
-      const chip = ev.target.closest(".pin-reset-chip");
-      if (chip) {   // ↺ 这颗用回报点坐标（保持选中；小按钮不遮图）
+      const reset = ev.target.closest(".pn-reset");
+      if (reset) {   // ↺ 这颗用回报点坐标（保持选中；名称标签尾部小按钮不遮图）
         ev.stopPropagation();
         const c = callouts.find(cc => cc.name === sel.calloutName || strictSpotMatch(cc, sel.calloutName));
         const live = entryLive(sel.e);

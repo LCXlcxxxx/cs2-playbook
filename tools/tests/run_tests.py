@@ -1183,6 +1183,20 @@ def r3l4_primary(page, base):
     n2 = page.evaluate(
         "() => [...document.querySelectorAll('.nade-icon')].filter(b => (b.title || '').includes('多落点测试烟')).length")
     assert n2 == 1, f"调点态也应只画 1 枚（主落点），实际 {n2}"
+    # R3-L5：调点态点击选中 → 常显名称标签（含标题+投法+↺）
+    page.evaluate(
+        "() => [...document.querySelectorAll('.nade-icon')].find(b => (b.title || '').includes('多落点测试烟')).click()")
+    page.wait_for_timeout(250)
+    lab = page.evaluate("""() => {
+      const c = document.querySelector('.pin-name-chip');
+      return c ? { title: c.querySelector('b')?.textContent || '',
+                   hasReset: !!c.querySelector('.pn-reset') } : null;
+    }""")
+    assert lab and lab["title"] == "多落点测试烟" and lab["hasReset"], f"选中应常显名称标签: {lab!r}"
+    # 取消选中 → 标签消失
+    page.evaluate("() => document.querySelector('.pin-name-chip').dispatchEvent(new MouseEvent('click', { bubbles: true }))")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => !document.querySelector('.pin-name-chip')"), "取消选中后名称标签应消失"
     # 清理还原
     page.evaluate("""() => {
       data.entries = data.entries.filter(x => x.id !== 'tmp-multi');
