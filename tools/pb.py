@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SLOT_LABELS = {"1-stand": "站位", "2-aim": "瞄点", "4-result": "落点&效果"}
 REQUIRED_SLOTS = ["1-stand", "2-aim", "4-result"]
 EXTRA_SLOT_LABELS = {"5-alt": "备选站位", "5-demo": "演示"}
-IMG_EXTS = [".png", ".jpg", ".jpeg", ".webp"]
+IMG_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".gif"]
 
 # ---- 字段注册表（R1-C）：字段知识单一真相源 ----
 # 每字段：key / type(scalar|scalar_array|array|object) / required / enum(值序=表单与显示序，[值, 中文名] 对) /
@@ -1205,7 +1205,7 @@ def cmd_shots(args):
     plan = []  # (path, entry_id, slot, overwrite)
     named, unnamed = [], []
     for p in imgs:
-        m = re.match(r"([\w-]+)_(\d+-[a-z0-9-]+)\.(png|jpg|jpeg|webp)$", p.name, re.I)
+        m = re.match(r"([\w-]+)_(\d+-[a-z0-9-]+)\.(png|jpg|jpeg|webp|gif)$", p.name, re.I)
         if m and m.group(1) in entries:
             named.append((p, m.group(1), m.group(2)))
         else:

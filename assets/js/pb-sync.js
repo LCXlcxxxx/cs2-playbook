@@ -472,8 +472,12 @@ function idbObjectURL(key) {
 }
 
 const IMG_MAX_BYTES = 1024 * 1024;   // 单图上限 1MB（AGENTS 四；2026-10-26 定稿：600KB 会逼烟雾/暗部场景质量跌破 0.6，放大出块）
+const GIF_TIP_BYTES = 8 * 1024 * 1024;   // GIF 动图提醒阈值（不强制——GIF 不进压缩链，超 8MB 提示发布包会变大）
 
 async function compressToSlot(file) {
+  // GIF 动图原样保留（R3-L11）：canvas 重编码只取第一帧会变静图，且逐帧处理非原生能力——
+  // 旁路压缩与缩放，尺寸体积由使用者自行把控（>8MB 由调用点提示）
+  if (/\.gif$/i.test(file.name || "")) return { blob: file, ext: "gif" };
   // 宽 >1920 等比压到 1920 输出 jpg(0.85)；任何图 >1MB 再降质量（0.85→0.4 步进 0.15）、
   // 仍超则缩宽（×0.8，下限 960）重编码直到 ≤1MB；≤1MB 的小图原样保留（不重压不转格式）
   let blob = file, ext = extFromFile(file);
@@ -513,6 +517,9 @@ function slotLabel(slot) {
 
 async function uploadSlotImage(entry, slot, file) {
   const { blob, ext } = await compressToSlot(file);
+  if (ext === "gif" && blob.size > GIF_TIP_BYTES) {
+    toast(`动图较大（${(blob.size / 1048576).toFixed(1)}MB）——会进发布包，建议自行压缩后再传`);
+  }
   let path;
   if (rootDirHandle && rootPerm === "ready") {
     const bare = await writeEntryImage(entry, slot, blob, ext);

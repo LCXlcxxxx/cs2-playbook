@@ -1510,6 +1510,26 @@ def r3l10_drawer(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3-L11 GIF 动图支持
+
+@case("R3L11/GIF：compressToSlot 旁路不丢帧不转格式，分拣台白名单放行")
+def r3l11_gif(page, base):
+    goto(page, base)
+    r = page.evaluate("""async () => {
+      // 假 GIF：填充字节（compressToSlot 按扩展名旁路，不解码不重编码）
+      const mk = (n) => new File([new Blob([new Uint8Array(n).fill(7)])], 'anim.gif', { type: 'image/gif' });
+      const f1 = mk(1024), f2 = mk(1.5 * 1024 * 1024);   // f2 >1MB 也必须旁路（不进压缩链）
+      const small = await compressToSlot(f1);
+      const big = await compressToSlot(f2);
+      return { sSame: small.blob === f1, sExt: small.ext,
+               bSame: big.blob === f2, bExt: big.ext,
+               re: SORT_IMG_RE.test('clip.gif'), reUp: SORT_IMG_RE.test('CLIP.GIF') };
+    }""")
+    assert r["sSame"] and r["sExt"] == "gif", f"小 GIF 应原样返回: {r!r}"
+    assert r["bSame"] and r["bExt"] == "gif", f"大 GIF 也应原样旁路（不压缩不转格式）: {r!r}"
+    assert r["re"] and r["reUp"], f"分拣台白名单应放行 gif: {r!r}"
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1567,6 +1587,7 @@ CASES = [
     r3l8_drawline,
     r3l9_ids,
     r3l10_drawer,
+    r3l11_gif,
     s6_pixels,
 ]
 

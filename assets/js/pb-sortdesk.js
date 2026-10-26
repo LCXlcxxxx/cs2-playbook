@@ -6,7 +6,7 @@
 const SORT_POOL_DIR = "文件夹批量录入";
 const SORT_DONE_DIR = "已录入";
 const SORT_SLOTS = [["1-stand", "站位"], ["2-aim", "瞄点"], ["4-result", "落点&效果"]];
-const SORT_IMG_RE = /\.(png|jpe?g|webp)$/i;
+const SORT_IMG_RE = /\.(png|jpe?g|webp|gif)$/i;
 const sortSt = {
   open: false, rows: [], pool: new Map(), groupParents: new Map(),
   selectedUid: null,       // 快速分拣目标行（I24：预览按 1/2/4 入坑的目标）
@@ -211,9 +211,15 @@ async function sortPutToSlot(row, slotName, payload) {
                blob, ext, url: URL.createObjectURL(blob), poolKey: payload.item.group + "/" + payload.item.name,
                poolItem: payload.item };   // 归还素材池时需要完整原对象（handle 等）
       sortSt.pool.delete(item.poolKey);   // 一图一坑：放下即从池移除
+      if (ext === "gif" && blob.size > GIF_TIP_BYTES) {
+        toast(`动图较大（${(blob.size / 1048576).toFixed(1)}MB）——会进发布包，建议自行压缩后再传`);
+      }
     } else {
       const { blob, ext } = await compressToSlot(payload.file);
       item = { src: "file", group: "", name: payload.file.name || "图片", blob, ext, url: URL.createObjectURL(blob), poolKey: null };
+      if (ext === "gif" && blob.size > GIF_TIP_BYTES) {
+        toast(`动图较大（${(blob.size / 1048576).toFixed(1)}MB）——会进发布包，建议自行压缩后再传`);
+      }
     }
   } catch { toast("图片读取失败"); return; }
   const old = row.slots[slotName];
@@ -725,7 +731,7 @@ function openSortStation() {
   // 共享上传 input：点槽上传
   const upInput = document.createElement("input");
   upInput.type = "file";
-  upInput.accept = ".png,.jpg,.jpeg,.webp,image/*";
+  upInput.accept = ".png,.jpg,.jpeg,.webp,.gif,image/*";
   upInput.hidden = true;
   el.appendChild(upInput);
   let upTarget = null;
