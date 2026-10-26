@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-26T23:26:37",
- "builtAt": "2026-10-26T15:26:37Z",
+ "generated_at": "2026-10-26T23:45:25",
+ "builtAt": "2026-10-26T15:45:25Z",
  "SCHEMA": {
   "entry": [
    {
@@ -1151,64 +1151,6 @@ window.PLAYBOOK = {
     "ksaxgdy",
     "adyt",
     "kd"
-   ]
-  },
-  {
-   "id": "dust2-ct-smoke-b-door-retake",
-   "map": "de_dust2",
-   "side": "CT",
-   "type": "smoke",
-   "click": "both",
-   "move": "stand",
-   "action": "direct",
-   "origin": "B门",
-   "target": "B门",
-   "title": "熙爷-回防B门展开烟",
-   "oneline": "B门→B包点，回防时贴箱展开",
-   "difficulty": "easy",
-   "phase": [
-    "retake"
-   ],
-   "status": "verified",
-   "spots": [
-    "B门"
-   ],
-   "tags": [
-    "回防"
-   ],
-   "source": {
-    "kind": "self"
-   },
-   "checked": "2026-10-01",
-   "throw_badge": "双键直投",
-   "images": [
-    {
-     "slot": "1-stand",
-     "label": "站位",
-     "path": "media/de_dust2/dust2-ct-smoke-b-door-retake/1-stand.jpg"
-    },
-    {
-     "slot": "2-aim",
-     "label": "瞄点",
-     "path": "media/de_dust2/dust2-ct-smoke-b-door-retake/2-aim.jpg"
-    },
-    {
-     "slot": "4-result",
-     "label": "落点&效果",
-     "path": "media/de_dust2/dust2-ct-smoke-b-door-retake/4-result.jpg"
-    }
-   ],
-   "missing": [],
-   "notes": "- 视频教学字幕：「回防B门展开烟」「贴住箱子再丢」——CT 回防时在 B 门内展开。\n- 该段无道具面板，投法占位待实测。- 素材为用户自截（Tatukunn 道具预览视频，画面含完美平台道具面板：起点/落点/投法已按面板录入）。",
-   "pyf": [
-    "xiyehuifangbmenzhankaiyan",
-    "bmen",
-    "bmen"
-   ],
-   "pyi": [
-    "xyhfbmzky",
-    "bm",
-    "bm"
    ]
   },
   {
@@ -6138,8 +6080,7 @@ window.PLAYBOOK = {
     "dust2-t-smoke-xbox",
     "dust2-t-smoke-mid-door",
     "dust2-t-smoke-ct",
-    "dust2-t-smoke-b-door",
-    "dust2-ct-smoke-b-door-retake"
+    "dust2-t-smoke-b-door"
    ],
    "timeline": [
     {

@@ -5,7 +5,7 @@ side: T
 title: 打法要点（大白话版）
 window: 整局
 status: draft
-uses: [dust2-t-smoke-xbox, dust2-t-smoke-mid-door, dust2-t-smoke-ct, dust2-t-smoke-b-door, dust2-ct-smoke-b-door-retake]
+uses: [dust2-t-smoke-xbox, dust2-t-smoke-mid-door, dust2-t-smoke-ct, dust2-t-smoke-b-door]
 timeline:
   - {t: "1:53", role: 1, text: 123, use: dust2-t-smoke-a-prot}
 ---
