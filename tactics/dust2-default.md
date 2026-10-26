@@ -2,12 +2,17 @@
 id: dust2-default
 map: de_dust2
 side: T
-title: 打法要点（大白话版）
+title: 提速上A小
 window: 整局
 status: draft
 uses: [dust2-t-smoke-xbox, dust2-t-smoke-mid-door, dust2-t-smoke-ct, dust2-t-smoke-b-door]
 timeline:
-  - {t: "1:53", role: 1, text: 123, use: dust2-t-smoke-a-prot}
+  - {t: "1:50", role: 1, text: 出匪口提速A小突破}
+  - {t: "1:50", role: 2, text: 出匪口提速A小补枪}
+  - {t: "1:53", role: 3, text: 跳暗道丢中门烟A小火，L位丢A小闪辅助队友，断后, use: dust2-t-smoke-mid-door}
+  - {t: "1:50", role: 4, text: 出匪口提速A小补枪}
+  - {t: "1:50", role: 5, text: 跳后花摸B2B1清点}
+  - {t: "1:55"}
 ---
 
 ## 开局怎么站（匪家）
