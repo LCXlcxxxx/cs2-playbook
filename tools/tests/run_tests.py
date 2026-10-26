@@ -1402,6 +1402,54 @@ def r3l8_drawline(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3-L9 板编号 + 复制道具 ID
+
+@case("R3L9/板编号 #NN 显示；详情页道具 ID 点击复制")
+def r3l9_ids(page, base):
+    goto(page, base)
+    # 战术板卡片编号：plan-NN 显示 #NN；default 无数字尾不显示
+    page.evaluate("""() => {
+      const e1 = PLAYBOOK.entries.find(x => x.map === 'de_dust2');
+      data.tactics.push({ id: 'dust2-plan-07', map: 'de_dust2', side: 'T', title: '编号测试板',
+        window: '整局', status: 'draft', uses: [], roles: [], timeline: [], body: '' });
+      state.map = 'de_dust2'; state.mapLayer = 'callouts'; render();
+    }""")
+    page.wait_for_timeout(300)
+    badge = page.evaluate(
+        "() => document.querySelector('#card-dust2-plan-07 .plan-no')?.textContent?.trim() || null")
+    assert badge == "#07", f"plan-07 卡片应显示 #07，实际 {badge!r}"
+    no_badge = page.evaluate(
+        "() => document.querySelector('#card-dust2-default .plan-no')?.textContent || null")
+    assert not no_badge, f"default 板不应显示编号，实际 {no_badge!r}"
+    # 时间轴板 chips 编号（两块板才出现 chips）
+    page.evaluate("() => { state.mapLayer = 'timeline'; state.tlBoard = 'dust2-plan-07'; render(); }")
+    page.wait_for_timeout(300)
+    chip = page.evaluate("""() => {
+      const b = [...document.querySelectorAll('[data-board]')].find(x => x.dataset.board === 'dust2-plan-07');
+      return b ? b.textContent.trim() : null;
+    }""")
+    assert chip and chip.startswith("#07"), f"板 chips 应带 #07 前缀: {chip!r}"
+    # 详情页 ID 复制按钮：存在 + 点击出 toast（copyText 成功或失败都有反馈）
+    page.evaluate("""() => {
+      state.mapLayer = 'callouts'; state.map = 'de_mirage'; render();
+      const first = PLAYBOOK.entries.find(x => x.map === 'de_mirage' && x.id);
+      state.tab = 'entries'; state.entryView = { id: first.id }; render();
+    }""")
+    page.wait_for_timeout(350)
+    btn_id = page.evaluate("() => document.querySelector('.entry-id-copy')?.dataset.copyid || null")
+    assert btn_id, "详情页应有 ID 复制按钮"
+    page.evaluate("() => document.querySelector('.entry-id-copy').click()")
+    page.wait_for_timeout(300)
+    toast_txt = page.evaluate("() => document.getElementById('toast').textContent || ''")
+    assert "复制" in toast_txt, f"点击复制应有 toast 反馈: {toast_txt!r}"
+    # 清理
+    page.evaluate("""() => {
+      data.tactics = data.tactics.filter(x => x.id !== 'dust2-plan-07');
+      state.entryView = null; state.tab = 'tactics'; render();
+    }""")
+    page.wait_for_timeout(200)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1457,6 +1505,7 @@ CASES = [
     r3l6_delete_refs,
     r3l7_roles,
     r3l8_drawline,
+    r3l9_ids,
     s6_pixels,
 ]
 

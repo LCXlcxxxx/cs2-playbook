@@ -673,8 +673,10 @@ function setupTimelineLayer(el, mapKey) {
   const calloutFor = tv => callouts.find(cc => cc.name === tv || strictSpotMatch(cc, tv));
 
   const boardChips = boards.length > 1
-    ? `<div class="tl-boards">${boards.map(b => `
-        <button class="editor-btn mini ${b.id === board.id ? "primary" : ""}" data-board="${b.id}">${escapeHtml(b.title || b.id)}</button>`).join("")}</div>`
+    ? `<div class="tl-boards">${boards.map(b => {
+        const no = (/-\d{2}$/.exec(b.id) || [null])[0];   // R3-L9：板编号 #NN（无数字尾不显示）
+        return `<button class="editor-btn mini ${b.id === board.id ? "primary" : ""}" data-board="${b.id}">${no ? no.replace("-", "#") + " " : ""}${escapeHtml(b.title || b.id)}</button>`;
+      }).join("")}</div>`
     : "";
 
   if (!steps.length) {
@@ -959,9 +961,11 @@ function tacticCard(t) {
   el.id = `card-${t.id}`;
 
   const mapInfo = data.maps[t.map] || {};
+  // R3-L9：板编号（id 尾段两位数字 → #NN；default 等无数字尾不显示）
+  const planNo = (/-\d{2}$/.exec(t.id) || [null])[0];
   const head = `
     <div class="card-head">
-      <h2>${escapeHtml(t.title)}</h2>
+      <h2>${escapeHtml(t.title)}${planNo ? `<span class="plan-no">${planNo.replace("-", " #")}</span>` : ""}</h2>
       <span class="badge-status ${t.status}">${STATUS_CN[t.status] || t.status}</span>
       <span class="badge-phase">${escapeHtml(mapInfo.cn || t.map)} · ${SIDE_CN[t.side] || t.side} · 时间窗 ${escapeHtml(t.window)}</span>
       <button class="editor-btn runbook-tbtn" data-trunbook="${t.id}" title="按时间轴开战：逐张翻看时间轴上的道具（Esc 退出）">🚀 按时间轴开战</button>

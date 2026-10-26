@@ -120,6 +120,10 @@ function entryCard(e) {
        ${e.checked ? `· 实测 ${escapeHtml(e.checked)}` : ""}</div>`
     : "";
 
+  // R3-L9：道具 ID 可点击复制（列表不显示 id；反馈/排查时精确指认用）
+  const idCopy = `<div class="entry-id-row"><button type="button" class="entry-id-copy" data-copyid="${escapeHtml(e.id)}"
+    title="点击复制道具 ID">ID: ${escapeHtml(e.id)} ⧉</button></div>`;
+
   // I47：底部「所属战术包」chips——点击打开 📦 只看视图并自动展开/定位该套装
   const setChips = (Array.isArray(e.sets) && e.sets.length)
     ? `<div class="set-chips"><span class="set-chips-label">所属战术包：</span>` +
@@ -147,12 +151,18 @@ function entryCard(e) {
         </span>
       </div>
       <div class="viewer-chips"></div>
-    </div>` + notes + srcNote + setChips;
+    </div>` + notes + srcNote + idCopy + setChips;
 
   renderViewerPanel($(".viewer-panel", el), e);
 
   // 所属战术包 chips（I47）：点击 = 📦 只看视图 + 展开/定位
   $$(".set-chip", el).forEach(btn => btn.addEventListener("click", () => openSetView(btn.dataset.setchip)));
+
+  // R3-L9：点击复制道具 ID
+  $(".entry-id-copy", el).addEventListener("click", async ev => {
+    const ok = await copyText(ev.currentTarget.dataset.copyid);
+    toast(ok ? "已复制道具 ID ✓" : "复制失败——请手动选中文字复制");
+  });
 
   // 状态徽章：两段确认切换 实测/待验证
   const stBtn = $(".badge-status-btn", el);

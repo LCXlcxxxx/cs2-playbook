@@ -189,6 +189,26 @@ function entryTitleHtml(title) {
 }
 
 
+// R3-L9：复制文本到剪贴板（详情页复制道具 ID 等）——clipboard API 优先，file:// 或旧浏览器
+// 回退隐藏 textarea + execCommand；返回是否成功（调用方 toast 反馈）
+async function copyText(txt) {
+  try {
+    await navigator.clipboard.writeText(txt);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = txt;
+      ta.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    } catch { return false; }
+  }
+}
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

@@ -1862,6 +1862,22 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 }
 .tl-chip.armed { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(90, 162, 247, 0.35); }
 
+/* R3-L9：板编号 + 详情页可复制道具 ID */
+.plan-no { font-size: 14px; font-weight: 500; color: var(--text-dim); margin-left: 8px; font-family: Consolas, monospace; }
+.entry-id-row { margin: 6px 0 0; }
+.entry-id-copy {
+  font-size: 12px;
+  font-family: Consolas, monospace;
+  color: var(--text-dim);
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 1px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.entry-id-copy:hover { color: var(--accent); border-color: var(--accent); }
+
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {
   background: var(--panel);
