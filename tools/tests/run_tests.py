@@ -1158,6 +1158,40 @@ def r3l3_customchips(page, base):
     page.wait_for_timeout(150)
 
 
+# ---------------------------------------------------------------- R3-L4 道具图层主落点
+
+@case("R3L4/道具图层主落点：多关联点条目只画一枚图标")
+def r3l4_primary(page, base):
+    goto(page, base)
+    # 注入一条双目标临时条目（警家/中门都在 Dust2 报点表），切💥道具层
+    page.evaluate("""() => {
+      state.map = 'de_dust2';
+      data.entries.push({ id: 'tmp-multi', map: 'de_dust2', side: 'T', type: 'smoke',
+        title: '多落点测试烟', oneline: '', origin: '匪家', target: ['警家', '中门'],
+        throw_badge: '左键跳投', difficulty: 'normal', phase: ['default'], status: 'verified',
+        tags: [], spots: ['警家', '中门'], images: [], notes: '', sets: [], related: [] });
+      state.mapLayer = 'nades';
+      render();
+    }""")
+    page.wait_for_timeout(350)
+    n = page.evaluate(
+        "() => [...document.querySelectorAll('.nade-icon')].filter(b => (b.title || '').includes('多落点测试烟')).length")
+    assert n == 1, f"多关联点条目应只画 1 枚图标（主落点），实际 {n}"
+    # 调点态同样一枚
+    page.evaluate("() => { state.pinEdit = true; render(); }")
+    page.wait_for_timeout(250)
+    n2 = page.evaluate(
+        "() => [...document.querySelectorAll('.nade-icon')].filter(b => (b.title || '').includes('多落点测试烟')).length")
+    assert n2 == 1, f"调点态也应只画 1 枚（主落点），实际 {n2}"
+    # 清理还原
+    page.evaluate("""() => {
+      data.entries = data.entries.filter(x => x.id !== 'tmp-multi');
+      state.pinEdit = false; state.mapLayer = 'callouts';
+      render();
+    }""")
+    page.wait_for_timeout(200)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1209,6 +1243,7 @@ CASES = [
     r3l1_source, r3l1_draft, r3l1_autogroup, r3l1_bulkcol,
     r3l2_row3cluster, r3l2_wall, r3l2_lb,
     r3_compress, r3l3_customchips,
+    r3l4_primary,
     s6_pixels,
 ]
 

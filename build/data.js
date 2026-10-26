@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-26T20:10:33",
- "builtAt": "2026-10-26T12:10:33Z",
+ "generated_at": "2026-10-26T21:09:23",
+ "builtAt": "2026-10-26T13:09:23Z",
  "SCHEMA": {
   "entry": [
    {
@@ -699,6 +699,12 @@ window.PLAYBOOK = {
     "CT",
     "B区"
    ],
+   "pin_targets": {
+    "B门": [
+     0.2447,
+     0.253
+    ]
+   },
    "source": {
     "kind": "video",
     "creator": "冷锋",
@@ -758,6 +764,12 @@ window.PLAYBOOK = {
    ],
    "tags": [],
    "related": [],
+   "pin_targets": {
+    "A小楼梯下": [
+     0.6562,
+     0.3452
+    ]
+   },
    "source": {
     "kind": "self",
     "creator": "自己"
@@ -818,6 +830,16 @@ window.PLAYBOOK = {
     "CT",
     "A区"
    ],
+   "pin_origin": [
+    0.4726,
+    0.256
+   ],
+   "pin_targets": {
+    "A小": [
+     0.5158,
+     0.4171
+    ]
+   },
    "source": {
     "kind": "video",
     "creator": "冷锋",
@@ -1342,6 +1364,12 @@ window.PLAYBOOK = {
    ],
    "tags": [],
    "related": [],
+   "pin_targets": {
+    "中门": [
+     0.442,
+     0.3461
+    ]
+   },
    "source": {
     "kind": "self",
     "creator": "自己"
@@ -1545,8 +1573,8 @@ window.PLAYBOOK = {
      0.2835
     ],
     "B 包点": [
-     0.192,
-     0.1353
+     0.1306,
+     0.2822
     ]
    },
    "source": {
@@ -2028,6 +2056,12 @@ window.PLAYBOOK = {
    "tags": [
     "中路"
    ],
+   "pin_targets": {
+    "中门": [
+     0.456,
+     0.341
+    ]
+   },
    "source": {
     "kind": "video",
     "creator": "祖灵Zu1ing",
@@ -2363,6 +2397,12 @@ window.PLAYBOOK = {
     0.2568,
     0.6125
    ],
+   "pin_targets": {
+    "B门": [
+     0.2618,
+     0.2272
+    ]
+   },
    "source": {
     "kind": "self"
    },
@@ -2558,8 +2598,8 @@ window.PLAYBOOK = {
    ],
    "pin_targets": {
     "中门": [
-     0.4572,
-     0.3612
+     0.4479,
+     0.3655
     ]
    },
    "source": {
@@ -2629,8 +2669,8 @@ window.PLAYBOOK = {
    ],
    "pin_targets": {
     "中门": [
-     0.4572,
-     0.3608
+     0.4525,
+     0.3557
     ]
    },
    "source": {

@@ -272,21 +272,31 @@ function calloutMapCard() {
 let nadeClear = null;      // 当前道具层选中项的取消函数；无选中/卡片重渲染时为 null
 let nadeEscBound = false;  // Esc 分层监听器全局只注册一次（setupNadeLayer 随 render 反复进入）
 
-// 展开 visible 条目为 (条目 × target 报点) 落点集合；坐标=pin 覆写（I41）否则报点，对不上的跳过并计数。
-// 聚合按调后坐标重算（同报点不同 pin 不再合并；调过的条目拖回来会自然重新聚合）。
+// 主落点（R3-L4，用户 2026-10-26 拍板「只显示一个落点」）：一条道具在图上只画一个落点=
+// 第一个可定位的关联目标（按 target 顺序，pin 覆写 I41 优先）；其余关联点保留在详情/搜索/钻取
+// 语义，不上图。解析不到返回 null（调用方计入未定位提示）。
+function primaryTargetSpot(e, callouts) {
+  for (const tv of targetVals(e)) {
+    const c = callouts.find(cc => cc.name === tv || strictSpotMatch(cc, tv));
+    if (!c) continue;
+    const pos = pinOrCallout(e, "target", tv) || { u: c.u, v: c.v };
+    return { tv, calloutName: c.name, u: pos.u, v: pos.v };
+  }
+  return null;
+}
+
+// 展开 visible 条目为落点集合（R3-L4 起每条只取主落点）；坐标=pin 覆写（I41）否则报点，
+// 对不上的跳过并计数。聚合按调后坐标重算（同报点不同 pin 不再合并；调过的条目拖回来会自然重新聚合）。
 function collectNadeSpots(mapKey, entries) {
   const callouts = (allCallouts() || {})[mapKey] || [];
   const spots = new Map();   // key=坐标 → {u, v, name, items: [{e, target}]}
   let unmatched = 0;
   for (const e of entries) {
-    for (const tv of targetVals(e)) {
-      const c = callouts.find(cc => cc.name === tv || strictSpotMatch(cc, tv));
-      if (!c) { unmatched++; continue; }
-      const pos = pinOrCallout(e, "target", tv) || { u: c.u, v: c.v };
-      const key = `${pos.u.toFixed(4)},${pos.v.toFixed(4)}`;
-      if (!spots.has(key)) spots.set(key, { u: pos.u, v: pos.v, name: c.name, items: [] });
-      spots.get(key).items.push({ e, target: tv });
-    }
+    const p = primaryTargetSpot(e, callouts);
+    if (!p) { unmatched++; continue; }
+    const key = `${p.u.toFixed(4)},${p.v.toFixed(4)}`;
+    if (!spots.has(key)) spots.set(key, { u: p.u, v: p.v, name: p.calloutName, items: [] });
+    spots.get(key).items.push({ e, target: p.tv });
   }
   return { spots: [...spots.values()], unmatched };
 }
@@ -340,13 +350,11 @@ function setupNadeLayer(el, mapKey) {
   let clearSel = () => {};   // 分支各自实现（el 点击/Esc 统一走最新引用）
 
   if (state.pinEdit) {
-    // 调点态：每（条目×目标）一枚独立图标（坐标=pin 覆写否则报点；对不上报点的跳过）
-    const flat = entries.flatMap(e => targetVals(e).flatMap(tv => {
-      const c = callouts.find(cc => cc.name === tv || strictSpotMatch(cc, tv));
-      if (!c) return [];
-      const pos = pinOrCallout(e, "target", tv) || { u: c.u, v: c.v };
-      return [{ e, tv, calloutName: c.name, u: pos.u, v: pos.v }];
-    }));
+    // 调点态：每条道具一枚图标（主落点=第一个可定位关联点；R3-L4 起与浏览态同语义，不调不显示的次要点）
+    const flat = entries.flatMap(e => {
+      const p = primaryTargetSpot(e, callouts);
+      return p ? [{ e, tv: p.tv, calloutName: p.calloutName, u: p.u, v: p.v }] : [];
+    });
     // 重叠自动散开（仅显示不存点）：报点=区域级，多颗同区域默认堆在报点中心；
     // 调点态按圆环错开让每颗可立即抓取，拖到真实落点才存 pin，没拖的退出即收回
     const clusters = new Map();
@@ -365,7 +373,7 @@ function setupNadeLayer(el, mapKey) {
       });
     }
     if (note) note.innerHTML = flat.length
-      ? "调点中：每颗道具独立图标（同区域的重叠道具已自动散开）——拖图标到真实落点＝精准定位并记住；先点一颗，再拖白点手柄＝调它的起点显示位。没拖过的不记位置，报点本身不变。"
+      ? "调点中：每条道具一枚图标（主落点＝它的第一个关联点；同区域的重叠道具已自动散开）——拖图标到真实落点＝精准定位并记住；先点一颗，再拖白点手柄＝调它的起点显示位。没拖过的不记位置，报点本身不变。"
       : "本图没有可调的道具落点。";
     if (!flat.length) return;
     if (!layer || !svg || !popup) return;
