@@ -353,9 +353,10 @@ function entryEditor(idOrNew) {
     const wrote = await deleteEntryFile(e.id);
     if (wrote) markEntryWritten(e.id);   // 文件已删：暂存转显示缓存（I19）
     applyEntryOverrides();
+    await stripDeletedRefs(e.id);   // R3-L6：清战术板 uses/timeline 与其他条目 related（防 uses 断链卡 build）
     state.editingId = null;
     render();
-    toast(wrote ? "已删除（.md 文件同步删除）" : "本浏览器已删除；关联项目文件夹后才能删文件");
+    toast(wrote ? "已删除（.md 文件同步删除；战术板/互链引用已一并清理）" : "本浏览器已删除；关联项目文件夹后才能删文件");
   });
 
   $("#ef-save", el).addEventListener("click", async () => {

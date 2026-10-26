@@ -278,6 +278,73 @@ async function deleteEntryFile(id) {
   catch { return false; }
 }
 
+/* ---- R3-L6：删除条目后的引用清理（改名 I35 有对称逻辑，删除路径曾缺失——
+   tactics uses 断链 ERROR 卡 build，用户 2026-10-26 踩坑）----
+   范围：战术板 uses 行内数组 / timeline 行内 use: + 其他条目 related。
+   内存/覆盖层恒清（防合并盖回）；磁盘侧 ready 立即改写，非 ready 由 flushPendingEntries
+   补删时收敛；块式 uses 文本替换不完美由 lint 兜底（保持拦坏数据的设计）。 */
+function stripIdFromTacticsText(txt, id) {
+  let out = txt;
+  out = out.replace(new RegExp(`(uses:\\s*\\[[^\\]]*?)\\s*,\\s*${id}(?=\\s*[,\\]])`, "g"), "$1");
+  out = out.replace(new RegExp(`(uses:\\s*\\[)\\s*${id}\\s*,\\s*`, "g"), "$1");
+  out = out.replace(new RegExp(`(uses:\\s*\\[)\\s*${id}(?=\\s*\\])`, "g"), "$1");
+  out = out.replace(new RegExp(`,?\\s*use:\\s*${id}(?=[},])`, "g"), "");
+  return out;
+}
+function stripDeletedRefsMemory(id) {
+  for (const t of data.tactics) {
+    if (Array.isArray(t.uses) && t.uses.includes(id)) t.uses = t.uses.filter(u => u !== id);
+    if (Array.isArray(t.timeline)) for (const st of t.timeline) if (st && st.use === id) delete st.use;
+  }
+  const tov = tacticOverrides();
+  let tch = false;
+  for (const t of Object.values(tov.edited || {})) {
+    if (Array.isArray(t.uses) && t.uses.includes(id)) { t.uses = t.uses.filter(u => u !== id); tch = true; }
+    if (Array.isArray(t.timeline)) for (const st of t.timeline) if (st && st.use === id) { delete st.use; tch = true; }
+  }
+  if (tch) saveTacticOverrides(tov);
+  for (const e of data.entries) {
+    if (Array.isArray(e.related) && e.related.includes(id)) e.related = e.related.filter(x => x !== id);
+  }
+  const ov = entryOverrides();
+  let ech = false;
+  for (const e of Object.values(ov.edited || {})) {
+    if (Array.isArray(e.related) && e.related.includes(id)) { e.related = e.related.filter(x => x !== id); ech = true; }
+  }
+  if (ech) saveEntryOverrides(ov);
+}
+async function stripDeletedRefsDisk(id) {
+  if (rootPerm !== "ready" || !rootDirHandle) return;
+  try {
+    const tdir = await rootDirHandle.getDirectoryHandle("tactics");
+    for await (const [name, h] of tdir.entries()) {
+      if (h.kind !== "file" || !name.endsWith(".md")) continue;
+      const txt = await (await h.getFile()).text();
+      if (!txt.includes(id)) continue;
+      const out = stripIdFromTacticsText(txt, id);
+      if (out !== txt) {
+        const fh = await h.createWritable();
+        await fh.write(out);
+        await fh.close();
+      }
+    }
+  } catch { /* tactics 清理失败不阻断删除主流程（lint 兜底） */ }
+  // related 磁盘改写：同 renameEntry 的 related 改写模式（改写 + 覆盖层显示缓存）
+  for (const it of data.entries) {
+    if (!Array.isArray(it.related) || !it.related.includes(id)) continue;
+    it.related = it.related.filter(x => x !== id);
+    await writeEntryFile(it);
+    const o2 = entryOverrides();
+    o2.edited = o2.edited || {}; o2.edited[it.id] = { ...it };
+    o2.savedAt[it.id] = isoNow(); o2.written[it.id] = true;
+    saveEntryOverrides(o2);
+  }
+}
+async function stripDeletedRefs(id) {
+  stripDeletedRefsMemory(id);
+  await stripDeletedRefsDisk(id);
+}
+
 /* ---- 战术板写盘（I39）：与条目同款语义，目标 tactics/*.md ---- */
 async function tacticsDir(create = false) {
   if (!rootDirHandle || rootPerm !== "ready") return null;
@@ -1395,6 +1462,7 @@ async function flushPendingEntries() {
     let ok = false;
     if ((ov.deleted || []).includes(id)) {
       ok = await deleteEntryFile(id);
+      if (ok) await stripDeletedRefsDisk(id);   // R3-L6：补删时同步清 tactics/related 磁盘引用
     } else {
       const item = ov.edited?.[id] || (ov.added || []).find(a => a.id === id);
       if (item) ok = await writeEntryFile(item);

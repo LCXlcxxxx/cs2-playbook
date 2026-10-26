@@ -1206,6 +1206,44 @@ def r3l4_primary(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3-L6 删除引用清理
+
+@case("R3L6/删除条目清理引用：uses 行内各形态/timeline.use/related（内存+文本函数）")
+def r3l6_delete_refs(page, base):
+    goto(page, base)
+    r = page.evaluate("""() => {
+      // 纯函数：uses 行内数组三种位置 + timeline use 两位置
+      const f = stripIdFromTacticsText;
+      const t1 = f('uses: [a, gone-x, b]', 'gone-x');        // 中间
+      const t2 = f('uses: [gone-x, a]', 'gone-x');            // 头部
+      const t3 = f('uses: [a, gone-x]', 'gone-x');            // 尾部
+      const t4 = f('uses: [gone-x]', 'gone-x');               // 仅一个
+      const t5 = f('- {t: "1:53", role: 1, text: 123, use: gone-x}', 'gone-x');   // 行内尾
+      const t6 = f('- {t: "1:53", use: gone-x, text: 123}', 'gone-x');            // 行内中
+      // 内存清理：注入战术板+条目引用 gone-x
+      data.tactics.push({ id: 'tmp-plan', uses: ['a', 'gone-x'],
+        timeline: [{ t: '0:30', role: 1, use: 'gone-x', text: 'x' }] });
+      data.entries.push({ id: 'tmp-rel', related: ['gone-x', 'keep'], map: 'de_dust2' });
+      stripDeletedRefsMemory('gone-x');
+      const plan = data.tactics.find(x => x.id === 'tmp-plan');
+      const rel = data.entries.find(x => x.id === 'tmp-rel');
+      const out = { t1, t2, t3, t4, t5, t6,
+        uses: plan.uses, tlUse: plan.timeline[0].use, related: rel.related };
+      data.tactics = data.tactics.filter(x => x.id !== 'tmp-plan');
+      data.entries = data.entries.filter(x => x.id !== 'tmp-rel');
+      return out;
+    }""")
+    assert r["t1"] == "uses: [a, b]", f"uses 中间: {r['t1']!r}"
+    assert r["t2"] == "uses: [a]", f"uses 头部: {r['t2']!r}"
+    assert r["t3"] == "uses: [a]", f"uses 尾部: {r['t3']!r}"
+    assert r["t4"] == "uses: []", f"uses 仅一个: {r['t4']!r}"
+    assert "use" not in r["t5"] and "123" in r["t5"], f"timeline 行内尾: {r['t5']!r}"
+    assert "use" not in r["t6"] and "123" in r["t6"], f"timeline 行内中: {r['t6']!r}"
+    assert r["uses"] == ["a"], f"内存 uses 清理: {r['uses']!r}"
+    assert r["tlUse"] is None, f"内存 timeline.use 清理: {r['tlUse']!r}"
+    assert r["related"] == ["keep"], f"内存 related 清理: {r['related']!r}"
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1258,6 +1296,7 @@ CASES = [
     r3l2_row3cluster, r3l2_wall, r3l2_lb,
     r3_compress, r3l3_customchips,
     r3l4_primary,
+    r3l6_delete_refs,
     s6_pixels,
 ]
 
