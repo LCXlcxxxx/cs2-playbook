@@ -1104,6 +1104,60 @@ def r3_compress(page, base):
     assert r["smallSame"] and r["smallExt"] == "png", f"小图应原样保留: {r!r}"
 
 
+# ---------------------------------------------------------------- R3-L3 自定义筛选 chips
+
+@case("R3L3/自定义筛选：添加→顶栏出现→点击按 tag 过滤→与内置 AND→设置回车创建")
+def r3l3_customchips(page, base):
+    goto(page, base); go_entries(page)
+    n_all = page.evaluate("() => data.entries.filter(entryMatch).length")
+    tag = page.evaluate(
+        "() => ((data.entries.find(e => entryMatch(e) && (e.tags || []).length)) || {}).tags[0] || null")
+    assert tag, "当前地图下应有带 tags 的条目"
+    expected = page.evaluate(
+        "(t) => data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t)).length", tag)
+    assert 0 < expected < n_all, f"测试前置：tag {tag!r} 应命中当前过滤下部分条目（{expected}/{n_all}）"
+    # 添加自定义 chip → 顶栏出现 → 点击过滤
+    page.evaluate("(t) => { saveCustomChipWords([t]); buildChipFilterRow(); }", tag)
+    sel = "#chip-filter [data-fchip=\"tag-" + tag + "\"]"
+    assert page.evaluate("(s) => !!document.querySelector(s)", sel), f"自定义 chip 按钮未出现: {sel}"
+    page.evaluate("(s) => document.querySelector(s).click()", sel)
+    page.wait_for_timeout(250)
+    got = page.evaluate("() => data.entries.filter(entryMatch).length")
+    assert got == expected, f"点击自定义 chip 应过滤到 {expected} 条（DOM 行数会因套装叠加视图重复，断言走数据口径）"
+    assert page.evaluate("(t) => state.filterChips.has('tag-' + t)", tag)
+    # 与内置「已实测」叠加 AND
+    page.evaluate(
+        "() => [...document.querySelectorAll('[data-fchip]')].find(b => b.dataset.fchip === 'verified').click()")
+    page.wait_for_timeout(250)
+    both = page.evaluate("() => data.entries.filter(entryMatch).length")
+    assert both <= expected, f"叠加已实测后应不多于 {expected}: {both}"
+    page.evaluate("() => document.querySelector('[data-fchipclear]').click()")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "清除后应恢复全量"
+    # 设置弹层（管理模式）：区块存在 + 输入回车创建 + 顶栏即时出现
+    page.evaluate("() => document.getElementById('manage-toggle').click()")
+    page.wait_for_timeout(150)
+    page.evaluate("() => document.getElementById('btn-settings').click()")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => !!document.getElementById('set-customchips')"), "设置应含「自定义筛选」区"
+    page.evaluate(
+        """() => { const i = document.getElementById('set-customchip-in');
+             i.value = '测试标签Z';
+             i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }""")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => customChipWords().includes('测试标签Z')"), "回车后词表应含新词"
+    assert page.evaluate("() => !!document.querySelector('#chip-filter [data-fchip=\"tag-测试标签Z\"]')"), \
+        "顶栏应即时出现新按钮"
+    # 清理：移除词 + 清选中 + 关设置
+    page.evaluate(
+        """() => { saveCustomChipWords(customChipWords().filter(w => w !== '测试标签Z'));
+             state.filterChips.clear(); buildChipFilterRow();
+             document.getElementById('set-done').click(); render(); }""")
+    page.wait_for_timeout(200)
+    page.evaluate("() => document.getElementById('manage-toggle').click()")
+    page.wait_for_timeout(150)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1154,7 +1208,7 @@ CASES = [
     r3_i42_archive,
     r3l1_source, r3l1_draft, r3l1_autogroup, r3l1_bulkcol,
     r3l2_row3cluster, r3l2_wall, r3l2_lb,
-    r3_compress,
+    r3_compress, r3l3_customchips,
     s6_pixels,
 ]
 

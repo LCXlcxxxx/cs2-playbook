@@ -58,10 +58,10 @@ function init() {
     render();
   });
 
-  // 快捷筛选 chips（I50）：固定集合 init 一次渲染；同 dim 互斥单选、跨 dim AND、与搜索词 AND
+  // 快捷筛选 chips（I50 + R3-L3 自定义）：同 dim 互斥单选、跨 dim AND、与搜索词 AND；
+  // 行内容由 buildChipFilterRow() 构建（设置弹层增删自定义词后重调），委托监听只挂一次
   const chipWrap = $("#chip-filter");
-  chipWrap.innerHTML = FILTER_CHIPS.map(c => `<button class="fchip" data-fchip="${c.id}">${c.label}</button>`).join("")
-    + `<button class="fchip-clear" data-fchipclear hidden>✕ 清除</button>`;
+  buildChipFilterRow();
   chipWrap.addEventListener("click", ev => {
     if (ev.target.closest("[data-fchipclear]")) {
       state.filterChips.clear();
@@ -71,12 +71,12 @@ function init() {
     }
     const btn = ev.target.closest("[data-fchip]");
     if (!btn) return;
-    const chip = FILTER_CHIP_BY_ID.get(btn.dataset.fchip);
+    const chip = getFilterChip(btn.dataset.fchip);
     if (!chip) return;
     if (state.filterChips.has(chip.id)) {
       state.filterChips.delete(chip.id);   // 再点已选中的=取消
     } else {
-      for (const other of FILTER_CHIPS) if (other.dim === chip.dim) state.filterChips.delete(other.id);
+      for (const other of allFilterChips()) if (other.dim === chip.dim) state.filterChips.delete(other.id);
       state.filterChips.add(chip.id);
     }
     refreshChipFilter();
@@ -372,6 +372,17 @@ function onKey(ev) {
 }
 
 function bootLightboxZoom() { initLightboxZoom(); }
+
+/* 快捷筛选 chips 行构建（I50 固定集合 + R3-L3 自定义）：id/label 过 escapeHtml（自定义词是用户输入）；
+   ⚙ 设置增删自定义词后也会重调本函数，委托监听在 init 只挂一次 */
+function buildChipFilterRow() {
+  const wrap = $("#chip-filter");
+  if (!wrap) return;
+  wrap.innerHTML = allFilterChips().map(c =>
+    `<button class="fchip" data-fchip="${escapeHtml(c.id)}">${escapeHtml(c.label)}</button>`).join("")
+    + `<button class="fchip-clear" data-fchipclear hidden>✕ 清除</button>`;
+  refreshChipFilter();
+}
 
 /* R2-A：筛选带状态——未激活任何筛选时灰阶弱化（激活项恢复高亮）；
    📦 只对道具列表有效，战术板 Tab 下隐藏（筛选语义本身零变化） */

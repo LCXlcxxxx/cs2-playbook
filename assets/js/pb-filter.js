@@ -93,9 +93,33 @@ const FILTER_CHIPS = [
 ];
 const FILTER_CHIP_BY_ID = new Map(FILTER_CHIPS.map(c => [c.id, c]));
 
+// 自定义筛选 chips（R3-L3，用户 2026-10-26 拍板）：把任意 tags 词提升为顶栏筛选按钮，数量不限。
+// 词表存 localStorage（持久）；每词独立 dim=多个自定义词可叠加 AND；选中态仍会话内（state.filterChips 原语义）。
+const CUSTOM_CHIPS_KEY = "pb-custom-chips";
+function customChipWords() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(CUSTOM_CHIPS_KEY) || "[]");
+    return Array.isArray(arr) ? arr.map(w => String(w || "").trim()).filter(Boolean) : [];
+  } catch { return []; }
+}
+function saveCustomChipWords(words) {
+  localStorage.setItem(CUSTOM_CHIPS_KEY,
+    JSON.stringify([...new Set(words.map(w => String(w || "").trim()).filter(Boolean))]));
+}
+function customChipObjs() {
+  return customChipWords().map(w => ({
+    id: "tag-" + w, label: w, dim: "tag-" + w,
+    test: e => (e.tags || []).includes(w),
+  }));
+}
+function allFilterChips() { return FILTER_CHIPS.concat(customChipObjs()); }
+function getFilterChip(id) {
+  return FILTER_CHIP_BY_ID.get(id) || customChipObjs().find(c => c.id === id) || null;
+}
+
 function chipMatch(e) {
   for (const id of state.filterChips) {
-    const c = FILTER_CHIP_BY_ID.get(id);
+    const c = getFilterChip(id);   // 含自定义 chips；词被移除后的悬挂 id 安全跳过
     if (c && !c.test(e)) return false;
   }
   return true;

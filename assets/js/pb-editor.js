@@ -700,6 +700,14 @@ function openSettings() {
           <input class="manual-in" id="set-move-in" placeholder="输入名称回车添加，如：蹲下" style="max-width:320px">
         </span>
       </div>
+      <div class="set-row pb-mng">
+        <div class="set-label">自定义筛选<span class="set-tip">把常用标签一键变成顶栏筛选按钮，数量不限——点按钮=只看带该标签的道具</span></div>
+        <span class="chips-row" id="set-customchips"></span>
+        <span class="chips-row" id="set-customchip-lib"></span>
+        <span class="pick-row">
+          <input class="manual-in" id="set-customchip-in" placeholder="输入标签回车添加，如：回防" style="max-width:320px">
+        </span>
+      </div>
       <div class="set-row">
         <div class="set-label">被搁置的本地修改<span class="set-tip">文件更新后，没来得及写进文件的浏览器旧修改自动移到这里留底，绝不丢失</span></div>
         <span class="chips-row" id="set-retired"></span>
@@ -917,7 +925,48 @@ function openSettings() {
     drawMoves();
   });
 
+  // 自定义筛选 chips（R3-L3）：从全库标签点选或输入新词 → 顶栏筛选带即时增删（数量不限）
+  function drawCustomChips() {
+    const words = customChipWords();
+    $("#set-customchips", ov).innerHTML = words.length
+      ? words.map(w => `<span class="chip on">${escapeHtml(w)}<button type="button" class="chip-x" data-cchip-x="${escapeHtml(w)}" title="移除该筛选按钮">×</button></span>`).join("")
+      : `<span class="chip-empty">还没有自定义筛选按钮</span>`;
+    const lib = new Map();
+    for (const x of data.entries) for (const t of (x.tags || [])) { const k = String(t).trim(); if (k) lib.set(k, (lib.get(k) || 0) + 1); }
+    const pool = [...lib.keys()].sort((a, b) => (lib.get(b) - lib.get(a)) || a.localeCompare(b, "zh"))
+      .filter(t => !words.includes(t)).slice(0, 16);
+    $("#set-customchip-lib", ov).innerHTML = pool.length
+      ? pool.map(t => `<button type="button" class="tag-sug" data-cchip-add="${escapeHtml(t)}" title="添加为顶栏筛选按钮">${escapeHtml(t)} ＋</button>`).join("")
+      : (words.length ? `<span class="chip-empty">常用标签都加过了——下面输入新词创建</span>` : "");
+  }
+  ov.addEventListener("click", ev => {
+    const add = ev.target.closest("[data-cchip-add]");
+    const del = ev.target.closest("[data-cchip-x]");
+    if (add) {
+      const words = customChipWords();
+      if (!words.includes(add.dataset.cchipAdd)) { words.push(add.dataset.cchipAdd); saveCustomChipWords(words); }
+      drawCustomChips(); buildChipFilterRow(); render();
+      return;
+    }
+    if (del) {
+      saveCustomChipWords(customChipWords().filter(w => w !== del.dataset.cchipX));
+      state.filterChips.delete("tag-" + del.dataset.cchipX);   // 若正选中，顺带清掉（chipMatch 对悬挂 id 本就安全，双保险）
+      drawCustomChips(); buildChipFilterRow(); render();
+    }
+  });
+  $("#set-customchip-in", ov).addEventListener("keydown", ev => {
+    if (ev.key !== "Enter") return;
+    ev.preventDefault();
+    const v = ev.target.value.trim();
+    if (!v) return;
+    const words = customChipWords();
+    if (!words.includes(v)) { words.push(v); saveCustomChipWords(words); }
+    ev.target.value = "";
+    drawCustomChips(); buildChipFilterRow(); render();
+  });
+
   drawMoves();
+  drawCustomChips();
   drawRetired();
   drawMapOrder();   // 地图排序（I29）
   // 分享按钮可用性：有条目暂存/暂存图/报点快照才可分享（I20）
