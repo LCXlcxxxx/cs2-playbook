@@ -16,7 +16,10 @@ status: draft
 spots: [头皮位, A小楼梯下]
 tags: []
 related: []
+pin_targets: {A小楼梯下: [0.6562, 0.3452]}
 source:
   kind: self
   creator: 自己
 ---
+
+

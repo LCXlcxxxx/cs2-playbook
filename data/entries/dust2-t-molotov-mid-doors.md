@@ -15,6 +15,7 @@ phase: [execute]
 status: verified
 spots: [叉箱, 中门]
 tags: [中路]
+pin_targets: {中门: [0.456, 0.341]}
 source:
   kind: video
   creator: 祖灵Zu1ing

@@ -15,6 +15,8 @@ phase: [postplant]
 status: draft
 spots: [A小, 警家]
 tags: [CT, A区]
+pin_origin: [0.4726, 0.256]
+pin_targets: {A小: [0.5158, 0.4171]}
 source:
   kind: video
   creator: 冷锋

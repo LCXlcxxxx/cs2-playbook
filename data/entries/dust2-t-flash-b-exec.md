@@ -16,9 +16,7 @@ status: draft
 spots: [B通/B2, 狗位, B 包点]
 tags: [B区]
 pin_origin: [0.1889, 0.5185]
-pin_targets:
-  狗位: [0.106, 0.2835]
-  "B 包点": [0.192, 0.1353]
+pin_targets: {狗位: [0.106, 0.2835], "B 包点": [0.1306, 0.2822]}
 source:
   kind: video
   creator: 冷锋

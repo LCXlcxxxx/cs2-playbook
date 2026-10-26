@@ -16,8 +16,7 @@ status: verified
 spots: [中门]
 tags: [A区]
 pin_origin: [0.6263, 0.8501]
-pin_targets:
-  中门: [0.4572, 0.3612]
+pin_targets: {中门: [0.4479, 0.3655]}
 source:
   kind: self
 checked: 2026-10-01

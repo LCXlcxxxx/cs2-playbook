@@ -15,6 +15,7 @@ phase: [retake]
 status: draft
 spots: [B 包点, B门, 卡车]
 tags: [CT, B区]
+pin_targets: {B门: [0.2447, 0.253]}
 source:
   kind: video
   creator: 冷锋

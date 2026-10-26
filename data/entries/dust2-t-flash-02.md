@@ -16,7 +16,10 @@ status: draft
 spots: [中路, 中门]
 tags: []
 related: []
+pin_targets: {中门: [0.442, 0.3461]}
 source:
   kind: self
   creator: 自己
 ---
+
+

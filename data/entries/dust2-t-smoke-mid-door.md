@@ -17,8 +17,7 @@ spots: [暗道, 中门]
 tags: [默认, 控中路]
 related: []
 pin_origin: [0.443, 0.8424]
-pin_targets:
-  中门: [0.4572, 0.3608]
+pin_targets: {中门: [0.4525, 0.3557]}
 source:
   kind: self
   creator: 自己

@@ -16,6 +16,7 @@ status: verified
 spots: [B门, 后花园]
 tags: [B区]
 pin_origin: [0.2568, 0.6125]
+pin_targets: {B门: [0.2618, 0.2272]}
 source:
   kind: self
 checked: 2026-10-01
