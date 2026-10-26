@@ -299,11 +299,24 @@ def s2_row_render(page, base):
              catch { return false; } })"""
     )
     assert rule_ok, "样式表应含 .entry-row .badge-status { margin-left: auto }（状态贴右）"
+    # 前缀规则（2026-10-26 放宽为中英文通用）：首个「-」前为非空 ≤12 字名字段即特殊显示
+    unit = page.evaluate(
+        """() => ({
+          en: entryTitleHtml('flamez-A小台下雷'),
+          cn: entryTitleHtml('寒王-抢A大门烟'),
+          none: entryTitleHtml('A门烟'),
+          long: entryTitleHtml('超过十二个字符的长前缀名字段-烟'),
+        })"""
+    )
+    assert "row-prefix" in unit["en"] and "flamez-" in unit["en"], f"英文前缀应特殊显示: {unit!r}"
+    assert "row-prefix" in unit["cn"] and "寒王-" in unit["cn"], f"中文前缀应特殊显示: {unit!r}"
+    assert "row-prefix" not in unit["none"], f"无连字符标题不应有前缀: {unit!r}"
+    assert "row-prefix" not in unit["long"], f"超长前缀（>12 字）不应特殊显示: {unit!r}"
     prefixed = page.evaluate(
         """() => PLAYBOOK.entries.find(e => e.map === 'de_mirage'
-              && !['broken','retired'].includes(e.status) && (() => {
-              const m = String(e.title||'').match(/^([A-Za-z0-9][A-Za-z0-9_.]{0,15})-(?=.)/);
-              return m && /[\\u4e00-\\u9fff]/.test(e.title.slice(m[0].length)); })())?.id"""
+              && !['broken','retired'].includes(e.status)
+              && (() => { const i = String(e.title||'').indexOf('-');
+                          return i > 0 && i <= 12 && e.title.length > i + 1; })())?.id"""
     )
     if prefixed:
         has = page.evaluate(
@@ -311,7 +324,7 @@ def s2_row_render(page, base):
         )
         assert has, f"{prefixed} 应有 .row-prefix 弱化前缀"
     else:
-        RESULTS["note"].append("前缀弱化：库内暂无拉丁前缀标题条目，断言跳过")
+        RESULTS["note"].append("前缀弱化：库内暂无前缀标题条目，断言跳过")
 
 
 # ---------------------------------------------------------------- S3 详情

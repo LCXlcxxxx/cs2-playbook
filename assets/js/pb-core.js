@@ -176,14 +176,14 @@ function throwBadgeClass(e) {
   return "";
 }
 
-// 来源前缀弱化（I48，纯显示层）：标题形如「flamez-跳台烟」（行首拉丁/数字段+连字符，余段含中文）时，
-// 前缀渲染为小号灰字。不改数据、不影响排序/搜索（hayOf 仍用原始 title）。
+// 来源前缀显示（I48 弱化；用户 2026-10-26 定稿放宽为中英文通用）——标题形如「flamez-跳台烟」
+// 「寒王-抢A大门烟」（首个「-」前为非空且 ≤12 字的名字段，其后非空）时，前缀渲染为次级小字，
+// 一眼分清职业选手/战队/UP 主来源。不改数据、不影响排序/搜索（hayOf 仍用原始 title）。
 function entryTitleHtml(title) {
   const s = String(title || "");
-  const m = s.match(/^([A-Za-z0-9][A-Za-z0-9_.]{0,15})-(?=.)/);
-  const rest = m ? s.slice(m[0].length) : "";
-  if (m && /[\u4e00-\u9fff]/.test(rest)) {
-    return `<span class="row-prefix">${escapeHtml(m[1])}-</span>${escapeHtml(rest)}`;
+  const i = s.indexOf("-");
+  if (i > 0 && i <= 12 && s.length > i + 1) {
+    return `<span class="row-prefix">${escapeHtml(s.slice(0, i))}-</span>${escapeHtml(s.slice(i + 1))}`;
   }
   return escapeHtml(s);
 }
