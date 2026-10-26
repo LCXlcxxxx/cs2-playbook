@@ -629,6 +629,71 @@ let tlRoleFilter = 0;
 let tlLineDraw = null;
 let tlEscBound = false;
 
+/* ---------------- R3-L10：时间轴道具抽屉（点 chip 弹缩略图，点缩略图进 lightbox） ----------------
+   步骤卡里的道具 chip 不再直接跳详情页——先弹小抽屉（标题+投法+缩略图组），
+   点缩略图 = lightbox 放大（滚轮缩放/拖拽复用 I12），「详情 ›」按钮保留进详情的路径。 */
+let tlDrawerKey = null;   // 抽屉的「点外关闭」监听（click capture）
+let tlDrawerEsc = null;   // 抽屉的 Esc 监听（capture；lightbox 开着时让位）
+
+function closeTlDrawer() {
+  document.getElementById("tl-drawer")?.remove();
+  if (tlDrawerKey) { document.removeEventListener("click", tlDrawerKey, true); tlDrawerKey = null; }
+  if (tlDrawerEsc) { document.removeEventListener("keydown", tlDrawerEsc, true); tlDrawerEsc = null; }
+}
+
+function openTlEntryDrawer(anchor, e) {
+  closeTlDrawer();
+  const imgs = (e.images || []);
+  const ov = document.createElement("div");
+  ov.id = "tl-drawer";
+  ov.dataset.eid = e.id;
+  ov.innerHTML = `
+    <div class="tld-head"><b>${escapeHtml(e.title)}</b>
+      <span class="badge-throw ${throwBadgeClass(e)}">${escapeHtml(e.throw_badge)}</span>
+      <button type="button" class="editor-btn mini" data-tld-detail title="查看完整详情页">详情 ›</button></div>
+    <div class="tld-thumbs">
+      ${imgs.length ? imgs.map((im, i) => `
+        <button type="button" class="tld-thumb" data-tld-img="${i}" title="${escapeHtml(im.label || "")}——点击放大（滚轮缩放）">
+          <img src="${im.path}" loading="lazy" alt="" draggable="false"><span>${escapeHtml(im.label || "")}</span>
+        </button>`).join("")
+      : `<span class="chip-empty">这颗道具还没有图——点「详情 ›」去补</span>`}
+    </div>`;
+  document.body.appendChild(ov);
+  // 定位：chip 下方弹出；右缘/底缘翻转（fixed 视口坐标）
+  const r = anchor.getBoundingClientRect();
+  ov.style.visibility = "hidden";
+  requestAnimationFrame(() => {
+    if (!ov.isConnected) return;
+    const w = ov.offsetWidth, h = ov.offsetHeight;
+    const x = Math.max(12, Math.min(r.left, innerWidth - w - 12));
+    let y = r.bottom + 8;
+    if (y + h > innerHeight - 12) y = Math.max(12, r.top - h - 8);
+    ov.style.left = `${x}px`;
+    ov.style.top = `${y}px`;
+    ov.style.visibility = "";
+  });
+  ov.addEventListener("click", ev => {
+    const d = ev.target.closest("[data-tld-detail]");
+    if (d) { closeTlDrawer(); jumpToEntry(e.id, "tactics"); return; }
+    const t = ev.target.closest("[data-tld-img]");
+    if (t) {
+      openLightboxCtx(imgs.map(im => im.path), Number(t.dataset.tldImg), e.title);
+    }
+  });
+  // 点抽屉外关闭（抽屉内部点击由抽屉自己的处理器接管）；Esc 关抽屉（lightbox 开着时让位）
+  tlDrawerKey = ev2 => {
+    if (ev2.target.closest("#tl-drawer")) return;
+    closeTlDrawer();
+  };
+  tlDrawerEsc = ev2 => {
+    if (ev2.key !== "Escape" || !document.getElementById("lightbox").hidden) return;
+    closeTlDrawer();
+    ev2.stopPropagation();
+  };
+  document.addEventListener("click", tlDrawerKey, true);
+  document.addEventListener("keydown", tlDrawerEsc, true);
+}
+
 // 倒计时解析："M:SS" → 秒数（0..115=1:55 上限）；非规范返回 null（显示 ⚠，滚轮重选即修复）
 function parseCountdown(s) {
   const m = /^(\d{1,2}):([0-5]\d)$/.exec(String(s || "").trim());
@@ -845,7 +910,12 @@ function setupTimelineLayer(el, mapKey) {
     }));
     strips.querySelectorAll("[data-jump]").forEach(chip => chip.addEventListener("click", ev => {
       ev.stopPropagation();
-      jumpToEntry(chip.dataset.jump, "tactics");
+      // R3-L10：不直接跳详情——弹道具抽屉（缩略图 → lightbox；「详情 ›」才进详情页）
+      const e0 = data.entries.find(x => x.id === chip.dataset.jump);
+      if (!e0) return;
+      const cur = document.getElementById("tl-drawer");
+      if (cur && cur.dataset.eid === e0.id) { closeTlDrawer(); return; }   // 再点同一颗=关闭
+      openTlEntryDrawer(chip, e0);
     }));
     // R3-L7：角色筛选 chips（render() 重渲=无监听堆叠）
     strips.querySelectorAll("[data-tlrf]").forEach(btn => btn.addEventListener("click", ev => {

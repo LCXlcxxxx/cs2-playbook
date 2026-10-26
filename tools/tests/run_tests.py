@@ -1450,6 +1450,66 @@ def r3l9_ids(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3-L10 时间轴道具抽屉
+
+@case("R3L10/时间轴道具抽屉：点 chip 弹缩略图→lightbox→详情入口，不直接跳页")
+def r3l10_drawer(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      state.map = 'de_dust2';
+      const e1 = PLAYBOOK.entries.find(x => x.map === 'de_dust2' && (x.images || []).length);
+      data.tactics.push({ id: 'tmp-plan-r10', map: 'de_dust2', side: 'T', title: 'R10测试板',
+        window: '整局', status: 'draft', uses: [e1.id], roles: [{ name: '一号' }],
+        timeline: [{ t: '1:50', role: 1, use: e1.id }], body: '## 测试' });
+      state.mapLayer = 'timeline'; state.tlBoard = 'tmp-plan-r10'; render();
+    }""")
+    page.wait_for_timeout(400)
+    info = page.evaluate("""() => {
+      const e1 = data.tactics.find(x => x.id === 'tmp-plan-r8' || x.id === 'tmp-plan-r10').timeline[0].use;
+      const e = PLAYBOOK.entries.find(x => x.id === e1);
+      return { id: e.id, n: e.images.length, img0: e.images[0].path };
+    }""")
+    assert info["n"] >= 1, "测试前置：道具应有图"
+    # 点步骤卡道具 chip → 抽屉出现（不跳详情）
+    page.evaluate("""() => document.querySelector('.tl-step .use-chip[data-jump]').click()""")
+    page.wait_for_timeout(350)
+    st = page.evaluate("""() => ({
+      drawer: !!document.getElementById('tl-drawer'),
+      n: document.querySelectorAll('#tl-drawer .tld-thumb').length,
+      noNav: !state.entryView })""")
+    assert st["drawer"] and st["noNav"], f"应弹抽屉且不跳详情: {st!r}"
+    assert st["n"] == info["n"], f"抽屉缩略图数应=道具图数: {st!r}"
+    # 点缩略图 → lightbox 打开且从对应图起
+    page.evaluate("() => document.querySelector('#tl-drawer .tld-thumb').click()")
+    page.wait_for_timeout(350)
+    lb = page.evaluate("""() => ({ open: !document.getElementById('lightbox').hidden,
+        src: document.getElementById('lightbox-img').getAttribute('src') })""")
+    assert lb["open"] and lb["src"] == info["img0"], f"缩略图应打开 lightbox: {lb!r}"
+    # Esc 关 lightbox（抽屉保留）→ 再 Esc 关抽屉
+    page.evaluate("""() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))""")
+    page.wait_for_timeout(200)
+    mid = page.evaluate("""() => ({ lbClosed: document.getElementById('lightbox').hidden,
+        drawerKept: !!document.getElementById('tl-drawer') })""")
+    assert mid["lbClosed"] and mid["drawerKept"], f"Esc 应先关 lightbox 保留抽屉: {mid!r}"
+    page.evaluate("""() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))""")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => !document.getElementById('tl-drawer')"), "第二次 Esc 应关抽屉"
+    # 「详情 ›」按钮 → 进详情页（detailFrom=tactics 语义）
+    page.evaluate("""() => document.querySelector('.tl-step .use-chip[data-jump]').click()""")
+    page.wait_for_timeout(250)
+    page.evaluate("""() => document.querySelector('#tl-drawer [data-tld-detail]').click()""")
+    page.wait_for_timeout(350)
+    nav = page.evaluate("() => ({ view: state.entryView && state.entryView.id, from: state.detailFrom })")
+    assert nav["view"] == info["id"] and nav["from"] == "tactics", f"详情按钮应跳详情且来源=战术板: {nav!r}"
+    # 清理
+    page.evaluate("""() => {
+      data.tactics = data.tactics.filter(x => x.id !== 'tmp-plan-r10');
+      state.entryView = null; state.tab = 'tactics'; state.mapLayer = 'callouts';
+      state.map = 'de_mirage'; render();
+    }""")
+    page.wait_for_timeout(200)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1506,6 +1566,7 @@ CASES = [
     r3l7_roles,
     r3l8_drawline,
     r3l9_ids,
+    r3l10_drawer,
     s6_pixels,
 ]
 

@@ -1878,6 +1878,36 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 }
 .entry-id-copy:hover { color: var(--accent); border-color: var(--accent); }
 
+/* R3-L10：时间轴道具抽屉（chip 下方弹出：标题+投法+缩略图组） */
+#tl-drawer {
+  position: fixed;
+  z-index: 65;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  max-width: min(560px, 92vw);
+}
+.tld-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.tld-head b { color: #fff; font-size: 15px; }
+.tld-head .editor-btn { margin-left: auto; }
+.tld-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tld-thumb {
+  width: 150px;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.tld-thumb img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.tld-thumb span { display: block; font-size: 12px; color: var(--text-dim); padding: 2px 6px; }
+.tld-thumb:hover { border-color: var(--accent); }
+
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {
   background: var(--panel);
