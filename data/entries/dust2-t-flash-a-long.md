@@ -15,8 +15,8 @@ phase: [default]
 status: draft
 spots: [黄车, A门内]
 tags: [A区]
-pin_targets:
-  A门内: [0.677, 0.5604]
+pin_origin: [0.6794, 0.6711]
+pin_targets: {A门内: [0.6801, 0.5565]}
 source:
   kind: video
   creator: 冷锋

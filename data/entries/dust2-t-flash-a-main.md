@@ -15,6 +15,7 @@ phase: [default]
 status: draft
 spots: [黄车, 大坑边, A大]
 tags: [A区]
+pin_targets: {大坑边: [0.7735, 0.5507]}
 source:
   kind: video
   creator: 冷锋

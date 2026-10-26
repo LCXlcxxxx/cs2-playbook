@@ -15,8 +15,7 @@ phase: [execute]
 status: draft
 spots: [A 包点, 二箱, 厕所]
 tags: [A区]
-pin_targets:
-  二箱: [0.7699, 0.1446]
+pin_targets: {二箱: [0.7994, 0.1664]}
 source:
   kind: video
   creator: 冷锋

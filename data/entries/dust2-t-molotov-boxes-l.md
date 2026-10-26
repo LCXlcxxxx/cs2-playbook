@@ -16,9 +16,7 @@ status: verified
 spots: [二箱, 电梯位]
 tags: [A区]
 related: []
-pin_targets:
-  电梯位: [0.7597, 0.1968]
-  二箱: [0.7709, 0.1617]
+pin_targets: {电梯位: [0.7597, 0.1968], 二箱: [0.7709, 0.1827]}
 source:
   kind: video
   creator: 祖灵Zu1ing

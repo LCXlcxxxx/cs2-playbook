@@ -16,7 +16,11 @@ status: draft
 spots: [A大]
 tags: []
 related: []
+pin_origin: [0.841, 0.4029]
+pin_targets: {A大: [0.8516, 0.4705]}
 source:
   kind: self
   creator: 自己
 ---
+
+
