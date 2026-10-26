@@ -1289,6 +1289,12 @@ function tacticEditor(idOrNew) {
     return { t: okT ? raw : "", rawT: okT ? "" : (s.t || ""), role: s.role || 0, text: s.text || "", use: s.use || "" };
   });
   let rolesRows = (Array.isArray(t.roles) ? t.roles : []).slice(0, 5).map(r => ({ name: r.name || "" }));   // I42：出生位已移除
+  // R3-L7：timeline 已指派的 role 视为已配置——重开编辑器补空行（保存时自动补名），修「保存后角色区显示没配置」
+  {
+    const maxUsed0 = (Array.isArray(t.timeline) ? t.timeline : [])
+      .reduce((m, s) => Math.max(m, Number(s?.role) || 0), 0);
+    while (rolesRows.length < Math.min(maxUsed0, 5)) rolesRows.push({ name: "" });
+  }
   const sameMapEntries = () => data.entries.filter(e => e.map === t.map && e.status !== "retired");
   const opt = (arr, cur) => arr.map(([v, cn]) =>
     `<option value="${v}" ${cur === v ? "selected" : ""}>${cn}</option>`).join("");
@@ -1482,9 +1488,16 @@ function tacticEditor(idOrNew) {
       steps.push({ t: tt, ...(role ? { role } : {}), ...(text ? { text } : {}), ...(use ? { use } : {}) });
     }
     if (steps.length > 20) { toast("时间轴最多 20 步"); return; }
-    const rolesClean = rolesRows
-      .map(r => ({ ...(r.name.trim() ? { name: r.name.trim() } : {}) }))
-      .filter(r => r.name);
+    // R3-L7：角色行=最后一个有名字的行 ∪ timeline 指派的最大 role（自动补名「角色N」）——
+    // 旧逻辑过滤未命名行会导致 role 序号漂移+重开后角色区消失（用户 2026-10-26 反馈）
+    let roleN = 0;
+    for (let i = 0; i < rolesRows.length; i++) if ((rolesRows[i]?.name || "").trim()) roleN = i + 1;
+    roleN = Math.min(5, Math.max(roleN, Math.min(steps.reduce((m, s) => Math.max(m, s.role || 0), 0), 5)));
+    const rolesClean = [];
+    for (let i = 0; i < roleN; i++) {
+      const nm = (rolesRows[i]?.name || "").trim();
+      rolesClean.push({ name: nm || `角色${i + 1}` });
+    }
     const status = val("tf-status");
     const tactic = {
       id: t.id, map: $("#tf-map", el).value, side: val("tf-side"),

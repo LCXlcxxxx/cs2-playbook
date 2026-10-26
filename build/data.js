@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-26T23:45:25",
- "builtAt": "2026-10-26T15:45:25Z",
+ "generated_at": "2026-10-27T00:14:48",
+ "builtAt": "2026-10-26T16:14:48Z",
  "SCHEMA": {
   "entry": [
    {
@@ -6073,7 +6073,7 @@ window.PLAYBOOK = {
    "id": "dust2-default",
    "map": "de_dust2",
    "side": "T",
-   "title": "打法要点（大白话版）",
+   "title": "提速上A小",
    "window": "整局",
    "status": "draft",
    "uses": [
@@ -6084,10 +6084,33 @@ window.PLAYBOOK = {
    ],
    "timeline": [
     {
-     "t": "1:53",
+     "t": "1:50",
      "role": 1,
-     "text": 123,
-     "use": "dust2-t-smoke-a-prot"
+     "text": "出匪口提速A小突破"
+    },
+    {
+     "t": "1:50",
+     "role": 2,
+     "text": "出匪口提速A小补枪"
+    },
+    {
+     "t": "1:53",
+     "role": 3,
+     "text": "跳暗道丢中门烟A小火，L位丢A小闪辅助队友，断后",
+     "use": "dust2-t-smoke-mid-door"
+    },
+    {
+     "t": "1:50",
+     "role": 4,
+     "text": "出匪口提速A小补枪"
+    },
+    {
+     "t": "1:50",
+     "role": 5,
+     "text": "跳后花摸B2B1清点"
+    },
+    {
+     "t": "1:55"
     }
    ],
    "sections": [
@@ -6120,6 +6143,28 @@ window.PLAYBOOK = {
       "- 常见分法：1 人 A 大、1 人 A 小和 A 包点、1 人中路看情况报点、1 人守 B、1 人到处补位",
       "- 守 B 的人别被假动静骗走，B 一空就难回来了",
       "- 中路的任务主要是「看和报」，不用非抢下来；听到动静先确认再支援"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dust2-plan-01",
+   "map": "de_dust2",
+   "side": "both",
+   "title": "测试",
+   "window": "整局",
+   "status": "draft",
+   "uses": [],
+   "timeline": [
+    {
+     "t": "1:55"
+    }
+   ],
+   "sections": [
+    {
+     "title": "",
+     "lines": [
+      "111"
      ]
     }
    ]

@@ -1834,6 +1834,18 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 .pin-name-chip .pn-reset:hover { border-color: var(--accent); color: var(--accent); }
 .pin-name-chip:hover { background: rgba(16, 20, 28, 0.94); color: inherit; }
 
+/* R3-L7：时间轴按角色分动线（筛选 chips + 非选中角色步骤弱化） */
+.tl-role-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+.tl-step.off { opacity: 0.35; }
+
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {
   background: var(--panel);

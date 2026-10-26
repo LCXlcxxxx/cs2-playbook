@@ -621,6 +621,9 @@ function setupNadeLayer(el, mapKey) {
 
 /* ---------------- I41：时间轴图层 v2（角色标 + 标签堆 + 真实动线） ---------------- */
 
+// R3-L7：时间轴动线按角色筛选（0=全部；会话内不持久化）——用户 2026-10-27 拍板「按角色分动线」
+let tlRoleFilter = 0;
+
 // 倒计时解析："M:SS" → 秒数（0..115=1:55 上限）；非规范返回 null（显示 ⚠，滚轮重选即修复）
 function parseCountdown(s) {
   const m = /^(\d{1,2}):([0-5]\d)$/.exec(String(s || "").trim());
@@ -656,6 +659,7 @@ function setupTimelineLayer(el, mapKey) {
   if (!state.tlBoard || !boards.some(b => b.id === state.tlBoard)) state.tlBoard = boards[0].id;
   const board = boards.find(b => b.id === state.tlBoard);
   const steps = Array.isArray(board.timeline) ? board.timeline : [];
+  if (tlRoleFilter && !steps.some(s => s.role === tlRoleFilter)) tlRoleFilter = 0;   // 换板后筛选角色不存在则回全部
   const callouts = (allCallouts() || {})[mapKey] || [];
   const roles = (Array.isArray(board.roles) ? board.roles : []).slice(0, 5);
   const roleColor = n => PLAYER_COLORS[(n - 1) % PLAYER_COLORS.length];
@@ -711,6 +715,7 @@ function setupTimelineLayer(el, mapKey) {
   const anchors = {};
   for (let n = 1; n <= 5; n++) {
     if (!ordered.some(x => x.st.role === n)) continue;   // 该角色没有任何步骤不立标
+    if (tlRoleFilter && n !== tlRoleFilter) continue;    // R3-L7：角色筛选——只立选中角色（动线/标签堆随之只画该角色）
     const a = roleAnchor(n);
     if (a) anchors[n] = a;
   }
@@ -763,15 +768,25 @@ function setupTimelineLayer(el, mapKey) {
 
   // 步骤卡（时间序）：倒计时徽章 + 角色徽章 + text/自动生成文 + use chip
   if (strips) {
+    // R3-L7：按角色分动线——筛选 chips（≥2 个角色才出现；点击 render() 全量重渲，无监听堆叠）
+    const usedRolesN = [...new Set(steps.map(s => s.role).filter(Boolean))];
+    const roleFilterChips = usedRolesN.length > 1
+      ? `<div class="tl-role-filter">动线只看：` +
+        `<button class="editor-btn mini tl-rf ${tlRoleFilter === 0 ? "primary" : ""}" data-tlrf="0">全部</button>` +
+        usedRolesN.map(n => `<button class="editor-btn mini tl-rf ${tlRoleFilter === n ? "primary" : ""}"
+          data-tlrf="${n}" title="${escapeHtml(roleName(n))} 的动线">${roleMark(n)}</button>`).join("") + `</div>`
+      : "";
     strips.innerHTML = `
       <div class="tl-strip card">
         <div class="tl-strip-head">${escapeHtml(board.title || board.id)}
           <span class="set-tip">${ordered.length} 步 · 时间窗 ${escapeHtml(board.window || "")} · 1:55=开局 0:00=回合结束</span></div>
+        ${roleFilterChips}
         ${ordered.map((x, i) => {
           const c = coords[i];
           const chained = !!(x.st.role && anchors[x.st.role]);
+          const dimmed = tlRoleFilter && x.st.role && x.st.role !== tlRoleFilter;   // R3-L7：非选中角色弱化
           return `
-          <div class="tl-step ${chained ? "has-role" : ""}" data-step="${i}" role="button" tabindex="0">
+          <div class="tl-step ${chained ? "has-role" : ""}${dimmed ? " off" : ""}" data-step="${i}" role="button" tabindex="0">
             ${x.st.role ? `<span class="tl-n" style="background:${roleColor(x.st.role)}">${roleMark(x.st.role)}</span>`
                         : `<span class="tl-n none" title="未指派角色">·</span>`}
             <span class="tl-t">${escapeHtml(x.st.t || "")}${x.sec == null ? ` <span class="tl-warn">⚠</span>` : ""}</span>
@@ -820,6 +835,12 @@ function setupTimelineLayer(el, mapKey) {
     strips.querySelectorAll("[data-jump]").forEach(chip => chip.addEventListener("click", ev => {
       ev.stopPropagation();
       jumpToEntry(chip.dataset.jump, "tactics");
+    }));
+    // R3-L7：角色筛选 chips（render() 重渲=无监听堆叠）
+    strips.querySelectorAll("[data-tlrf]").forEach(btn => btn.addEventListener("click", ev => {
+      ev.stopPropagation();
+      tlRoleFilter = Number(btn.dataset.tlrf) || 0;
+      render();
     }));
   }
   el.addEventListener("click", () => setSel(null));   // 点地图空白清高亮

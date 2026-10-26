@@ -1244,6 +1244,62 @@ def r3l6_delete_refs(page, base):
     assert r["related"] == ["keep"], f"内存 related 清理: {r['related']!r}"
 
 
+# ---------------------------------------------------------------- R3-L7 角色往返 + 按角色分动线
+
+@case("R3L7/角色往返：未命名 role 保存自动补名重开不丢；时间轴按角色筛选动线")
+def r3l7_roles(page, base):
+    goto(page, base)
+    # 注入板：timeline 指派 role 1/2 但 roles 名单为空（用户踩坑形态）；用两颗真实道具
+    page.evaluate("""() => {
+      state.map = 'de_dust2';   // 时间轴层按当前地图找板
+      const e1 = PLAYBOOK.entries.find(x => x.map === 'de_dust2' && x.side !== 'CT');
+      const e2 = PLAYBOOK.entries.find(x => x.map === 'de_dust2' && x.side !== 'CT' && x.id !== e1.id);
+      data.tactics.push({ id: 'tmp-plan-r7', map: 'de_dust2', side: 'T', title: 'R7测试板',
+        window: '整局', status: 'draft', uses: [e1.id, e2.id], roles: [],
+        timeline: [{ t: '1:50', role: 1, use: e1.id }, { t: '1:40', role: 2, use: e2.id }],
+        body: '## 测试' });
+      state.tacticEditId = 'tmp-plan-r7'; render();
+    }""")
+    page.wait_for_timeout(350)
+    # 编辑器重开：角色区应显示 2 行（不再是「还没配置角色」）
+    rows = page.evaluate("() => document.querySelectorAll('#role-rows .role-row').length")
+    assert rows == 2, f"重开编辑器角色区应自动补 2 行，实际 {rows}"
+    empty = page.evaluate("() => !!document.querySelector('#role-rows .chip-empty')")
+    assert not empty, "不应显示「还没配置角色」"
+    # 保存 → 覆盖层 roles 自动补名（角色1/角色2），timeline role 引用往返一致
+    page.evaluate("() => document.getElementById('tf-save').click()")
+    page.wait_for_timeout(400)
+    saved = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-tactics-v1') || '{\"edited\":{}}').edited || {})['tmp-plan-r7'] || null")
+    assert saved and saved.get("roles") == [{"name": "角色1"}, {"name": "角色2"}], \
+        f"保存应自动补名: {saved and saved.get('roles')!r}"
+    # 时间轴层按角色筛选
+    page.evaluate("""() => { state.tacticEditId = null; state.mapLayer = 'timeline';
+      state.tlBoard = 'tmp-plan-r7'; render(); }""")
+    page.wait_for_timeout(350)
+    assert page.evaluate("() => document.querySelectorAll('.tl-rf').length") == 3, "应有 全部+①+② 三个筛选钮"
+    assert page.evaluate("() => document.querySelectorAll('.tl-role').length") == 2, "全部态应立 2 个角色标"
+    page.evaluate("""() => [...document.querySelectorAll('.tl-rf')].find(b => b.dataset.tlrf === '1').click()""")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => document.querySelectorAll('.tl-role').length") == 1, "筛选①后应只剩角色 1 标"
+    n_lines = page.evaluate("() => document.querySelectorAll('.tl-line').length")
+    assert n_lines == 1, f"筛选①后动线应只剩该角色 1 条，实际 {n_lines}"
+    off = page.evaluate("() => document.querySelectorAll('.tl-step.off').length")
+    assert off == 1, f"步骤卡应弱化非选中角色 1 行，实际 {off}"
+    page.evaluate("""() => [...document.querySelectorAll('.tl-rf')].find(b => b.dataset.tlrf === '0').click()""")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => document.querySelectorAll('.tl-role').length") == 2, "回全部应恢复 2 个角色标"
+    # 清理
+    page.evaluate("""() => {
+      const ov = JSON.parse(localStorage.getItem('pb-tactics-v1') || '{}');
+      if (ov.edited) delete ov.edited['tmp-plan-r7'];
+      localStorage.setItem('pb-tactics-v1', JSON.stringify(ov));
+      data.tactics = data.tactics.filter(x => x.id !== 'tmp-plan-r7');
+      tlRoleFilter = 0; state.mapLayer = 'callouts'; state.map = 'de_mirage'; render();
+    }""")
+    page.wait_for_timeout(200)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1297,6 +1353,7 @@ CASES = [
     r3_compress, r3l3_customchips,
     r3l4_primary,
     r3l6_delete_refs,
+    r3l7_roles,
     s6_pixels,
 ]
 
