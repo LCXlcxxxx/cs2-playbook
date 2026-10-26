@@ -899,7 +899,7 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 /* 标题+tags 主区（I48）：占据自由空间；拥挤时标题省略号、tags 整体裁切，都不换行不撑高行 */
 .entry-row .row-main { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .entry-row .row-title { font-weight: 700; color: #fff; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.entry-row .row-prefix { font-size: 12px; font-weight: 500; color: var(--text-dim); font-style: normal; }
+.entry-row .row-prefix { font-size: 15px; font-weight: 600; color: #b9c5d6; font-style: normal; }   /* 来源前缀（I48 弱化、用户 2026-10-26 反馈太暗——提亮提大，仍次于 17px 白粗标题） */
 .entry-row .row-tags { display: flex; gap: 5px; flex: 0 1 auto; min-width: 0; overflow: hidden; }
 .entry-row .row-tag {
   font-size: 14px; line-height: 1.45; font-style: normal;
