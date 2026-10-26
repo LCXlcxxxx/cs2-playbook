@@ -1,7 +1,12 @@
 __pycache__/
-build/
 dist/
 *.bak
 *.zip
 tools/_test*
 cookies.txt
+
+# build/ 下是临时脚本、日志与调试产物，不入库。
+# 唯一例外 build/data.js：index.html 运行时直接依赖它，
+# GitHub Pages 部署必须带上，否则页面会报「没有找到 build/data.js」。
+build/*
+!build/data.js
