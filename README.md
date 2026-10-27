@@ -2,6 +2,7 @@
 
 CS2 游戏中快速查看道具点位与默认打法的副屏工具。
 
+- **在线版（GitHub Pages，免下载浏览器直接开）**：https://lcxlcxxxx.github.io/cs2-playbook/
 - 项目规范（最高约束）：[AGENTS.md](AGENTS.md)
 - 开发计划（分期任务与技术要点）：[docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - 迭代开发包（查看器功能迭代）：[docs/iterations/](docs/iterations/)
@@ -21,6 +22,8 @@ CS2 游戏中快速查看道具点位与默认打法的副屏工具。
 - 副屏置顶：双击 `tools\pin.bat`（F4 置顶 / F3 半透明，需 AutoHotkey v2）。
 
 ## 开发者
+
+从 GitHub 克隆本仓库接手开发：先读 [AGENTS.md](AGENTS.md)（项目宪法，硬约束与数据模型）与 [docs/DEV.md](docs/DEV.md)（开发手册：环境、git 流程、测试坑）；内容/代码改动遵循「每迭代 = 改动 + 台账行 + 一条提交」。本仓库 main 分支根目录同时是 GitHub Pages 站点，`build/data.js` 必须入库。
 
 命令行工具（开发会话用，使用者无需接触）：
 
