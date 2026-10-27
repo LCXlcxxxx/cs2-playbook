@@ -1908,6 +1908,34 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 .tld-thumb span { display: block; font-size: 12px; color: var(--text-dim); padding: 2px 6px; }
 .tld-thumb:hover { border-color: var(--accent); }
 
+/* R3-L12：分拣台行内调落点 */
+.cell-pin {
+  font-size: 13px;
+  padding: 3px 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.cell-pin:hover { border-color: var(--accent); color: var(--accent); }
+.cell-pin.has { border-color: var(--accent); color: var(--accent); }
+.pin-mark {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: inherit;
+  padding: 0;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.pin-mark.cur { font-size: 21px; }
+
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {
   background: var(--panel);

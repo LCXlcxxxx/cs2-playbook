@@ -192,7 +192,9 @@ function sortAddRow() {
     uid: "r" + Date.now() + Math.random().toString(36).slice(2, 6),
     title: "", origin: "", targets: [], id: "", idTouched: false, adv: false,
     side: "T", type: "smoke", click: "lmb", move: "stand", action: "jump",
-    phase: "default", verified: sortSt.srcMode !== "video", notes: "",   // R3-L1①：视频档新行默认不勾实测
+    phase: "default", verified: false, notes: "",   // R3-L12：实测默认不勾（单勾/表头▾全勾）
+    tags: [],    // R3-L12：行内标签（逗号分隔输入，导入写 tags）
+    pins: {},    // R3-L12：行内调点（键=目标名 → [u,v]；导入写 pin_targets）
     slots: { "1-stand": null, "2-aim": null, "4-result": null },
   };
   sortAutoId(row);
@@ -269,7 +271,8 @@ function sortStripRow(row) {
   }
   return { uid: row.uid, title: row.title, origin: row.origin, targets: row.targets, id: row.id,
     idTouched: row.idTouched, adv: row.adv, side: row.side, type: row.type, click: row.click,
-    move: row.move, action: row.action, phase: row.phase, verified: row.verified, notes: row.notes, slots };
+    move: row.move, action: row.action, phase: row.phase, verified: row.verified, notes: row.notes,
+    tags: row.tags || [], pins: row.pins || {}, slots };
 }
 
 function saveSortDraftNow() {
@@ -302,6 +305,8 @@ async function restoreSortDraft(draft) {
   for (const dr of draft.rows || []) {
     const row = { ...dr, slots: { "1-stand": null, "2-aim": null, "4-result": null } };
     row.targets = Array.isArray(row.targets) ? row.targets : [];
+    row.tags = Array.isArray(row.tags) ? row.tags : [];
+    row.pins = (row.pins && typeof row.pins === "object") ? row.pins : {};
     for (const [slot, meta] of Object.entries(dr.slots || {})) {
       if (!meta) continue;
       if (meta.src === "pool" && meta.poolKey && sortSt.pool.has(meta.poolKey)) {
@@ -383,6 +388,113 @@ async function sortAutoGroup(group) {
 }
 
 /* ---------------- R3-L1⑤：表头批量设列（▾ 小菜单应用到全表） ---------------- */
+
+/* ---------------- R3-L12：行内调落点弹窗（点击地图设选中目标的落点；报点位虚位标记） ---------------- */
+
+function openSortPinAdjuster(row) {
+  const { map } = sortRowMap(row);
+  if (!map || !data.maps[map]?.radar_exists) { toast("该行还没有确定地图：先放素材图或选全局地图"); return; }
+  const targets = (row.targets || []).filter(Boolean);
+  if (!targets.length) { toast("先给这行选目标——落点跟着目标走"); return; }
+  const callouts = (allCallouts() || {})[map] || [];
+  const snap = { ...(row.pins || {}) };   // 取消还原快照
+  row.pins = { ...(row.pins || {}) };
+  let cur = targets[0];
+  const mapInfo = data.maps[map];
+  const ov = document.createElement("div");
+  ov.className = "picker-overlay";
+  ov.style.zIndex = sortSt.preview ? 90 : 80;
+  ov.innerHTML = `
+    <div class="picker-card">
+      <div class="picker-head">
+        <div class="picker-tabs">${targets.map(t =>
+          `<button type="button" class="picker-tab ${t === cur ? "active" : ""}" data-pt="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>
+        <span class="set-tip">点击地图＝把选中目标的落点设到该处（可反复点击微调；虚位＝报点中心）</span>
+      </div>
+      <div class="picker-map" data-pinmap>
+        <img class="radar" src="${mapInfo.radar}" alt="雷达底图" draggable="false">
+        ${targets.map(t => {
+          const c = callouts.find(cc => cc.name === t || strictSpotMatch(cc, t));
+          const p = row.pins[t] || (c ? [c.u, c.v] : null);
+          if (!p) return "";
+          return `<button type="button" class="pin-mark ${t === cur ? "cur" : ""}" data-pinmark="${escapeHtml(t)}"
+            style="left:${p[0] * 100}%;top:${p[1] * 100}%" title="${escapeHtml(t)}${row.pins[t] ? "（已调）" : "（报点位）"}">${row.pins[t] ? "📍" : "◎"}</button>`;
+        }).join("")}
+      </div>
+      <div class="picker-foot">
+        <span class="picker-status" data-pinstatus></span>
+        <span class="picker-actions">
+          <button type="button" class="editor-btn" data-pincancel>取消</button>
+          <button type="button" class="editor-btn primary" data-pinok>完成</button>
+        </span>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const statusEl = $("[data-pinstatus]", ov);
+  const statusText = () => {
+    const done = targets.filter(t => row.pins[t]).length;
+    statusEl.textContent = `已调 ${done}/${targets.length} 个落点（未调的导入后停在报点中心）`;
+  };
+  statusText();
+  const close = () => {
+    document.removeEventListener("keydown", onEsc, true);
+    state.picking = false;
+    pickerClose = null;
+    ov.remove();
+  };
+  const cancel = () => { row.pins = snap; close(); drawSortStation(); };
+  const onEsc = ev => {
+    if (ev.key !== "Escape") return;
+    ev.preventDefault(); ev.stopPropagation(); cancel();
+  };
+  document.addEventListener("keydown", onEsc, true);
+  state.picking = true;
+  pickerClose = cancel;
+  ov.addEventListener("click", ev => {
+    if (ev.target === ov) { cancel(); return; }
+    const tab = ev.target.closest("[data-pt]");
+    if (tab) {
+      cur = tab.dataset.pt;
+      $$(".picker-tab", ov).forEach(b => b.classList.toggle("active", b.dataset.pt === cur));
+      $$(".pin-mark", ov).forEach(m => {
+        const isCur = m.dataset.pinmark === cur;
+        m.classList.toggle("cur", isCur);
+        m.textContent = isCur ? "📍" : "◎";
+      });
+      return;
+    }
+    if (ev.target.closest("[data-pincancel]")) { cancel(); return; }
+    if (ev.target.closest("[data-pinok]")) {
+      close();
+      drawSortStation();
+      toast(Object.keys(row.pins).length ? "落点已记录——导入后这颗的显示位就用它 ✓" : "未调整任何落点");
+      return;
+    }
+    // 点地图设当前目标落点
+    const mapBox = ev.target.closest("[data-pinmap]");
+    if (mapBox) {
+      const radar = $("img.radar", mapBox);
+      const rect = radar.getBoundingClientRect();
+      const u = (ev.clientX - rect.left) / rect.width, v = (ev.clientY - rect.top) / rect.height;
+      if (u < 0 || u > 1 || v < 0 || v > 1) return;
+      row.pins[cur] = [+u.toFixed(4), +v.toFixed(4)];
+      let mark = $(`[data-pinmark="${CSS.escape(cur)}"]`, ov);
+      if (!mark) {
+        mark = document.createElement("button");
+        mark.type = "button";
+        mark.className = "pin-mark cur";
+        mark.dataset.pinmark = cur;
+        mapBox.appendChild(mark);
+      }
+      mark.classList.add("cur");
+      mark.textContent = "📍";
+      mark.style.left = `${u * 100}%`;
+      mark.style.top = `${v * 100}%`;
+      mark.title = `${cur}（已调）`;
+      statusText();
+    }
+  });
+}
 
 function openBulkMenu(col, anchorBtn) {
   document.getElementById("pb-bulk-menu")?.remove();
@@ -530,7 +642,9 @@ async function sortImportAll() {
         title: row.title.trim() || "未命名",
         oneline,
         difficulty: "normal", phase: [row.phase], status: row.verified ? "verified" : "draft",
-        spots, tags: [], related: [],
+        tags: (row.tags || []).filter(Boolean),   // R3-L12：行内标签导入
+        spots, related: [],
+        ...(Object.keys(row.pins || {}).length ? { pin_targets: { ...row.pins } } : {}),   // R3-L12：行内调点导入（空不写）
         source: sortSt.srcMode === "video"   // R3-L1①：本批来源（修硬编码 self 的署名缺口）
           ? { kind: "video", creator: sortSt.srcCreator.trim(), url: sortSt.srcUrl.trim() }
           : { kind: "self", creator: "自己", url: "" },
@@ -683,6 +797,13 @@ function openSortStation() {
     </div>`;
   document.body.appendChild(el);
   sortSt.sortEl = el;
+  // R3-L12：全库标签 datalist（行内标签输入建议）
+  const dl = document.createElement("datalist");
+  dl.id = "pb-tag-datalist";
+  const libTags = new Set();
+  for (const x of data.entries) for (const t of (x.tags || [])) if (String(t).trim()) libTags.add(String(t).trim());
+  dl.innerHTML = [...libTags].sort((a, b) => a.localeCompare(b, "zh")).map(t => `<option value="${escapeHtml(t)}">`).join("");
+  el.appendChild(dl);
 
   const mapSel = $("#sort-global-map", el);
   // 首项「全部素材」（I29）：选择同时决定素材池的地图过滤范围与行地图兜底
@@ -756,6 +877,13 @@ function openSortStation() {
     // R3-L1③：智能三连成组
     const ag = ev.target.closest("[data-autogroup]");
     if (ag) { sortAutoGroup(ag.dataset.autogroup); return; }
+    // R3-L12：行内调落点
+    const pinBtn = ev.target.closest("[data-pinrow]");
+    if (pinBtn) {
+      const row = sortSt.rows.find(r => r.uid === pinBtn.dataset.pinrow);
+      if (row) openSortPinAdjuster(row);
+      return;
+    }
     // R3-L1⑤：表头批量设列
     const bsBtn = ev.target.closest(".pb-th-set");
     if (bsBtn && !bsBtn.disabled) { openBulkMenu(bsBtn.dataset.bulkcol, bsBtn); return; }
@@ -767,6 +895,7 @@ function openSortStation() {
         const prev = sortSt.rows[i - 1], row = sortSt.rows[i];
         row.origin = prev.origin; row.click = prev.click; row.move = prev.move; row.action = prev.action;
         row.phase = prev.phase; row.side = prev.side;
+        row.tags = [...(prev.tags || [])];   // R3-L12：标签一并抄（同图同型常同标）
         row.verified = sortSt.srcMode === "video" ? false : prev.verified;
         drawSortStation();
       }
@@ -882,6 +1011,7 @@ function openSortStation() {
     const k = t.dataset.k;
     if (k === "id") { row.id = t.value.trim().toLowerCase(); row.idTouched = true; }
     else if (k === "verified") row.verified = t.checked;
+    else if (k === "tags") row.tags = t.value.split(/[,，、]/).map(s => s.trim()).filter(Boolean);   // R3-L12：行内标签解析
     else row[k] = t.value;
     if (k === "type" && !row.idTouched) {
       sortAutoId(row);
@@ -1139,6 +1269,8 @@ async function drawSortStation() {
       <td><input class="cell" data-row="${row.uid}" data-k="title" value="${escapeHtml(row.title)}" placeholder="标题">${idHtml}</td>
       <td><button class="cell-pick" data-pickrow="${row.uid}" data-mode="origin">${row.origin ? escapeHtml(row.origin) : "＋ 选起点"}</button></td>
       <td><button class="cell-pick" data-pickrow="${row.uid}" data-mode="target">${row.targets.length ? escapeHtml(row.targets.join("、")) : "＋ 选目标"}</button></td>
+      <td><button class="cell-pin ${Object.keys(row.pins || {}).length ? "has" : ""}" data-pinrow="${row.uid}"
+            title="调整落点显示位（可选）——点开地图，点选目标后点击地图设落点">${Object.keys(row.pins || {}).length ? `📍 ${Object.keys(row.pins).length}` : "＋ 调点"}</button></td>
       <td>${sortCellSelect(row.side, [["T", "T"], ["CT", "CT"], ["both", "双方"]], "side", row)}</td>
       <td>${sortCellSelect(row.type, [["smoke", "烟"], ["flash", "闪"], ["molotov", "火"], ["he", "雷"]], "type", row)}</td>
       <td>${sortCellSelect(row.click, [["lmb", "左键"], ["rmb", "右键"], ["both", "双键"]], "click", row)}</td>
@@ -1146,6 +1278,7 @@ async function drawSortStation() {
       <td>${sortCellSelect(row.action, [["direct", "直投"], ["jump", "跳投"], ["crouch-jump", "蹲跳投"]], "action", row)}</td>
       <td>${sortCellSelect(row.phase, PHASE_OPTS, "phase", row)}</td>
       <td class="cell-v"><input type="checkbox" data-row="${row.uid}" data-k="verified" ${row.verified ? "checked" : ""}${sortSt.srcMode === "video" ? " disabled" : ""} title="${sortSt.srcMode === "video" ? "视频抽帧一律待验证——实测过才能转绿" : "勾选=导入即「已实测」（记今天日期）"}"></td>
+      <td><input class="cell wide" data-row="${row.uid}" data-k="tags" value="${escapeHtml((row.tags || []).join("，"))}" placeholder="标签（逗号分隔，可空）" list="pb-tag-datalist"></td>
       <td><input class="cell wide" data-row="${row.uid}" data-k="notes" value="${escapeHtml(row.notes)}" placeholder="一句话怎么扔（卡片大字）"></td>
       ${cells}
     </tr>`;
@@ -1154,12 +1287,12 @@ async function drawSortStation() {
     <div class="sort-table-note">id 是道具的文件名，自动生成、不参与搜索/地图选点/钻取，无需填写；起点和目标才是在地图上点选的。点表格里的行选中它，再点素材图放大后按 1/2/4 入坑。</div>
     <table class="sort-table">
       <thead><tr>
-        <th></th><th>标题</th><th>起点</th><th>目标</th>
+        <th></th><th>标题</th><th>起点</th><th>目标</th><th>落点📍</th>
         <th>阵营<button type="button" class="pb-th-set" data-bulkcol="side" title="一键设置全表">▾</button></th>
         <th>类型<button type="button" class="pb-th-set" data-bulkcol="type" title="一键设置全表">▾</button></th>
         <th>键位</th><th>移动</th><th>投掷</th>
         <th>阶段<button type="button" class="pb-th-set" data-bulkcol="phase" title="一键设置全表">▾</button></th>
-        <th>已实测✓<button type="button" class="pb-th-set" data-bulkcol="verified" ${sortSt.srcMode === "video" ? "disabled" : ""} title="${sortSt.srcMode === "video" ? "视频来源一律待验证" : "一键设置全表"}">▾</button></th><th>备注(一句话)</th>
+        <th>已实测✓<button type="button" class="pb-th-set" data-bulkcol="verified" ${sortSt.srcMode === "video" ? "disabled" : ""} title="${sortSt.srcMode === "video" ? "视频来源一律待验证" : "默认不勾——实测过才勾（可一键全勾）"}">▾</button></th><th>标签</th><th>备注(一句话)</th>
         <th>站位</th><th>瞄点</th><th>落点&效果</th>
       </tr></thead>
       <tbody>${rowsHtml}</tbody>

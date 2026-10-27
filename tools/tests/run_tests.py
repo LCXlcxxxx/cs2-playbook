@@ -1530,6 +1530,91 @@ def r3l11_gif(page, base):
     assert r["re"] and r["reUp"], f"分拣台白名单应放行 gif: {r!r}"
 
 
+# ---------------------------------------------------------------- R3-L12 分拣台默认实测/标签/调点
+
+@case("R3L12/分拣台：实测默认不勾；行内标签导入；调点弹窗设 pin 写盘")
+def r3l12_sortext(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      localStorage.removeItem('pb-entries-v1'); localStorage.removeItem('pb-sort-draft-v1');
+      // 压缩桩
+      window._realCompress = compressToSlot;
+      compressToSlot = async (f) => ({ blob: f, ext: 'jpg' });
+      sortSt.globalMap = 'de_dust2';
+      sortSt.rows = []; sortSt.srcMode = 'self';
+      const r = sortAddRow();
+      window._r = r;
+      r.targets = ['警家', '中门']; r.origin = '匪家'; r.title = 'L12测试烟';
+      r.type = 'smoke'; r.side = 'T';
+      // 模拟放入三图（绕过池）
+      for (const s of ['1-stand', '2-aim', '4-result']) {
+        r.slots[s] = { src: 'file', group: '', name: s + '.jpg', blob: new Blob(['x']), ext: 'jpg',
+          url: URL.createObjectURL(new Blob(['x'])), poolKey: null };
+      }
+      sortAutoId(r);
+      openSortStation();
+    }""")
+    page.wait_for_timeout(300)
+    # 1. 实测默认不勾
+    assert page.evaluate("""() => {
+      const cb = document.querySelector('.sort-table input[data-k="verified"]');
+      return { checked: cb.checked, row: window._r.verified };
+    }""") == {"checked": False, "row": False}, "实测列默认应不勾"
+    # 2. 行内标签：输入逗号分隔 → change 解析为数组
+    page.evaluate("""() => {
+      const inp = document.querySelector('.sort-table input[data-k="tags"]');
+      inp.value = '回防, 单向';
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+    }""")
+    page.wait_for_timeout(150)
+    assert page.evaluate("() => window._r.tags") == ["回防", "单向"], "tags 输入应解析为数组"
+    # 3. 调点弹窗：打开 → 切目标 → 点击地图设两点 → 完成
+    page.evaluate("""() => document.querySelector('[data-pinrow]').click()""")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => !!document.querySelector('[data-pinmap]')"), "调点弹窗应打开"
+    page.evaluate("""() => {
+      // 选中第二个目标（中门）
+      const tab = [...document.querySelectorAll('[data-pt]')].find(b => b.dataset.pt === '中门');
+      tab.click();
+      const mapBox = document.querySelector('[data-pinmap]');
+      const radar = mapBox.querySelector('img.radar');
+      const rect = radar.getBoundingClientRect();
+      mapBox.dispatchEvent(new MouseEvent('click', { bubbles: true,
+        clientX: rect.left + rect.width * 0.4, clientY: rect.top + rect.height * 0.4 }));
+    }""")
+    page.wait_for_timeout(200)
+    pin_mid = page.evaluate("() => window._r.pins['中门'] || null")
+    assert pin_mid and abs(pin_mid[0] - 0.4) < 0.01, f"点击地图应设中门落点: {pin_mid!r}"
+    page.evaluate("""() => document.querySelector('[data-pinok]').click()""")
+    page.wait_for_timeout(250)
+    # 4. 导入：tags + pin_targets + draft（未勾实测）进覆盖层
+    page.evaluate("() => sortImportAll()")
+    page.wait_for_timeout(600)
+    added = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-entries-v1') || '{\"added\":[]}').added || []).at(-1) || null")
+    assert added, "导入应产生条目"
+    assert added["tags"] == ["回防", "单向"], f"导入 tags: {added['tags']!r}"
+    assert added["status"] == "draft" and not added.get("checked"), "默认不勾应导入 draft"
+    pt = added.get("pin_targets") or {}
+    assert pt.get("中门") and abs(pt["中门"][0] - 0.4) < 0.01, f"pin_targets 应写入: {pt!r}"
+    # 5. dump 往返：.md 序列化含 tags + pin_targets（块式）
+    rt = page.evaluate("""(a) => {
+      const md = dumpEntryMd(a);
+      return { tags: md.includes('tags:'), pins: md.includes('pin_targets'),
+               parse: parseEntryMd(md) };
+    }""", added)
+    assert rt["tags"] and rt["pins"], f".md 应含 tags/pin_targets 行: {rt!r}"
+    assert rt["parse"]["tags"] == ["回防", "单向"], f"parse tags 往返: {rt['parse']['tags']!r}"
+    # 清理（含 IndexedDB 待写图——否则下个用例顶栏出现「待写入」徽标造成像素漂移）
+    page.evaluate("""async () => {
+      compressToSlot = window._realCompress;
+      closeSortStation(); sortSt.rows = [];
+      localStorage.removeItem('pb-entries-v1'); localStorage.removeItem('pb-sort-draft-v1');
+      for (const it of await allIdbImages()) await removeIdbImage(it.key);
+      refreshSyncBadge();
+    }""")
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1588,6 +1673,7 @@ CASES = [
     r3l9_ids,
     r3l10_drawer,
     r3l11_gif,
+    r3l12_sortext,
     s6_pixels,
 ]
 
