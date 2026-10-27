@@ -16,8 +16,11 @@ status: verified
 spots: [中远匪口, 中路]
 tags: []
 related: []
+pin_targets: {中路: [0.5316, 0.4708]}
 source:
   kind: self
   creator: 自己
 checked: 2026-10-17
 ---
+
+
