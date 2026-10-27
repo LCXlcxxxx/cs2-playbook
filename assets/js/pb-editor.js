@@ -1505,8 +1505,8 @@ function tacticEditor(idOrNew) {
       id: t.id, map: $("#tf-map", el).value, side: val("tf-side"),
       title, window: val("tf-window") || "整局", status,
       uses: [...usesSel],
-      ...(rolesClean.length ? { roles: rolesClean } : {}),
-      ...(steps.length ? { timeline: steps } : {}),
+      roles: rolesClean,   // R3-L15：显式写空数组——删空后省键会被覆盖层「无键=不改」合并保活（用户踩坑）
+      timeline: steps,
       body: $("#tf-body", el).value.replace(/\r\n/g, "\n").trim(),
     };
     if (status === "verified") {

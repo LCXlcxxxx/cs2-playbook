@@ -1671,6 +1671,62 @@ def r3l12_sortext(page, base):
     }""")
 
 
+# ---------------------------------------------------------------- R3-L15 删空保存清除
+
+@case("R3L15/时间轴删空保存＝清除：覆盖层显式空数组，合并后角色标/步骤全消失")
+def r3l15_clear_on_empty(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      state.map = 'de_dust2';
+      const e1 = PLAYBOOK.entries.find(x => x.map === 'de_dust2');
+      data.tactics.push({ id: 'tmp-plan-r15', map: 'de_dust2', side: 'T', title: 'R15测试板',
+        window: '整局', status: 'draft', uses: [e1.id], roles: [{ name: '一号' }],
+        timeline: [{ t: '1:50', role: 1, use: e1.id }], body: '## 测试' });
+      state.tacticEditId = 'tmp-plan-r15'; render();
+    }""")
+    page.wait_for_timeout(350)
+    # 删掉全部时间轴行与角色行（循环点 ✕ 直到清空）
+    page.evaluate("""() => {
+      let guard = 30;
+      while (document.querySelector('[data-tldel]') && guard-- > 0) {
+        document.querySelector('[data-tldel]').click();
+      }
+      guard = 10;
+      while (document.querySelector('[data-roledel]') && guard-- > 0) {
+        document.querySelector('[data-roledel]').click();
+      }
+    }""")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => document.querySelectorAll('#tl-rows .tl-row').length") == 0, "时间轴行应删空"
+    # 保存 → 覆盖层显式空数组 → 合并后板的时间轴/角色清除
+    page.evaluate("() => document.getElementById('tf-save').click()")
+    page.wait_for_timeout(500)
+    saved = page.evaluate(
+        "() => (JSON.parse(localStorage.getItem('pb-tactics-v1') || '{\"edited\":{}}').edited || {})['tmp-plan-r15'] || null")
+    assert saved is not None, "保存应写覆盖层"
+    assert saved.get("timeline") == [] and saved.get("roles") == [], \
+        f"覆盖层应显式空数组: timeline={saved.get('timeline')!r} roles={saved.get('roles')!r}"
+    merged = page.evaluate("""() => {
+      const b = data.tactics.find(x => x.id === 'tmp-plan-r15');
+      return { tl: b.timeline, roles: b.roles };
+    }""")
+    assert merged["tl"] == [] and merged["roles"] == [], f"合并后应已清除: {merged!r}"
+    # 时间轴层应显示「还没有时间轴」且无角色标
+    page.evaluate("""() => { state.tacticEditId = null; state.mapLayer = 'timeline';
+      state.tlBoard = 'tmp-plan-r15'; render(); }""")
+    page.wait_for_timeout(350)
+    assert page.evaluate("() => document.querySelectorAll('.tl-role').length") == 0, "时间轴层不应有角色标"
+    # 清理
+    page.evaluate("""() => {
+      const ov = JSON.parse(localStorage.getItem('pb-tactics-v1') || '{}');
+      if (ov.edited) delete ov.edited['tmp-plan-r15'];
+      localStorage.setItem('pb-tactics-v1', JSON.stringify(ov));
+      data.tactics = data.tactics.filter(x => x.id !== 'tmp-plan-r15');
+      state.mapLayer = 'callouts'; state.map = 'de_mirage'; render();
+    }""")
+    page.wait_for_timeout(200)
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1730,6 +1786,7 @@ CASES = [
     r3l10_drawer,
     r3l11_gif,
     r3l12_sortext,
+    r3l15_clear_on_empty,
     s6_pixels,
 ]
 

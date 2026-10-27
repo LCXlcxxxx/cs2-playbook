@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-27T20:04:59",
- "builtAt": "2026-10-27T12:04:59Z",
+ "generated_at": "2026-10-27T20:22:30",
+ "builtAt": "2026-10-27T12:22:30Z",
  "SCHEMA": {
   "entry": [
    {
@@ -6073,7 +6073,7 @@ window.PLAYBOOK = {
    "id": "dust2-default",
    "map": "de_dust2",
    "side": "T",
-   "title": "提速上A小",
+   "title": "默认",
    "window": "整局",
    "status": "draft",
    "uses": [
@@ -6081,37 +6081,6 @@ window.PLAYBOOK = {
     "dust2-t-smoke-mid-door",
     "dust2-t-smoke-ct",
     "dust2-t-smoke-b-door"
-   ],
-   "timeline": [
-    {
-     "t": "1:50",
-     "role": 1,
-     "text": "出匪口提速A小突破"
-    },
-    {
-     "t": "1:50",
-     "role": 2,
-     "text": "出匪口提速A小补枪"
-    },
-    {
-     "t": "1:53",
-     "role": 3,
-     "text": "跳暗道丢中门烟A小火，L位丢A小闪辅助队友，断后",
-     "use": "dust2-t-smoke-mid-door"
-    },
-    {
-     "t": "1:50",
-     "role": 4,
-     "text": "出匪口提速A小补枪"
-    },
-    {
-     "t": "1:50",
-     "role": 5,
-     "text": "跳后花摸B2B1清点"
-    },
-    {
-     "t": "1:55"
-    }
    ],
    "sections": [
     {
