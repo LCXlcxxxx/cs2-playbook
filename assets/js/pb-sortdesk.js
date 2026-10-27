@@ -195,6 +195,7 @@ function sortAddRow() {
     phase: "default", verified: false, notes: "",   // R3-L12：实测默认不勾（单勾/表头▾全勾）
     tags: [],    // R3-L12：行内标签（逗号分隔输入，导入写 tags）
     pins: {},    // R3-L12：行内调点（键=目标名 → [u,v]；导入写 pin_targets）
+    originPin: null,   // R3-L16：行内调起点（[u,v]；导入写 pin_origin）
     slots: { "1-stand": null, "2-aim": null, "4-result": null },
   };
   sortAutoId(row);
@@ -305,7 +306,7 @@ function sortStripRow(row) {
   return { uid: row.uid, title: row.title, origin: row.origin, targets: row.targets, id: row.id,
     idTouched: row.idTouched, adv: row.adv, side: row.side, type: row.type, click: row.click,
     move: row.move, action: row.action, phase: row.phase, verified: row.verified, notes: row.notes,
-    tags: row.tags || [], pins: row.pins || {}, slots };
+    tags: row.tags || [], pins: row.pins || {}, originPin: row.originPin ? [...row.originPin] : null, slots };
 }
 
 function saveSortDraftNow() {
@@ -340,6 +341,7 @@ async function restoreSortDraft(draft) {
     row.targets = Array.isArray(row.targets) ? row.targets : [];
     row.tags = Array.isArray(row.tags) ? row.tags : [];
     row.pins = (row.pins && typeof row.pins === "object") ? row.pins : {};
+    row.originPin = Array.isArray(row.originPin) ? row.originPin : null;
     for (const [slot, meta] of Object.entries(dr.slots || {})) {
       if (!meta) continue;
       if (meta.src === "pool" && meta.poolKey && sortSt.pool.has(meta.poolKey)) {
@@ -422,7 +424,11 @@ async function sortAutoGroup(group) {
 
 /* ---------------- R3-L1⑤：表头批量设列（▾ 小菜单应用到全表） ---------------- */
 
-/* ---------------- R3-L12：行内调落点弹窗（点击地图设选中目标的落点；报点位虚位标记） ---------------- */
+/* ---------------- R3-L16：行内调落点（与战术板 ✏️ 调点同款交互）——
+   每个目标一枚道具图标：拖拽＝调落点（位移<4px=点击选中）；同区域重叠自动环形散开（仅显示不存点）；
+   选中＝常显名称标签（目标名+已调/报点位+↺ 回报点）+ 起点白点手柄（拖＝调起点显示位）；
+   Esc 两段：先取消选中、再关窗还原。数据存 row.pins（目标→[u,v]）与 row.originPin（[u,v]），
+   导入写 pin_targets / pin_origin；未调的落点导入后停在报点中心。 */
 
 function openSortPinAdjuster(row) {
   const { map } = sortRowMap(row);
@@ -430,10 +436,22 @@ function openSortPinAdjuster(row) {
   const targets = (row.targets || []).filter(Boolean);
   if (!targets.length) { toast("先给这行选目标——落点跟着目标走"); return; }
   const callouts = (allCallouts() || {})[map] || [];
-  const snap = { ...(row.pins || {}) };   // 取消还原快照
+  const snap = { pins: { ...(row.pins || {}) }, originPin: row.originPin ? [...row.originPin] : null };
   row.pins = { ...(row.pins || {}) };
-  let cur = targets[0];
+  row.originPin = row.originPin ? [...row.originPin] : null;
+  const calloutOf = t => callouts.find(cc => cc.name === t || strictSpotMatch(cc, t));
+  const posOf = t => {
+    if (row.pins[t]) return { u: row.pins[t][0], v: row.pins[t][1] };
+    const c = calloutOf(t);
+    return c ? { u: c.u, v: c.v } : null;
+  };
+  const originPos = () => {
+    if (row.originPin) return { u: row.originPin[0], v: row.originPin[1] };
+    const c = calloutOf(row.origin || "");
+    return c ? { u: c.u, v: c.v } : null;
+  };
   const mapInfo = data.maps[map];
+  let sel = null;   // 当前选中的目标名（null=未选中）
   const ov = document.createElement("div");
   ov.className = "picker-overlay";
   ov.style.zIndex = sortSt.preview ? 90 : 80;
@@ -441,17 +459,18 @@ function openSortPinAdjuster(row) {
     <div class="picker-card">
       <div class="picker-head">
         <div class="picker-tabs">${targets.map(t =>
-          `<button type="button" class="picker-tab ${t === cur ? "active" : ""}" data-pt="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>
-        <span class="set-tip">点击地图＝把选中目标的落点设到该处（可反复点击微调；虚位＝报点中心）</span>
+          `<button type="button" class="picker-tab" data-pt="${escapeHtml(t)}" title="选中「${escapeHtml(t)}」">${escapeHtml(t)}</button>`).join("")}</div>
+        <span class="set-tip">拖图标＝调落点 · 点图标＝选中（调起点/回报点）</span>
       </div>
       <div class="picker-map" data-pinmap>
         <img class="radar" src="${mapInfo.radar}" alt="雷达底图" draggable="false">
         ${targets.map(t => {
-          const c = callouts.find(cc => cc.name === t || strictSpotMatch(cc, t));
-          const p = row.pins[t] || (c ? [c.u, c.v] : null);
+          const p = posOf(t);
           if (!p) return "";
-          return `<button type="button" class="pin-mark ${t === cur ? "cur" : ""}" data-pinmark="${escapeHtml(t)}"
-            style="left:${p[0] * 100}%;top:${p[1] * 100}%" title="${escapeHtml(t)}${row.pins[t] ? "（已调）" : "（报点位）"}">${row.pins[t] ? "📍" : "◎"}</button>`;
+          return `<button type="button" class="nade-icon" data-pinicon="${escapeHtml(t)}"
+            style="left:${p.u * 100}%;top:${p.v * 100}%"
+            title="${escapeHtml(t)}${row.pins[t] ? "（已调）" : "（报点位）"}——拖动＝调整落点显示位">
+            <img src="${(TYPE_INFO[row.type] || {}).icon || "assets/icons/icon-he.svg"}" alt=""></button>`;
         }).join("")}
       </div>
       <div class="picker-foot">
@@ -463,10 +482,65 @@ function openSortPinAdjuster(row) {
       </div>
     </div>`;
   document.body.appendChild(ov);
+  const mapBox = $("[data-pinmap]", ov);
+  const radar = $("img.radar", mapBox);
   const statusEl = $("[data-pinstatus]", ov);
   const statusText = () => {
     const done = targets.filter(t => row.pins[t]).length;
-    statusEl.textContent = `已调 ${done}/${targets.length} 个落点（未调的导入后停在报点中心）`;
+    statusEl.textContent = `已调 ${done}/${targets.length} 个落点（未调的导入后停在报点中心）` +
+      (row.originPin ? " · 起点已调" : "");
+  };
+  // 同区域重叠自动环形散开（仅显示不存点——与战术板 ✏️ 调点同款算法）
+  {
+    const clusters = new Map();
+    for (const t of targets) {
+      const p = posOf(t);
+      if (!p) continue;
+      const k = `${p.u.toFixed(3)},${p.v.toFixed(3)}`;
+      (clusters.get(k) || clusters.set(k, []).get(k)).push({ t, u: p.u, v: p.v });
+    }
+    for (const [, arr] of clusters) {
+      if (arr.length < 2) continue;
+      const n = arr.length;
+      arr.forEach((it, i) => {
+        const ang = (2 * Math.PI * i) / n - Math.PI / 2;
+        it.u = Math.min(1, Math.max(0, +(it.u + 0.026 * Math.cos(ang)).toFixed(4)));
+        it.v = Math.min(1, Math.max(0, +(it.v + 0.026 * Math.sin(ang)).toFixed(4)));
+      });
+    }
+    for (const { t, u, v } of [...clusters.values()].flat()) {
+      const ic = $(`[data-pinicon="${CSS.escape(t)}"]`, mapBox);
+      if (ic) { ic.style.left = `${u * 100}%`; ic.style.top = `${v * 100}%`; }
+    }
+  }
+  const drawSel = () => {
+    mapBox.querySelectorAll(".pin-handle, .pin-reset-chip").forEach(x => x.remove());
+    $$(".nade-icon", mapBox).forEach(b => b.classList.toggle("sel", b.dataset.pinicon === sel));
+    $$(".picker-tab", ov).forEach(b => b.classList.toggle("active", b.dataset.pt === sel));
+    if (!sel) return;
+    const p = posOf(sel);
+    if (!p) return;
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "pin-reset-chip pin-name-chip";
+    chip.innerHTML = `<b>${escapeHtml(sel)}</b>` +
+      `<span class="pn-throw">${row.pins[sel] ? "已调" : "报点位"}</span>` +
+      `<span class="pn-reset">↺ 回报点</span>`;
+    chip.title = "↺＝这个目标恢复报点中心";
+    chip.style.left = `${p.u * 100}%`;
+    chip.style.top = `${p.v * 100}%`;
+    chip.style.transform = p.u > 0.7 ? "translate(calc(-100% - 14px), -50%)" : "translate(14px, -50%)";
+    mapBox.appendChild(chip);
+    const o = originPos();
+    if (o) {
+      const h = document.createElement("button");
+      h.type = "button";
+      h.className = "pin-handle";
+      h.style.left = `${o.u * 100}%`;
+      h.style.top = `${o.v * 100}%`;
+      h.title = `起点：${row.origin || "?"} · 拖动＝调整起点显示位`;
+      mapBox.appendChild(h);
+    }
   };
   statusText();
   const close = () => {
@@ -475,60 +549,99 @@ function openSortPinAdjuster(row) {
     pickerClose = null;
     ov.remove();
   };
-  const cancel = () => { row.pins = snap; close(); drawSortStation(); };
+  const cancel = () => {
+    row.pins = snap.pins;
+    row.originPin = snap.originPin ? [...snap.originPin] : null;
+    close();
+    drawSortStation();
+  };
   const onEsc = ev => {
     if (ev.key !== "Escape") return;
-    ev.preventDefault(); ev.stopPropagation(); cancel();
+    ev.preventDefault(); ev.stopPropagation();
+    if (sel) { sel = null; drawSel(); return; }   // 两段：先取消选中
+    cancel();
   };
   document.addEventListener("keydown", onEsc, true);
   state.picking = true;
   pickerClose = cancel;
+  // 图标拖拽（位移<4px=点击选中）——与战术板 ✏️ 调点同款
+  mapBox.querySelectorAll(".nade-icon").forEach(ic => {
+    ic.addEventListener("pointerdown", ev => {
+      ev.stopPropagation();
+      const t = ic.dataset.pinicon;
+      const base = posOf(t) || { u: 0.5, v: 0.5 };
+      let moved = false;
+      const sx = ev.clientX, sy = ev.clientY;
+      const move = ev2 => {
+        const dx = ev2.clientX - sx, dy = ev2.clientY - sy;
+        if (!moved && Math.hypot(dx, dy) < 4) return;
+        moved = true;
+        const rect = radar.getBoundingClientRect();
+        const u = Math.min(1, Math.max(0, base.u + dx / rect.width));
+        const v = Math.min(1, Math.max(0, base.v + dy / rect.height));
+        row.pins[t] = [+u.toFixed(4), +v.toFixed(4)];
+        ic.style.left = `${u * 100}%`;
+        ic.style.top = `${v * 100}%`;
+        if (sel === t) drawSel();
+        statusText();
+      };
+      const up = () => {
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", up);
+        if (!moved) { sel = (sel === t ? null : t); drawSel(); }
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", up);
+    });
+  });
+  // 起点手柄拖拽（选中后出现，委托到 mapBox）
+  mapBox.addEventListener("pointerdown", ev => {
+    const h = ev.target.closest(".pin-handle");
+    if (!h || !sel) return;
+    ev.stopPropagation();
+    const o = originPos();
+    if (!o) return;
+    const rect = radar.getBoundingClientRect();
+    const move = ev2 => {
+      const pu = Math.min(1, Math.max(0, (ev2.clientX - rect.left) / rect.width));
+      const pv = Math.min(1, Math.max(0, (ev2.clientY - rect.top) / rect.height));
+      row.originPin = [+pu.toFixed(4), +pv.toFixed(4)];
+      o.u = pu; o.v = pv;
+      h.style.left = `${pu * 100}%`;
+      h.style.top = `${pv * 100}%`;
+      statusText();
+    };
+    const up = () => {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+  });
   ov.addEventListener("click", ev => {
     if (ev.target === ov) { cancel(); return; }
-    const tab = ev.target.closest("[data-pt]");
-    if (tab) {
-      cur = tab.dataset.pt;
-      $$(".picker-tab", ov).forEach(b => b.classList.toggle("active", b.dataset.pt === cur));
-      $$(".pin-mark", ov).forEach(m => {
-        const isCur = m.dataset.pinmark === cur;
-        m.classList.toggle("cur", isCur);
-        m.textContent = isCur ? "📍" : "◎";
-      });
+    const reset = ev.target.closest(".pn-reset");
+    if (reset && sel) {
+      delete row.pins[sel];
+      const c = calloutOf(sel);
+      const ic = $(`[data-pinicon="${CSS.escape(sel)}"]`, mapBox);
+      if (c && ic) { ic.style.left = `${c.u * 100}%`; ic.style.top = `${c.v * 100}%`; }
+      drawSel(); statusText();
       return;
     }
+    if (ev.target.closest(".pin-name-chip")) { sel = null; drawSel(); return; }
     if (ev.target.closest("[data-pincancel]")) { cancel(); return; }
     if (ev.target.closest("[data-pinok]")) {
       close();
       drawSortStation();
-      toast(Object.keys(row.pins).length ? "落点已记录——导入后这颗的显示位就用它 ✓" : "未调整任何落点");
+      toast(Object.keys(row.pins).length || row.originPin ? "落点/起点已记录——导入后显示位就用它 ✓" : "未调整任何落点");
       return;
     }
-    // 点地图设当前目标落点
-    const mapBox = ev.target.closest("[data-pinmap]");
-    if (mapBox) {
-      const radar = $("img.radar", mapBox);
-      const rect = radar.getBoundingClientRect();
-      const u = (ev.clientX - rect.left) / rect.width, v = (ev.clientY - rect.top) / rect.height;
-      if (u < 0 || u > 1 || v < 0 || v > 1) return;
-      row.pins[cur] = [+u.toFixed(4), +v.toFixed(4)];
-      let mark = $(`[data-pinmark="${CSS.escape(cur)}"]`, ov);
-      if (!mark) {
-        mark = document.createElement("button");
-        mark.type = "button";
-        mark.className = "pin-mark cur";
-        mark.dataset.pinmark = cur;
-        mapBox.appendChild(mark);
-      }
-      mark.classList.add("cur");
-      mark.textContent = "📍";
-      mark.style.left = `${u * 100}%`;
-      mark.style.top = `${v * 100}%`;
-      mark.title = `${cur}（已调）`;
-      statusText();
-    }
+    const tab = ev.target.closest("[data-pt]");
+    if (tab) { sel = tab.dataset.pt; drawSel(); return; }
+    if (ev.target.closest("img.radar")) { sel = null; drawSel(); }   // 点地图空白=取消选中
   });
 }
-
 function openBulkMenu(col, anchorBtn) {
   document.getElementById("pb-bulk-menu")?.remove();
   const OPTS = {
@@ -678,6 +791,7 @@ async function sortImportAll() {
         tags: (row.tags || []).filter(Boolean),   // R3-L12：行内标签导入
         spots, related: [],
         ...(Object.keys(row.pins || {}).length ? { pin_targets: { ...row.pins } } : {}),   // R3-L12：行内调点导入（空不写）
+        ...(row.originPin ? { pin_origin: row.originPin } : {}),   // R3-L16：行内调起点导入
         source: sortSt.srcMode === "video"   // R3-L1①：本批来源（修硬编码 self 的署名缺口）
           ? { kind: "video", creator: sortSt.srcCreator.trim(), url: sortSt.srcUrl.trim() }
           : { kind: "self", creator: "自己", url: "" },
@@ -929,6 +1043,8 @@ function openSortStation() {
         row.origin = prev.origin; row.click = prev.click; row.move = prev.move; row.action = prev.action;
         row.phase = prev.phase; row.side = prev.side;
         row.tags = [...(prev.tags || [])];   // R3-L12：标签一并抄（同图同型常同标）
+        row.pins = { ...(prev.pins || {}) };   // R3-L16：调点一并抄（同点位连录常见）
+        row.originPin = prev.originPin ? [...prev.originPin] : null;
         row.verified = sortSt.srcMode === "video" ? false : prev.verified;
         drawSortStation();
       }

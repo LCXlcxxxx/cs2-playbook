@@ -1624,23 +1624,50 @@ def r3l12_sortext(page, base):
     }""")
     page.wait_for_timeout(150)
     assert page.evaluate("() => window._r.tags") == ["回防", "单向"], "tags 输入应解析为数组"
-    # 3. 调点弹窗：打开 → 切目标 → 点击地图设两点 → 完成
+    # 3. 调点弹窗（R3-L16 战术板同款交互）：拖「中门」图标设落点 → 点选显名称 → 拖起点手柄
     page.evaluate("""() => document.querySelector('[data-pinrow]').click()""")
     page.wait_for_timeout(300)
     assert page.evaluate("() => !!document.querySelector('[data-pinmap]')"), "调点弹窗应打开"
+    drag = page.evaluate("""() => {
+      const ic = document.querySelector('[data-pinicon="中门"]');
+      const rect = document.querySelector('[data-pinmap] img.radar').getBoundingClientRect();
+      const x = rect.left + rect.width * parseFloat(ic.style.left) / 100;
+      const y = rect.top + rect.height * parseFloat(ic.style.top) / 100;
+      ic.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y }));
+      document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x + 30, clientY: y + 10 }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      const callouts = (allCallouts() || {})['de_dust2'] || [];
+      const c = callouts.find(cc => cc.name === '中门');
+      const w = rect.width;
+      return { pin: window._r.pins['中门'] || null,
+               expectU: c ? +(Math.min(1, Math.max(0, c.u + 30 / w))).toFixed(4) : null };
+    }""")
+    assert drag["pin"] and drag["expectU"] is not None and abs(drag["pin"][0] - drag["expectU"]) < 0.01, \
+        f"拖拽应把中门落点移到报点位+30px: {drag!r}"
+    # 点图标（无位移）＝选中 → 名称标签出现；拖起点手柄 → originPin
     page.evaluate("""() => {
-      // 选中第二个目标（中门）
-      const tab = [...document.querySelectorAll('[data-pt]')].find(b => b.dataset.pt === '中门');
-      tab.click();
-      const mapBox = document.querySelector('[data-pinmap]');
-      const radar = mapBox.querySelector('img.radar');
-      const rect = radar.getBoundingClientRect();
-      mapBox.dispatchEvent(new MouseEvent('click', { bubbles: true,
-        clientX: rect.left + rect.width * 0.4, clientY: rect.top + rect.height * 0.4 }));
+      const ic = document.querySelector('[data-pinicon="中门"]');
+      const r = ic.getBoundingClientRect();
+      ic.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: r.x, clientY: r.y }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
     }""")
     page.wait_for_timeout(200)
-    pin_mid = page.evaluate("() => window._r.pins['中门'] || null")
-    assert pin_mid and abs(pin_mid[0] - 0.4) < 0.01, f"点击地图应设中门落点: {pin_mid!r}"
+    chip = page.evaluate("""() => {
+      const c = document.querySelector('.picker-card .pin-name-chip');
+      return c ? c.textContent : '';
+    }""")
+    assert "中门" in chip, f"选中应显示名称标签: {chip!r}"
+    page.evaluate("""() => {
+      const h = document.querySelector('.picker-card .pin-handle');
+      const rect = document.querySelector('[data-pinmap] img.radar').getBoundingClientRect();
+      const x = rect.left + rect.width * parseFloat(h.style.left) / 100;
+      const y = rect.top + rect.height * parseFloat(h.style.top) / 100;
+      h.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y }));
+      document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x - 20, clientY: y }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    }""")
+    page.wait_for_timeout(150)
+    assert page.evaluate("() => window._r.originPin"), "拖起点手柄应设 originPin"
     page.evaluate("""() => document.querySelector('[data-pinok]').click()""")
     page.wait_for_timeout(250)
     # 4. 导入：tags + pin_targets + draft（未勾实测）进覆盖层
@@ -1652,7 +1679,10 @@ def r3l12_sortext(page, base):
     assert added["tags"] == ["回防", "单向"], f"导入 tags: {added['tags']!r}"
     assert added["status"] == "draft" and not added.get("checked"), "默认不勾应导入 draft"
     pt = added.get("pin_targets") or {}
-    assert pt.get("中门") and abs(pt["中门"][0] - 0.4) < 0.01, f"pin_targets 应写入: {pt!r}"
+    assert pt.get("中门") and abs(pt["中门"][0] - drag["expectU"]) < 0.01, \
+        f"pin_targets 应写入拖拽后的位置: {pt!r} vs {drag['expectU']!r}"
+    po = added.get("pin_origin") or None
+    assert po, f"pin_origin 应写入: {added.get('pin_origin')!r}"
     # 5. dump 往返：.md 序列化含 tags + pin_targets（块式）
     rt = page.evaluate("""(a) => {
       const md = dumpEntryMd(a);

@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-27T20:22:30",
- "builtAt": "2026-10-27T12:22:30Z",
+ "generated_at": "2026-10-27T22:33:25",
+ "builtAt": "2026-10-27T14:33:25Z",
  "SCHEMA": {
   "entry": [
    {
@@ -4904,6 +4904,12 @@ window.PLAYBOOK = {
    ],
    "tags": [],
    "related": [],
+   "pin_targets": {
+    "中路": [
+     0.5316,
+     0.4708
+    ]
+   },
    "source": {
     "kind": "self",
     "creator": "自己"
