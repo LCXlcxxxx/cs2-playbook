@@ -1657,6 +1657,12 @@ def r3l12_sortext(page, base):
       return c ? c.textContent : '';
     }""")
     assert "中门" in chip, f"选中应显示名称标签: {chip!r}"
+    # R3-L16：起点连线 + 起点小标（对齐战术板视觉）
+    line_ok = page.evaluate("""() => {
+      const l = document.querySelector('.picker-card .sp-lines line');
+      return !!l && !!document.querySelector('.picker-card .pin-origin-tag');
+    }""")
+    assert line_ok, "选中后应有起点→落点连线与「起点」小标"
     page.evaluate("""() => {
       const h = document.querySelector('.picker-card .pin-handle');
       const rect = document.querySelector('[data-pinmap] img.radar').getBoundingClientRect();

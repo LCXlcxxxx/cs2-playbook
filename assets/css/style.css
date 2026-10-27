@@ -1936,6 +1936,21 @@ body:not(.pb-manage) .pb-mng { display: none !important; }
 }
 .pin-mark.cur { font-size: 21px; }
 
+/* R3-L16：分拣台调点——起点连线 svg + 起点小标（对齐战术板调点视觉） */
+.sp-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 2; }
+.pin-origin-tag {
+  position: absolute;
+  z-index: 3;
+  font-size: 12px;
+  color: var(--accent);
+  background: rgba(16, 20, 28, 0.85);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* ---- I44：导入结果弹层 + 按钮抖动 ---- */
 .import-result-card {
   background: var(--panel);

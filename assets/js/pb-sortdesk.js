@@ -464,6 +464,7 @@ function openSortPinAdjuster(row) {
       </div>
       <div class="picker-map" data-pinmap>
         <img class="radar" src="${mapInfo.radar}" alt="雷达底图" draggable="false">
+        <svg class="sp-lines"></svg>
         ${targets.map(t => {
           const p = posOf(t);
           if (!p) return "";
@@ -514,12 +515,19 @@ function openSortPinAdjuster(row) {
     }
   }
   const drawSel = () => {
-    mapBox.querySelectorAll(".pin-handle, .pin-reset-chip").forEach(x => x.remove());
+    mapBox.querySelectorAll(".pin-handle, .pin-reset-chip, .pin-origin-tag").forEach(x => x.remove());
     $$(".nade-icon", mapBox).forEach(b => b.classList.toggle("sel", b.dataset.pinicon === sel));
     $$(".picker-tab", ov).forEach(b => b.classList.toggle("active", b.dataset.pt === sel));
-    if (!sel) return;
+    const svgL = mapBox.querySelector(".sp-lines");
+    if (!sel) { if (svgL) svgL.innerHTML = ""; return; }
     const p = posOf(sel);
     if (!p) return;
+    // 起点→落点连线（R3-L16 补齐：与战术板调点一致，白点手柄不再悬空无解释）
+    const o = originPos();
+    if (svgL && o) {
+      svgL.innerHTML = `<line x1="${o.u * 100}%" y1="${o.v * 100}%" x2="${p.u * 100}%" y2="${p.v * 100}%"
+        stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4" opacity="0.75"/>`;
+    } else if (svgL) svgL.innerHTML = "";
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "pin-reset-chip pin-name-chip";
@@ -531,7 +539,6 @@ function openSortPinAdjuster(row) {
     chip.style.top = `${p.v * 100}%`;
     chip.style.transform = p.u > 0.7 ? "translate(calc(-100% - 14px), -50%)" : "translate(14px, -50%)";
     mapBox.appendChild(chip);
-    const o = originPos();
     if (o) {
       const h = document.createElement("button");
       h.type = "button";
@@ -540,6 +547,13 @@ function openSortPinAdjuster(row) {
       h.style.top = `${o.v * 100}%`;
       h.title = `起点：${row.origin || "?"} · 拖动＝调整起点显示位`;
       mapBox.appendChild(h);
+      const tag = document.createElement("span");
+      tag.className = "pin-origin-tag";
+      tag.textContent = `起点${row.originPin ? "（已调）" : ""}`;
+      tag.style.left = `${o.u * 100}%`;
+      tag.style.top = `${o.v * 100}%`;
+      tag.style.transform = "translate(10px, 8px)";
+      mapBox.appendChild(tag);
     }
   };
   statusText();
@@ -609,6 +623,11 @@ function openSortPinAdjuster(row) {
       o.u = pu; o.v = pv;
       h.style.left = `${pu * 100}%`;
       h.style.top = `${pv * 100}%`;
+      const line = mapBox.querySelector(".sp-lines line");
+      if (line && sel) {
+        const p = posOf(sel);
+        if (p) { line.setAttribute("x1", `${pu * 100}%`); line.setAttribute("y1", `${pv * 100}%`); }
+      }
       statusText();
     };
     const up = () => {
