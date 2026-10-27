@@ -1560,6 +1560,32 @@ def r3l12_sortext(page, base):
       const cb = document.querySelector('.sort-table input[data-k="verified"]');
       return { checked: cb.checked, row: window._r.verified };
     }""") == {"checked": False, "row": False}, "实测列默认应不勾"
+    # 1b. 标题自动读图名（R3-L13）：放 1-stand 时取文件名词干；IMG_xxx 类不导入；手动标题不覆盖
+    page.evaluate("""async () => {
+      window._r2 = sortAddRow();
+      window._r2.targets = ['中门'];
+      await sortPutToSlot(window._r2, '1-stand',
+        { kind: 'pool', item: { group: '炙热沙城II', name: '警家单向烟.png',
+          handle: { getFile: async () => new Blob(['x']) }, url: null } });
+      window._r3 = sortAddRow();
+      window._r3.title = '我起的名字';
+      window._r3.targets = ['中门'];
+      await sortPutToSlot(window._r3, '1-stand',
+        { kind: 'pool', item: { group: '炙热沙城II', name: '另一个名字.png',
+          handle: { getFile: async () => new Blob(['x']) }, url: null } });
+      window._r4 = sortAddRow();
+      window._r4.targets = ['中门'];
+      await sortPutToSlot(window._r4, '1-stand',
+        { kind: 'pool', item: { group: '炙热沙城II', name: 'IMG_20261027_001.png',
+          handle: { getFile: async () => new Blob(['x']) }, url: null } });
+    }""")
+    page.wait_for_timeout(300)
+    titles = page.evaluate(
+        "() => [window._r2.title, window._r3.title, window._r4.title]")
+    assert titles[0] == "警家单向烟", f"标题应自动读图名词干: {titles!r}"
+    assert titles[1] == "我起的名字", f"手动标题不应被覆盖: {titles!r}"
+    assert titles[2] == "", f"IMG_ 类截图名不应导入标题: {titles!r}"
+    page.evaluate("() => { sortSt.rows = sortSt.rows.filter(r => r !== window._r2 && r !== window._r3 && r !== window._r4); }")
     # 2. 行内标签：输入逗号分隔 → change 解析为数组
     page.evaluate("""() => {
       const inp = document.querySelector('.sort-table input[data-k="tags"]');

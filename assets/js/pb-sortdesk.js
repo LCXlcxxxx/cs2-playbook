@@ -231,6 +231,14 @@ async function sortPutToSlot(row, slotName, payload) {
   }
   if (old?.url) URL.revokeObjectURL(old.url);
   row.slots[slotName] = item;
+  // R3-L13：标题自动读图名——标题空 + 放入的是 1-stand 站位图时，取文件名去扩展位作标题
+  // （「警家单向烟.png」→「警家单向烟」；截图类名如 IMG_xxxx/Screenshot_xxx 不导入）；手动改过不覆盖
+  if (slotName === "1-stand" && !String(row.title || "").trim()) {
+    const stem = String(item.name || "").replace(/\.[a-z0-9]+$/i, "").trim();
+    if (stem && !/^(img|screenshot|screen shot|截图|屏幕截图)[-_ \d]*/i.test(stem)) {
+      row.title = stem;
+    }
+  }
   sortAutoId(row);   // 地图确定后 id 定型（I24）
 }
 
