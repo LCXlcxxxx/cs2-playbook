@@ -15,7 +15,7 @@
 
 - 本地仓库在项目根（`git init -b main`）；**远端 origin = GitHub 公开仓库（2026-10-27 起，宪法一.11 已由「永不 push」修订为允许开发会话 push——分发与协作开发用）**。git.exe 位置：`%LocalAppData%\Programs\Git\cmd\git.exe`（npmmirror 便携版 2.56，**未加入 PATH**——winget 在本机因 GitHub 直连失败不可用，Dev 会话用全路径调用）。
 - 仓库级身份已配（不动全局）：`user.name=cs2-playbook-dev`、`user.email=cs2-playbook-dev@localhost`（占位）、`core.autocrlf=false`（防整库换行抖动污染 diff）。
-- **远端与 Pages（2026-10-27）**：`origin = https://github.com/LCXlcxxxx/cs2-playbook.git`（公开）；在线版 = `https://lcxlcxxxx.github.io/cs2-playbook/`（main 分支根目录即站点——build/data.js 因此必须入库，fetch JSON 禁令不可破的根因之一）；凭据走 GCM（首次 push 弹浏览器授权，存 Windows 凭据管理器）；github.com 走代理 `git config --global http.https://github.com.proxy http://127.0.0.1:11888`（端口跟随梯子，梯子端口变了我来改）。push 前提：工作区 clean、台账已记；大推送先 `git config http.postBuffer 524288000`。
+- **远端与 Pages（2026-10-27）**：`origin = git@github.com:LCXlcxxxx/cs2-playbook.git`（公开仓库，SSH 形态）；在线版 = `https://lcxlcxxxx.github.io/cs2-playbook/`（main 分支根目录即站点——build/data.js 因此必须入库，fetch JSON 禁令不可破的根因之一）。**push 一律走 SSH：ssh.github.com:443 + 写权限 Deploy Key（私钥 `~/.ssh/id_ed25519`，`~/.ssh/config` 已配 github.com→ssh.github.com:443 映射）——HTTPS 经梯子上传必 HTTP 408 断（400MB 与 30MB 测试同炸，梯子 HTTPS 上传链路坏；GET/API 正常），别再走 HTTPS 推**；API/网页走梯子代理 `http://127.0.0.1:11888`（端口跟随梯子，梯子端口变了我来改）。push 前提：工作区 clean、台账已记。
 - **提交规范**：每迭代 = 改动 + PROGRESS.md 台账行 + 一条 git 提交，信息格式 `ITER-Ixx: 摘要` 或 `Rx: 摘要`。大改前先做基线提交，保证重构本身可回滚。
 - **并行规则（R1-D 后终态）**：五个 UI 域文件（pb-list/pb-detail/pb-tactics/pb-editor/pb-sortdesk）可各认领一个并行；**pb-core/pb-data/pb-sync/app.js 四个共享文件、index.html、style.css（单文件共享）与 pb.py 改动仍一律串行**（等前一会话台账入账且 `git status` 干净再动手）。app.js 瘦壳仅 334 行，动它的场景（新键盘钩子/新路由分支）天然少——「app.js 串行」实质已收敛为「共享文件串行」，无需专门解除。
 - 不入库（.gitignore）：`dist/`、`build/`、`*.bak`、`*.zip`、`__pycache__/`、`cookies.txt`、`tools/_test*`；**media/ 与 文件夹批量录入/ 内容图片入库**（内容可回滚是核心收益，本地仓 ~290MB 可承受）。
@@ -92,7 +92,7 @@ tools\pb.cmd test                     :: R1-A 回归套件（playwright 可选�
 ## 8. 环境速查（2026-10 现状）
 
 - Python 3.12：`%LocalAppData%\Programs\Python\Python312`；多命令 python 一律加 `-X utf8`。
-- git：npmmirror 便携版 2.56，`%LocalAppData%\Programs\Git\cmd\git.exe`（未入 PATH；winget 下载源在本机连不上 GitHub、装包走 npmmirror 镜像；github.com 直连 2026-10-27 实测可达，push/clone 正常）。
+- git：npmmirror 便携版 2.56，`%LocalAppData%\Programs\Git\cmd\git.exe`（未入 PATH；winget 下载源在本机连不上 GitHub、装包走 npmmirror 镜像）。**GitHub 通道（2026-10-27 实测）：API/网页走梯子代理 127.0.0.1:11888 可用；HTTPS push 不可用（经梯子上传必 408，与大小无关）；push/clone 走 SSH ssh.github.com:443 直连（部署密钥，实测 2.6MiB/s 稳定）**。
 - ffmpeg：pip 的 imageio-ffmpeg 自带二进制（harvest.py 的 find_ffmpeg 已内置回退）；中文标注字体 simhei.ttf 在项目根。
 - yt-dlp：pip 装；B 站未登录可拉 1080P30（仅 4K/1080P60 要会员）；竖屏视频分辨率判定用 `width<=1920`。
 - AutoHotkey v2：`%LocalAppData%\Programs\AutoHotkey\v2`（pin.bat 已探测此路径）。
