@@ -1560,6 +1560,36 @@ def r3l12_sortext(page, base):
       const cb = document.querySelector('.sort-table input[data-k="verified"]');
       return { checked: cb.checked, row: window._r.verified };
     }""") == {"checked": False, "row": False}, "实测列默认应不勾"
+    # 1c. 文件名关键词抓字段（R3-L14）：类型/投掷/移动/键位 + 真实标题防误伤（跳台≠跳投）
+    page.evaluate("""async () => {
+      const mk = (name) => ({ kind: 'pool', item: { group: '炙热沙城II', name,
+        handle: { getFile: async () => new Blob(['x']) }, url: null } });
+      window._a = sortAddRow(); window._a.targets = ['中门'];
+      await sortPutToSlot(window._a, '1-stand', mk('flamez-警家W跳投闪.png'));
+      window._b = sortAddRow(); window._b.targets = ['中门'];
+      await sortPutToSlot(window._b, '1-stand', mk('双键右墙火.png'));
+      window._c = sortAddRow(); window._c.targets = ['中门'];
+      await sortPutToSlot(window._c, '1-stand', mk('B门蹲跳投烟.png'));
+      window._d = sortAddRow(); window._d.targets = ['中门'];
+      await sortPutToSlot(window._d, '1-stand', mk('跳台连接口烟.png'));
+      window._e = sortAddRow(); window._e.targets = ['中门'];
+      await sortPutToSlot(window._e, '1-stand', mk('右键轻抛火.png'));
+    }""")
+    page.wait_for_timeout(300)
+    fx = page.evaluate("""() => {
+      const g = r => ({ type: r.type, click: r.click, move: r.move, action: r.action, title: r.title });
+      return { a: g(window._a), b: g(window._b), c: g(window._c), d: g(window._d), e: g(window._e) };
+    }""")
+    assert fx["a"]["title"] == "flamez-警家W跳投闪" and fx["a"]["type"] == "flash" \
+        and fx["a"]["move"] == "w" and fx["a"]["action"] == "jump", f"W跳投闪: {fx['a']!r}"
+    assert fx["b"]["click"] == "both" and fx["b"]["type"] == "molotov" \
+        and fx["b"]["action"] == "jump", f"双键火（无投掷词应保持默认 jump）: {fx['b']!r}"
+    assert fx["c"]["action"] == "crouch-jump" and fx["c"]["type"] == "smoke", f"蹲跳投烟: {fx['c']!r}"
+    assert fx["d"]["action"] == "jump" and fx["d"]["move"] == "stand", \
+        f"「跳台」不应误触跳投/跑投: {fx['d']!r}"
+    assert fx["e"]["click"] == "rmb" and fx["e"]["type"] == "molotov" \
+        and fx["e"]["action"] == "direct", f"右键轻抛火: {fx['e']!r}"
+    page.evaluate("() => { sortSt.rows = sortSt.rows.filter(r => ![window._a, window._b, window._c, window._d, window._e].includes(r)); }")
     # 1b. 标题自动读图名（R3-L13）：放 1-stand 时取文件名词干；IMG_xxx 类不导入；手动标题不覆盖
     page.evaluate("""async () => {
       window._r2 = sortAddRow();

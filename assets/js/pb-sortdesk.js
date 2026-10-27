@@ -231,16 +231,41 @@ async function sortPutToSlot(row, slotName, payload) {
   }
   if (old?.url) URL.revokeObjectURL(old.url);
   row.slots[slotName] = item;
-  // R3-L13：标题自动读图名——标题空 + 放入的是 1-stand 站位图时，取文件名去扩展位作标题
-  // （「警家单向烟.png」→「警家单向烟」；截图类名如 IMG_xxxx/Screenshot_xxx 不导入）；手动改过不覆盖
+  // R3-L13/L14：标题自动读图名 + 关键词抓字段——放 1-stand 站位图且标题为空时，取文件名词干
+  // 作标题（IMG_/Screenshot_/截图 类相机命名不导入；手动改过不覆盖），并按词表抓
+  // 类型/键位/移动/投掷（词汇表=I27 冷锋字幕校准；命中即覆盖，行内下拉仍可随手改）
   if (slotName === "1-stand" && !String(row.title || "").trim()) {
     const stem = String(item.name || "").replace(/\.[a-z0-9]+$/i, "").trim();
     if (stem && !/^(img|screenshot|screen shot|截图|屏幕截图)[-_ \d]*/i.test(stem)) {
       row.title = stem;
+      const done = new Set();   // 每字段首个命中生效（数组序=长词优先，蹲跳投不被跳投覆盖）
+      for (const [re, field, val] of TITLE_HINTS) {
+        if (!done.has(field) && re.test(stem)) { row[field] = val; done.add(field); }
+      }
     }
   }
   sortAutoId(row);   // 地图确定后 id 定型（I24）
 }
+
+// R3-L14：文件名关键词 → 字段（每组按数组序=长词优先，防「跳投」被短词截胡；各字段首个命中生效）
+const TITLE_HINTS = [
+  [/蹲跳投|蹲跳/, "action", "crouch-jump"],
+  [/跳投/, "action", "jump"],
+  [/直投|平投|轻抛/, "action", "direct"],
+  [/跑一步|走一步|W一步/i, "move", "walk-step"],
+  [/W跳投|W投/i, "move", "w"],
+  [/跑投|跑动/, "move", "run"],
+  [/Shift\+?W/i, "move", "shift-w"],
+  [/Shift/i, "move", "shift"],
+  [/蹲投/, "move", "crouch"],
+  [/双键/, "click", "both"],
+  [/右键/, "click", "rmb"],
+  [/左键/, "click", "lmb"],
+  [/烟/, "type", "smoke"],
+  [/闪光|瞬爆|闪/, "type", "flash"],
+  [/燃烧|火/, "type", "molotov"],
+  [/高爆|雷/, "type", "he"],
+];
 
 // 一点多用（I30）：已入坑的池图复制一份回素材池（槽内图保留；克隆与原图共享 handle，
 // poolKey 唯一即可无损往返既有归还链路——× 取下/换图/删行按各自 poolKey 原样还原）
