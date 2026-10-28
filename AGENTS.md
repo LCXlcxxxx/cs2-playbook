@@ -29,7 +29,7 @@ AGENTS.md  宪法 | README.md  入口 | index.html  查看器（双击即开）|
 docs/  PROGRESS（台账）DEV UI RECORD BUILD_PLAN PROMPTS CONTENT_IDEAS CHECK-01* iterations/
 data/  maps.json（注册表）+ callouts.json（报点 u/v 0~1）+ glossary.md（术语）+ entries/（条目一 .md 一条）
 tactics/  战术板一 .md 一板 | assets/  radar/ + js/css/ + icons/
-media/<map>/<id>/  道具截图（固定槽位，见四）——media/ 与 文件夹批量录入/（素材池+已录入/ 归档）均入 git
+media/<map>/<id>/  道具截图（固定槽位，见四）——media/ 入 git；文件夹批量录入/（素材池）原图不入 git（2026-10-28 定稿：录完即弃防膨胀，仅 README/占位说明入库）
 tools/  pb.py（单文件 CLI）+ pb.cmd + pin.ahk/pin.bat + pydict.json + harvest.py
 build/ dist/（生成产物，不入 git）| _archive/  归档留底 | simhei.ttf  标注字体
 ```
