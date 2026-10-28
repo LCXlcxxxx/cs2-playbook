@@ -778,8 +778,55 @@ def r3_i42_archive(page, base):
     }""")
     assert r3 is None or r3 == "moved", \
         f"池剩余属于别的组不应阻塞本组，实际 {r3!r}"
+    # 场景 4（R3-L17）：真实归档路径——mock 父目录句柄：复制→删源→重建空文件夹+占位说明
+    # 占位文件不随迁留底；重建失败不影响 moved 结果
+    r4 = page.evaluate("""() => {
+      const mkDir = () => {
+        const files = new Map(), subs = new Map();
+        return {
+          kind: 'directory', _files: files, _subs: subs,
+          async *entries() { for (const [n] of files) yield [n, { kind: 'file' }]; for (const [n, s] of subs) yield [n, s]; },
+          getFileHandle: (n) => ({ createWritable: async () => ({
+            write: async (d) => { files.set(n, typeof d === 'string' ? d : 'blob'); },
+            close: async () => {},
+          }) }),
+          getDirectoryHandle(n) { if (!subs.has(n)) subs.set(n, mkDir()); return subs.get(n); },
+          removeEntry(n) { subs.delete(n); },
+        };
+      };
+      const srcDir = {
+        kind: 'directory',
+        async *entries() {
+          yield ['a.jpg', { kind: 'file', getFile: async () => ({ name: 'a.jpg' }) }];
+          yield ['把截图放这里.txt', { kind: 'file', getFile: async () => ({ name: 'ph' }) }];
+        },
+      };
+      const parent = mkDir();
+      parent._subs.set('测试组C', srcDir);
+      sortSt.groupParents = new Map([['测试组C', parent]]);
+      sortSt.pool = new Map(); sortSt.rows = [];
+      return sortMaybeMoveGroup('测试组C').then((r) => {
+        const doneSub = parent._subs.get('已录入')?._subs.get('测试组C');
+        const rebuilt = parent._subs.get('测试组C');
+        const out = {
+          r,
+          srcGone: !parent._subs.has('测试组C') || parent._subs.get('测试组C') !== srcDir,
+          copiedImgs: doneSub ? [...doneSub._files.keys()] : null,
+          rebuiltExists: !!rebuilt,
+          placeholderText: rebuilt ? rebuilt._files.get('把截图放这里.txt') : null,
+        };
+        sortSt.groupParents = new Map();
+        return out;
+      });
+    }""")
+    assert r4["r"] == "moved", f"mock 归档应 moved，实际 {r4!r}"
+    assert r4["srcGone"], "归档后源文件夹应已移除"
+    assert r4["copiedImgs"] == ["a.jpg"], f"留底只收图片、占位不随迁，实际 {r4['copiedImgs']!r}"
+    assert r4["rebuiltExists"], "归档后应重建空地图文件夹"
+    assert r4["placeholderText"] and "F12" in r4["placeholderText"], \
+        f"重建文件夹应含占位说明，实际 {r4['placeholderText']!r}"
     # 清理
-    page.evaluate("() => { sortSt.pool = new Map(); sortSt.rows = []; }")
+    page.evaluate("() => { sortSt.pool = new Map(); sortSt.rows = []; sortSt.groupParents = new Map(); }")
 
 
 

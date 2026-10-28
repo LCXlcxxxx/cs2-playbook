@@ -5,6 +5,10 @@
 
 const SORT_POOL_DIR = "文件夹批量录入";
 const SORT_DONE_DIR = "已录入";
+// R3-L17：地图文件夹占位说明——git/GitHub 不存空文件夹，占位文件让地图文件夹在仓库里常驻；
+// 素材扫描只认图片（SORT_IMG_RE），占位文件零影响
+const POOL_PLACEHOLDER = "把截图放这里.txt";
+const POOL_PLACEHOLDER_TEXT = "把游戏 F12 截图放进本文件夹（建议每颗道具 3 张连拍：站位、瞄点、落点&效果），再打开 index.html 用「📥 分拣台」导入。\r\n图片名可以顺手写清打法（如「车位丢三箱火左键跳投」），导入时能自动带出标题和投法。\r\n分拣完成后本文件夹会自动移入「已录入」留底，并重新生成一个空文件夹等你下次使用。\r\n";
 const SORT_SLOTS = [["1-stand", "站位"], ["2-aim", "瞄点"], ["4-result", "落点&效果"]];
 const SORT_IMG_RE = /\.(png|jpe?g|webp|gif)$/i;
 const sortSt = {
@@ -736,7 +740,7 @@ async function sortMaybeMoveGroup(group) {
     const srcDir = await parentDir.getDirectoryHandle(group);
     const doneSub = await doneDir.getDirectoryHandle(group, { create: true });
     for await (const [name, h] of srcDir.entries()) {
-      if (h.kind !== "file") continue;
+      if (h.kind !== "file" || name === POOL_PLACEHOLDER) continue;   // 占位说明不随迁留底
       const f = await h.getFile();
       const fh = await doneSub.getFileHandle(name, { create: true });
       const w = await fh.createWritable();
@@ -744,6 +748,14 @@ async function sortMaybeMoveGroup(group) {
       await w.close();
     }
     await parentDir.removeEntry(group, { recursive: true });
+    // R3-L17：重建空文件夹 + 占位说明（失败不影响归档结果）
+    try {
+      const rebuilt = await parentDir.getDirectoryHandle(group, { create: true });
+      const ph = await rebuilt.getFileHandle(POOL_PLACEHOLDER, { create: true });
+      const pw = await ph.createWritable();
+      await pw.write(POOL_PLACEHOLDER_TEXT);
+      await pw.close();
+    } catch { }
     return "moved";
   } catch {
     return "move-fail";
