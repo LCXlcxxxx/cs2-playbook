@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-10-28T19:07:02",
- "builtAt": "2026-10-28T11:07:02Z",
+ "generated_at": "2026-10-31T17:05:41",
+ "builtAt": "2026-10-31T09:05:41Z",
  "SCHEMA": {
   "entry": [
    {
@@ -614,6 +614,66 @@ window.PLAYBOOK = {
  },
  "entries": [
   {
+   "id": "dust2-ct-flash-01",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "警家",
+   "target": "A斜坡",
+   "title": "警家丢A大反清闪，原地左键投掷 (1)",
+   "oneline": "警家→A斜坡，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "retake"
+   ],
+   "status": "draft",
+   "spots": [
+    "警家",
+    "A斜坡"
+   ],
+   "tags": [
+    "反清"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-01/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-01/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-01/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "jingjiadiuadafanqingshanyuandizuojiantouzhi1",
+    "jingjia",
+    "a"
+   ],
+   "pyi": [
+    "jjdadfqsydzjtz1",
+    "jj",
+    "a"
+   ]
+  },
+  {
    "id": "dust2-ct-flash-02",
    "map": "de_dust2",
    "side": "CT",
@@ -678,6 +738,654 @@ window.PLAYBOOK = {
     "ctzzfadms",
     "ad",
     "ad"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-03",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "crouch",
+   "action": "direct",
+   "origin": "蓝车",
+   "target": "蓝车",
+   "title": "蓝车后单向闪，蹲下左键投掷 (1)",
+   "oneline": "蓝车→蓝车，蹲下左键",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "蓝车"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "蹲下左键",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-03/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-03/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-03/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "lanchehouxiangshandunxiazuojiantouzhi1",
+    "lanche",
+    "lanche"
+   ],
+   "pyi": [
+    "lchxsdxzjtz1",
+    "lc",
+    "lc"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-04",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "沙地",
+   "target": "中门",
+   "title": "沙地卡车丢A小反清闪，原地左键投掷 (1)",
+   "oneline": "沙地→中门，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "沙地",
+    "中门"
+   ],
+   "tags": [
+    "反清"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-04/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-04/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-04/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "shadikachediuaxiaofanqingshanyuandizuojiantouzhi1",
+    "shadi",
+    "zhongmen"
+   ],
+   "pyi": [
+    "sdkcdaxfqsydzjtz1",
+    "sd",
+    "zm"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-05",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "中路凹槽",
+   "target": "中门",
+   "title": "中门凹槽反清中路单向闪，原地左键投掷 (1)",
+   "oneline": "中路凹槽→中门，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "中路凹槽",
+    "中门"
+   ],
+   "tags": [
+    "反清"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-05/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-05/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-05/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "zhongmenfanqingzhongluxiangshanyuandizuojiantouzhi1",
+    "zhonglu",
+    "zhongmen"
+   ],
+   "pyi": [
+    "zmfqzlxsydzjtz1",
+    "zl",
+    "zm"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-06",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "白车死点",
+   "target": "白车死点",
+   "title": "B包白车死点阴间闪，蹲下左键投掷 (1)",
+   "oneline": "白车死点→白车死点，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "anti-eco"
+   ],
+   "status": "draft",
+   "spots": [
+    "白车死点"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-06/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-06/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-06/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "bbaobaichesidianyinjianshandunxiazuojiantouzhi1",
+    "baichesidian",
+    "baichesidian"
+   ],
+   "pyi": [
+    "bbbcsdyjsdxzjtz1",
+    "bcsd",
+    "bcsd"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-07",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "jump",
+   "origin": "白车",
+   "target": "B洞",
+   "title": "B通外反清B通瞬爆闪，原地左键跳投 (1)",
+   "oneline": "白车→B洞，左键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "白车",
+    "B洞"
+   ],
+   "tags": [
+    "反清"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-07/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-07/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-07/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "btongwaifanqingbtongshunbaoshanyuandizuojiantiaotou1",
+    "baiche",
+    "bdong"
+   ],
+   "pyi": [
+    "btwfqbtsbsydzjtt1",
+    "bc",
+    "bd"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-09",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "jump",
+   "origin": "狗洞",
+   "target": "B 死点",
+   "title": "狗洞外丢回防闪，丢后点左键上台进洞看左边不被闪，原地左键跳投 (1)",
+   "oneline": "狗洞→B 死点，左键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "retake"
+   ],
+   "status": "draft",
+   "spots": [
+    "狗洞",
+    "B 死点"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-09/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-09/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-09/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "goudongwaidiuhuifangshandiuhoudianzuojianshangtaijindongkanzuobianbubeishanyuandizuojiantiaotou1",
+    "goudong",
+    "bsidian"
+   ],
+   "pyi": [
+    "gdwdhfsdhdzjstjdkzbbbsydzjtt1",
+    "gd",
+    "bsd"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-10",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "walk-step",
+   "action": "direct",
+   "origin": "A大",
+   "target": "A门内",
+   "title": "A大丢A门前顶单向闪，W一步左键投掷 (1)",
+   "oneline": "A大→A门内，W一步左键",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "A大",
+    "A门内"
+   ],
+   "tags": [
+    "前顶"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "W一步左键",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-10/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-10/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-10/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "adadiuamenqiandingxiangshanwyibuzuojiantouzhi1",
+    "ada",
+    "amennei"
+   ],
+   "pyi": [
+    "addamqdxswybzjtz1",
+    "ad",
+    "amn"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-11",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "rmb",
+   "move": "stand",
+   "action": "jump",
+   "origin": "A门内",
+   "target": "匪A门",
+   "title": "A门前顶自助闪，右键跳投 (1)",
+   "oneline": "A门内→匪A门，右键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "default"
+   ],
+   "status": "draft",
+   "spots": [
+    "A门内",
+    "匪A门"
+   ],
+   "tags": [
+    "前顶"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "右键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-11/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-11/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-11/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "amenqiandingzizhushanyoujiantiaotou1",
+    "amennei",
+    "feiamen"
+   ],
+   "pyi": [
+    "amqdzzsyjtt1",
+    "amn",
+    "fam"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-12",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "空调",
+   "target": "A斜坡",
+   "title": "A小丢A大反清闪，原地左键投掷 (1)",
+   "oneline": "空调→A斜坡，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "空调",
+    "A斜坡"
+   ],
+   "tags": [
+    "反清"
+   ],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-12/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-12/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-12/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "axiaodiuadafanqingshanyuandizuojiantouzhi1",
+    "kongdiao",
+    "a"
+   ],
+   "pyi": [
+    "axdadfqsydzjtz1",
+    "kd",
+    "a"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-13",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "A斜坡",
+   "target": "忍者位",
+   "title": "A斜坡丢A小单向闪，原地左键投掷 (1)",
+   "oneline": "A斜坡→忍者位，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "A斜坡",
+    "忍者位"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-13/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-13/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-13/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "adiuaxiaoxiangshanyuandizuojiantouzhi1",
+    "a",
+    "zhewei"
+   ],
+   "pyi": [
+    "adaxxsydzjtz1",
+    "a",
+    "zw"
+   ]
+  },
+  {
+   "id": "dust2-ct-flash-14",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "A斜坡",
+   "target": "电梯位",
+   "title": "A斜坡防A小进攻，原地左键投掷 (1)",
+   "oneline": "A斜坡→电梯位，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "A斜坡",
+    "电梯位"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-flash-14/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-flash-14/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-flash-14/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "afangaxiaojingongyuandizuojiantouzhi1",
+    "a",
+    "diantiwei"
+   ],
+   "pyi": [
+    "afaxjgydzjtz1",
+    "a",
+    "dtw"
    ]
   },
   {
@@ -752,6 +1460,64 @@ window.PLAYBOOK = {
    ]
   },
   {
+   "id": "dust2-ct-he-01",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "he",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "沙地",
+   "target": "叉箱",
+   "title": "X箱吃大雷，原地左键投掷 (1)",
+   "oneline": "沙地→叉箱，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "沙地",
+    "叉箱"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-he-01/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-he-01/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-he-01/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "xxiangdaleiyuandizuojiantouzhi1",
+    "shadi",
+    "chaxiang"
+   ],
+   "pyi": [
+    "xxdlydzjtz1",
+    "sd",
+    "cx"
+   ]
+  },
+  {
    "id": "dust2-ct-he-02",
    "map": "de_dust2",
    "side": "CT",
@@ -813,6 +1579,64 @@ window.PLAYBOOK = {
     "flamezaxtxl",
     "tw",
     "axltx"
+   ]
+  },
+  {
+   "id": "dust2-ct-he-04",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "he",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "卡车",
+   "target": "中门",
+   "title": "沙地卡车丢炸中门雷，原地左键投掷 (1)",
+   "oneline": "卡车→中门，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "卡车",
+    "中门"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-he-04/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-he-04/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-he-04/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "shadikachediuzhongmenleiyuandizuojiantouzhi1",
+    "kache",
+    "zhongmen"
+   ],
+   "pyi": [
+    "sdkcdzmlydzjtz1",
+    "kc",
+    "zm"
    ]
   },
   {
@@ -884,6 +1708,238 @@ window.PLAYBOOK = {
     "ctjjsdsaxh",
     "jj",
     "ax"
+   ]
+  },
+  {
+   "id": "dust2-ct-molotov-01",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "molotov",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "沙地",
+   "target": "中路",
+   "title": "沙地防A小rush火，原地左键投掷 (1)",
+   "oneline": "沙地→中路，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "沙地",
+    "中路"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-molotov-01/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-molotov-01/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-molotov-01/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "shadifangaxiaorushhuoyuandizuojiantouzhi1",
+    "shadi",
+    "zhonglu"
+   ],
+   "pyi": [
+    "sdfaxrushhydzjtz1",
+    "sd",
+    "zl"
+   ]
+  },
+  {
+   "id": "dust2-ct-molotov-03",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "molotov",
+   "click": "lmb",
+   "move": "stand",
+   "action": "jump",
+   "origin": "狗洞",
+   "target": "B 死点",
+   "title": "狗洞外丢B包点死点火闪，原地左键跳投 (1)",
+   "oneline": "狗洞→B 死点，左键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "retake"
+   ],
+   "status": "draft",
+   "spots": [
+    "狗洞",
+    "B 死点"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-molotov-03/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-molotov-03/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-molotov-03/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "goudongwaidiubbaodiansidianhuoshanyuandizuojiantiaotou1",
+    "goudong",
+    "bsidian"
+   ],
+   "pyi": [
+    "gdwdbbdsdhsydzjtt1",
+    "gd",
+    "bsd"
+   ]
+  },
+  {
+   "id": "dust2-ct-smoke-01",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "smoke",
+   "click": "both",
+   "move": "stand",
+   "action": "jump",
+   "origin": "卡车",
+   "target": "空调",
+   "title": "沙地卡车补A小烟，原地双键跳投 (1)",
+   "oneline": "卡车→空调，双键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "postplant"
+   ],
+   "status": "draft",
+   "spots": [
+    "卡车",
+    "空调"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "双键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-smoke-01/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-smoke-01/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-smoke-01/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "shadikachebuaxiaoyanyuandishuangjiantiaotou1",
+    "kache",
+    "kongdiao"
+   ],
+   "pyi": [
+    "sdkcbaxyydsjtt1",
+    "kc",
+    "kd"
+   ]
+  },
+  {
+   "id": "dust2-ct-smoke-03",
+   "map": "de_dust2",
+   "side": "CT",
+   "type": "smoke",
+   "click": "both",
+   "move": "stand",
+   "action": "jump",
+   "origin": "沙地",
+   "target": "狗洞",
+   "title": "回防B区沟通左侧烟可打狙位死点，双键跳投 (1)",
+   "oneline": "沙地→狗洞，双键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "retake"
+   ],
+   "status": "draft",
+   "spots": [
+    "沙地",
+    "狗洞"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "双键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-ct-smoke-03/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-ct-smoke-03/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-ct-smoke-03/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "huifangbqutongzuoceyankejuweisidianshuangjiantiaotou1",
+    "shadi",
+    "goudong"
+   ],
+   "pyi": [
+    "hfbqtzcykjwsdsjtt1",
+    "sd",
+    "gd"
    ]
   },
   {
@@ -1291,6 +2347,64 @@ window.PLAYBOOK = {
     "zzady",
     "sd",
     "ad"
+   ]
+  },
+  {
+   "id": "dust2-t-flash-01",
+   "map": "de_dust2",
+   "side": "T",
+   "type": "flash",
+   "click": "lmb",
+   "move": "stand",
+   "action": "direct",
+   "origin": "B通/B2",
+   "target": "狗位",
+   "title": "B2进攻B包一点多用B通单向闪，原地左键投掷 (1)",
+   "oneline": "B通/B2→狗位，左键直投",
+   "difficulty": "normal",
+   "phase": [
+    "execute"
+   ],
+   "status": "draft",
+   "spots": [
+    "B通/B2",
+    "狗位"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键直投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-t-flash-01/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-t-flash-01/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-t-flash-01/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "b2jingongbbaoyidianyongbtongxiangshanyuandizuojiantouzhi1",
+    "btongb2",
+    "gouwei"
+   ],
+   "pyi": [
+    "b2jgbbydybtxsydzjtz1",
+    "btb2",
+    "gw"
    ]
   },
   {
@@ -1845,6 +2959,64 @@ window.PLAYBOOK = {
    ]
   },
   {
+   "id": "dust2-t-molotov-02",
+   "map": "de_dust2",
+   "side": "T",
+   "type": "molotov",
+   "click": "lmb",
+   "move": "stand",
+   "action": "jump",
+   "origin": "B通/B2",
+   "target": "白车",
+   "title": "APEX-天火高闪一点二用，抵墙平行，蹲着瞄点，站着左键跳投 (1)",
+   "oneline": "B通/B2→白车，左键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "execute"
+   ],
+   "status": "draft",
+   "spots": [
+    "B通/B2",
+    "白车"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-t-molotov-02/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-t-molotov-02/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-t-molotov-02/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "apexhuogaoshanyidianeryongdiqiangpingxingdunmiaodianzhanzuojiantiaotou1",
+    "btongb2",
+    "baiche"
+   ],
+   "pyi": [
+    "apexhgsydeydqpxdmdzzjtt1",
+    "btb2",
+    "bc"
+   ]
+  },
+  {
    "id": "dust2-t-molotov-b-door",
    "map": "de_dust2",
    "side": "T",
@@ -2067,6 +3239,64 @@ window.PLAYBOOK = {
    ]
   },
   {
+   "id": "dust2-t-smoke-01",
+   "map": "de_dust2",
+   "side": "T",
+   "type": "smoke",
+   "click": "lmb",
+   "move": "stand",
+   "action": "jump",
+   "origin": "B通/B2",
+   "target": "狗洞",
+   "title": "B2进攻B包一点多用狗洞烟，原地左键跳投 (1)",
+   "oneline": "B通/B2→狗洞，左键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "execute"
+   ],
+   "status": "draft",
+   "spots": [
+    "B通/B2",
+    "狗洞"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "左键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-t-smoke-01/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-t-smoke-01/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-t-smoke-01/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "b2jingongbbaoyidianyonggoudongyanyuandizuojiantiaotou1",
+    "btongb2",
+    "goudong"
+   ],
+   "pyi": [
+    "b2jgbbydygdyydzjtt1",
+    "btb2",
+    "gd"
+   ]
+  },
+  {
    "id": "dust2-t-smoke-02",
    "map": "de_dust2",
    "side": "T",
@@ -2089,6 +3319,16 @@ window.PLAYBOOK = {
    ],
    "tags": [],
    "related": [],
+   "pin_origin": [
+    0.5736,
+    0.8351
+   ],
+   "pin_targets": {
+    "警A门": [
+     0.6971,
+     0.5304
+    ]
+   },
    "source": {
     "kind": "self",
     "creator": "自己"
@@ -2122,6 +3362,64 @@ window.PLAYBOOK = {
     "qadamy",
     "fj",
     "jam"
+   ]
+  },
+  {
+   "id": "dust2-t-smoke-03",
+   "map": "de_dust2",
+   "side": "T",
+   "type": "smoke",
+   "click": "both",
+   "move": "stand",
+   "action": "jump",
+   "origin": "B通/B2",
+   "target": "B门",
+   "title": "B2进攻B包一点多用B门烟，原地双键跳投 (1)",
+   "oneline": "B通/B2→B门，双键跳投",
+   "difficulty": "normal",
+   "phase": [
+    "execute"
+   ],
+   "status": "draft",
+   "spots": [
+    "B通/B2",
+    "B门"
+   ],
+   "tags": [],
+   "related": [],
+   "source": {
+    "kind": "self",
+    "creator": "自己"
+   },
+   "throw_badge": "双键跳投",
+   "images": [
+    {
+     "slot": "1-stand",
+     "label": "站位",
+     "path": "media/de_dust2/dust2-t-smoke-03/1-stand.jpg"
+    },
+    {
+     "slot": "2-aim",
+     "label": "瞄点",
+     "path": "media/de_dust2/dust2-t-smoke-03/2-aim.jpg"
+    },
+    {
+     "slot": "4-result",
+     "label": "落点&效果",
+     "path": "media/de_dust2/dust2-t-smoke-03/4-result.jpg"
+    }
+   ],
+   "missing": [],
+   "notes": "",
+   "pyf": [
+    "b2jingongbbaoyidianyongbmenyanyuandishuangjiantiaotou1",
+    "btongb2",
+    "bmen"
+   ],
+   "pyi": [
+    "b2jgbbydybmyydsjtt1",
+    "btb2",
+    "bm"
    ]
   },
   {
@@ -2427,13 +3725,13 @@ window.PLAYBOOK = {
    ],
    "related": [],
    "pin_origin": [
-    0.1986,
-    0.7706
+    0.2004,
+    0.7678
    ],
    "pin_targets": {
     "警家": [
-     0.5127,
-     0.2462
+     0.5142,
+     0.2435
     ]
    },
    "source": {

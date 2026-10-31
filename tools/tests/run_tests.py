@@ -1810,6 +1810,66 @@ def r3l15_clear_on_empty(page, base):
     page.wait_for_timeout(200)
 
 
+# ---------------------------------------------------------------- R3-L18 分拣台列序 + 阵营 id 刷新
+
+@case("R3L18/图槽列移到标签左 + 改阵营即时刷新自动 id（单行+表头批量）")
+def r3l18_columns_sideid(page, base):
+    goto(page, base)
+    page.evaluate("""() => {
+      localStorage.removeItem('pb-entries-v1');
+      localStorage.removeItem('pb-sort-draft-v1');
+      sortSt.globalMap = 'de_dust2';
+      sortSt.rows = [];
+      const r = sortAddRow();
+      r.title = '阵营id测试烟';
+      openSortStation();
+    }""")
+    page.wait_for_timeout(300)
+    # 列序：站位/瞄点/落点 头位于 标签/备注 之前（R3-L18）
+    order = page.evaluate("""() => [...document.querySelectorAll('#sort-table thead th')]
+      .map(t => t.textContent.replace('▾', '').trim())""")
+    i1, i2, i3 = order.index('站位'), order.index('瞄点'), order.index('落点&效果')
+    it, ib = order.index('标签'), order.index('备注(一句话)')
+    assert i1 < i2 < i3 < it < ib, f"列序应为 已实测→站位→瞄点→落点→标签→备注，实际 {order}"
+    pos = page.evaluate("""() => {
+      const tr = document.querySelector('#sort-table tbody tr');
+      const slotTd = tr.querySelector('.slot-box').closest('td');
+      const tagsTd = tr.querySelector('input[data-k="tags"]').closest('td');
+      return !!(slotTd.compareDocumentPosition(tagsTd) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }""")
+    assert pos, "标签输入格应排在图槽格之后"
+    # 单行改阵营 → 自动 id 前缀即时刷新（T→CT）
+    pid = page.evaluate("""() => {
+      const sel = document.querySelector('#sort-table select[data-k="side"]');
+      sel.value = 'CT';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      return document.querySelector('[data-idtag]').textContent;
+    }""")
+    assert '-ct-smoke-' in pid, f"改阵营后 id 应即时刷新为 -ct-smoke- 前缀，实际 {pid!r}"
+    # 改类型同样刷新（既有语义回归）
+    pid2 = page.evaluate("""() => {
+      const sel = document.querySelector('#sort-table select[data-k="type"]');
+      sel.value = 'flash';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      return document.querySelector('[data-idtag]').textContent;
+    }""")
+    assert '-ct-flash-' in pid2, f"改类型后 id 应刷新为 -ct-flash- 前缀，实际 {pid2!r}"
+    # 表头 ▾ 批量设阵营同样刷新全表 id
+    page.evaluate("() => { sortAddRow(); drawSortStation(); }")
+    page.evaluate('() => document.querySelector(\'#sort-table thead [data-bulkcol="side"]\').click()')
+    page.wait_for_timeout(150)
+    page.evaluate("""() => {
+      const b = [...document.querySelectorAll('[data-bulkval]')].find(x => x.dataset.bulkval === 'CT');
+      b.click();
+    }""")
+    page.wait_for_timeout(200)
+    ids = page.evaluate("() => [...document.querySelectorAll('[data-idtag]')].map(t => t.textContent)")
+    assert len(ids) == 2 and ids[0].startswith('dust2-ct-flash-') and ids[1].startswith('dust2-ct-smoke-'), \
+        f"批量设阵营后两行 id 都应刷新（第 1 行保持 flash、第 2 行 smoke），实际 {ids!r}"
+    # 清理
+    page.evaluate("() => { sortSt.rows = []; sortSt.open = false; document.querySelectorAll('.sort-overlay,#sort-view').forEach(n => n.remove()); }")
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1868,8 +1928,9 @@ CASES = [
     r3l9_ids,
     r3l10_drawer,
     r3l11_gif,
-    r3l12_sortext,
-    r3l15_clear_on_empty,
+r3l12_sortext,
+r3l15_clear_on_empty,
+r3l18_columns_sideid,
     s6_pixels,
 ]
 

@@ -689,10 +689,10 @@ function openBulkMenu(col, anchorBtn) {
     const v = b.dataset.bulkval;
     for (const row of sortSt.rows) {
       if (col === "verified") { if (sortSt.srcMode !== "video") row.verified = v === "true"; }
-      else if (col === "type") { row.type = v; if (!row.idTouched) row.id = ""; }
+      else if (col === "type" || col === "side") { row[col] = v; if (!row.idTouched) row.id = ""; }
       else row[col] = v;
     }
-    if (col === "type") for (const row of sortSt.rows) if (!row.idTouched) sortAutoId(row);
+    if (col === "type" || col === "side") for (const row of sortSt.rows) if (!row.idTouched) sortAutoId(row);   // R3-L18：阵营也参与 id 前缀，批量改动同样重算
     close();
     drawSortStation();
   });
@@ -1193,7 +1193,7 @@ function openSortStation() {
     else if (k === "verified") row.verified = t.checked;
     else if (k === "tags") row.tags = t.value.split(/[,，、]/).map(s => s.trim()).filter(Boolean);   // R3-L12：行内标签解析
     else row[k] = t.value;
-    if (k === "type" && !row.idTouched) {
+    if ((k === "type" || k === "side") && !row.idTouched) {   // R3-L18：阵营改动同样即时刷新自动 id（前缀含 side）
       sortAutoId(row);
       const idTag = el.querySelector(`[data-idtag="${row.uid}"]`);
       if (idTag) idTag.textContent = row.id;
@@ -1458,9 +1458,9 @@ async function drawSortStation() {
       <td>${sortCellSelect(row.action, [["direct", "直投"], ["jump", "跳投"], ["crouch-jump", "蹲跳投"]], "action", row)}</td>
       <td>${sortCellSelect(row.phase, PHASE_OPTS, "phase", row)}</td>
       <td class="cell-v"><input type="checkbox" data-row="${row.uid}" data-k="verified" ${row.verified ? "checked" : ""}${sortSt.srcMode === "video" ? " disabled" : ""} title="${sortSt.srcMode === "video" ? "视频抽帧一律待验证——实测过才能转绿" : "勾选=导入即「已实测」（记今天日期）"}"></td>
+      ${cells}
       <td><input class="cell wide" data-row="${row.uid}" data-k="tags" value="${escapeHtml((row.tags || []).join("，"))}" placeholder="标签（逗号分隔，可空）" list="pb-tag-datalist"></td>
       <td><input class="cell wide" data-row="${row.uid}" data-k="notes" value="${escapeHtml(row.notes)}" placeholder="一句话怎么扔（卡片大字）"></td>
-      ${cells}
     </tr>`;
   }).join("");
   tableEl.innerHTML = `
@@ -1472,8 +1472,8 @@ async function drawSortStation() {
         <th>类型<button type="button" class="pb-th-set" data-bulkcol="type" title="一键设置全表">▾</button></th>
         <th>键位</th><th>移动</th><th>投掷</th>
         <th>阶段<button type="button" class="pb-th-set" data-bulkcol="phase" title="一键设置全表">▾</button></th>
-        <th>已实测✓<button type="button" class="pb-th-set" data-bulkcol="verified" ${sortSt.srcMode === "video" ? "disabled" : ""} title="${sortSt.srcMode === "video" ? "视频来源一律待验证" : "默认不勾——实测过才勾（可一键全勾）"}">▾</button></th><th>标签</th><th>备注(一句话)</th>
-        <th>站位</th><th>瞄点</th><th>落点&效果</th>
+        <th>已实测✓<button type="button" class="pb-th-set" data-bulkcol="verified" ${sortSt.srcMode === "video" ? "disabled" : ""} title="${sortSt.srcMode === "video" ? "视频来源一律待验证" : "默认不勾——实测过才勾（可一键全勾）"}">▾</button></th>
+        <th>站位</th><th>瞄点</th><th>落点&效果</th><th>标签</th><th>备注(一句话)</th>
       </tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>`;

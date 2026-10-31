@@ -16,9 +16,8 @@ status: verified
 spots: [后花园平台, 警家]
 tags: [默认, 控中路]
 related: []
-pin_origin: [0.1986, 0.7706]
-pin_targets:
-  警家: [0.5127, 0.2462]
+pin_origin: [0.2004, 0.7678]
+pin_targets: {警家: [0.5142, 0.2435]}
 source:
   kind: self
   creator: 自己
