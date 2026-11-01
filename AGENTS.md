@@ -28,7 +28,7 @@
 AGENTS.md  宪法 | README.md  入口 | index.html  查看器（双击即开）| help.html  使用说明 | 同步并打包.bat  使用者唯一入口
 docs/  PROGRESS（台账）DEV UI RECORD BUILD_PLAN PROMPTS CONTENT_IDEAS CHECK-01* iterations/
 data/  maps.json（注册表）+ callouts.json（报点 u/v 0~1）+ glossary.md（术语）+ entries/（条目一 .md 一条）
-tactics/  战术板一 .md 一板 | assets/  radar/ + js/css/ + icons/
+tactics/  战术板一 .md 一板 | assets/  radar/ + js/css/ + icons/ + help/（使用手册配图，随 pack 进发布包）
 media/<map>/<id>/  道具截图（固定槽位，见四）——media/ 入 git；文件夹批量录入/（素材池）原图不入 git（2026-10-28 定稿：录完即弃防膨胀，仅 README/占位说明入库）
 tools/  pb.py（单文件 CLI）+ pb.cmd + pin.ahk/pin.bat + pydict.json + harvest.py
 build/ dist/（生成产物，不入 git）| _archive/  归档留底 | simhei.ttf  标注字体
@@ -94,7 +94,7 @@ timeline:                # 可选（≤20 步；t=倒计时 "M:SS"（1:55=开局
 `tools/pin.ahk`：F4 切换鼠标下窗口置顶、F3 切换 ~40% 半透明；`tools/pin.bat` 一键启动。进游戏前点一下查看器窗口再按 F4。置顶是**自己的增强**，不属于发布包。
 
 ## 九、打包分发（发朋友直接打开）
-`pb pack` 生成 `dist/cs2-playbook-YYYYMMDD.zip`（微信/QQ 直发得动），解压后 `index.html` 双击即开，含 `help.html`（⚙ 设置「📖 使用说明」打开的纯静态说明页）、`build/data.js`、`media/`、`assets/`、`使用说明.txt`。包内**不含** tools/、tactics/、data/ 源文件与 pin.ahk——朋友只要看，不要录。自用目录与发布包共用同一套查看器代码，`pb pack` 只做拷贝+出说明。朋友版同样显示 source 署名——分发不删署名。
+`pb pack` 生成 `dist/cs2-playbook-YYYYMMDD.zip`（微信/QQ 直发得动），解压后 `index.html` 双击即开，含 `help.html`（⚙ 设置「📖 使用说明」打开的纯静态图文使用手册，配图在 `assets/help/` 一并入包）、`build/data.js`、`media/`、`assets/`、`使用说明.txt`。包内**不含** tools/、tactics/、data/ 源文件与 pin.ahk——朋友只要看，不要录。自用目录与发布包共用同一套查看器代码，`pb pack` 只做拷贝+出说明。朋友版同样显示 source 署名——分发不删署名。
 
 ## 十、内容流水线（来源档）
 | 档 | 来源 | 入库状态 | 说明 |

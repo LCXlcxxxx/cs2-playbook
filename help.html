@@ -3,109 +3,381 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CS2 道具速查 · 使用说明</title>
+<title>CS2 道具速查 · 使用手册</title>
 <style>
-  /* 与查看器同款配色字体（内联，抗路径变化） */
   body {
     margin: 0;
-    padding: 32px 16px 48px;
+    padding: 32px 16px 64px;
     background: #10141c;
     color: #d6dde7;
     font-size: 18px;
-    line-height: 1.75;
+    line-height: 1.8;
     font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    scroll-behavior: smooth;
   }
-  .wrap { max-width: 720px; margin: 0 auto; }
-  h1 {
-    font-size: 28px;
-    margin: 0 0 6px;
-    color: #fff;
+  .wrap { max-width: 940px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 0 0 6px; color: #fff; }
+  h2 {
+    font-size: 24px; color: #fff; margin: 52px 0 14px;
+    padding-top: 14px; border-top: 1px solid #2c3542;
+    scroll-margin-top: 16px;
   }
-  .sub { color: #8b97a8; font-size: 16px; margin: 0 0 28px; }
+  h2 .no { color: #5aa2f7; margin-right: 8px; }
+  h3 { font-size: 19px; color: #e8eef6; margin: 26px 0 8px; }
+  p { margin: 10px 0; }
+  b, strong { color: #fff; }
+  .sub { color: #8b97a8; font-size: 16px; margin: 0 0 24px; }
+  a { color: #5aa2f7; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back { display: inline-block; margin-top: 4px; font-size: 16px; }
+  .lead {
+    background: #16202c; border: 1px solid #2f4a63; border-radius: 12px;
+    padding: 16px 20px; margin: 0 0 24px;
+  }
+  .lead p { margin: 6px 0; }
   .card {
-    background: #1a2029;
-    border: 1px solid #2c3542;
-    border-radius: 12px;
-    padding: 18px 22px;
-    margin: 0 0 16px;
+    background: #1a2029; border: 1px solid #2c3542; border-radius: 12px;
+    padding: 16px 20px; margin: 14px 0;
   }
-  .q {
-    font-size: 20px;
-    font-weight: 700;
-    color: #5aa2f7;
-    margin: 0 0 10px;
-  }
-  .card p { margin: 8px 0; }
-  .card b { color: #fff; }
   .tip {
-    color: #8b97a8;
-    font-size: 15px;
-    border-left: 3px solid #2c3542;
-    padding-left: 10px;
-    margin: 10px 0 0;
+    color: #9aa7b8; font-size: 15px; border-left: 3px solid #34435a;
+    padding-left: 12px; margin: 12px 0;
   }
-  .foot {
-    margin-top: 28px;
-    text-align: center;
-    color: #8b97a8;
-    font-size: 14px;
+  .tip b { color: #c6d2e2; }
+  /* 目录 */
+  .toc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0 8px; }
+  @media (max-width: 720px) { .toc { grid-template-columns: 1fr; } }
+  .toc a {
+    display: block; background: #1a2029; border: 1px solid #2c3542; border-radius: 10px;
+    padding: 10px 14px; color: #d6dde7; font-size: 16px;
   }
-  .back {
-    display: inline-block;
-    margin-top: 4px;
-    color: #5aa2f7;
-    text-decoration: none;
-    font-size: 16px;
+  .toc a:hover { border-color: #3f6ea3; text-decoration: none; background: #1d2530; }
+  .toc a b { color: #5aa2f7; margin-right: 8px; }
+  /* 图片 */
+  figure { margin: 18px 0; }
+  figure img {
+    display: block; width: 100%; height: auto; cursor: zoom-in;
+    border: 1px solid #2c3542; border-radius: 10px; background: #0c0f15;
   }
+  figure.narrow img { max-width: 760px; margin: 0 auto; }
+  figcaption {
+    text-align: center; color: #8b97a8; font-size: 14px; margin-top: 6px;
+  }
+  /* 表格 */
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 16px; }
+  th, td { border: 1px solid #2c3542; padding: 7px 12px; text-align: left; vertical-align: top; }
+  th { background: #1d2530; color: #fff; white-space: nowrap; }
+  td { background: #171c25; }
+  .kbd {
+    display: inline-block; background: #232b38; border: 1px solid #3a4557;
+    border-bottom-width: 2px; border-radius: 6px; padding: 0 7px;
+    font-family: Consolas, monospace; font-size: 14px; color: #e8eef6;
+  }
+  .badge { display: inline-block; border-radius: 999px; padding: 0 10px; font-size: 14px; font-weight: 700; }
+  .b-ok    { background: #1d3a2a; color: #6fd599; border: 1px solid #2c5a3f; }
+  .b-draft { background: #3d3113; color: #eec26a; border: 1px solid #6b5520; }
+  .b-bad   { background: #3d1a1a; color: #ef8a8a; border: 1px solid #6b2c2c; }
+  .steps { counter-reset: st; padding-left: 0; list-style: none; }
+  .steps li { counter-increment: st; margin: 10px 0; padding-left: 40px; position: relative; }
+  .steps li::before {
+    content: counter(st); position: absolute; left: 0; top: 3px;
+    width: 26px; height: 26px; border-radius: 50%; background: #2f5d8a; color: #fff;
+    font-weight: 700; font-size: 15px; line-height: 26px; text-align: center;
+  }
+  .totop { text-align: right; margin: -6px 0 0; }
+  .totop a { font-size: 14px; color: #6b7f99; }
+  .foot { margin-top: 44px; text-align: center; color: #8b97a8; font-size: 14px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>CS2 道具速查 · 使用说明</h1>
-  <p class="sub">六个常见问题，看完就会用。<a class="back" href="index.html">← 返回册子</a></p>
+<div class="wrap" id="top">
 
-  <div class="card">
-    <p class="q">① 这个册子怎么用？</p>
-    <p>双击 <b>index.html</b> 打开。顶部搜索框输文字就能找道具（支持<b>拼音首字母</b>，比如打 jjy 就能找到警家烟）；右边四个图标按<b>烟雾 / 闪光 / 燃烧 / 高爆</b>筛选。「战术板」页是一张地图，点地图上的地名，就能看到这个点位相关的道具；还能切到「💥 道具」看落点、「🕒 时间轴」按顺序看套路。</p>
-    <p>常用的道具点 <b>⭐ 收藏</b>，会自动排在列表最上面。<b>截图后不用存文件</b>——复制截图，在要填的图槽上直接 <b>Ctrl+V</b> 就能贴进去。</p>
-    <p class="tip">道具标题里「<b>名字-</b>」开头的小字（比如 flamez-、寒王-、Jame-）是这条道具的<b>来源人物/战队</b>——职业选手、UP 主或朋友的代号，<b>中英文都算</b>，一眼就能分清这条道具学的是谁的。</p>
-    <p class="tip">「🕒 时间轴」里的时间是<b>倒计时</b>：1:55＝刚开局，0:00＝回合结束，步骤按先发生的排前面。每一步可以分给 ①-⑤ 号角色（角色只填名字，地图上自动站在他第一个动作的道具起点）。「💥 道具」层点 <b>✏️ 调点</b>：报点管区域，道具点要精准——同一区域重叠的道具会<b>自动散开</b>，逐颗拖到真实落点就记住了（没拖过的不记位置），时间轴也跟着用调好的位置。</p>
+  <h1>CS2 道具速查 · 使用手册</h1>
+  <p class="sub">图文版说明书：怎么查、怎么录、怎么发给朋友。<a class="back" href="index.html">← 返回册子</a></p>
+
+  <div class="lead">
+    <p><b>30 秒上手：</b>双击 <b>index.html</b> 打开册子 → 顶部选地图 → 「道具」页点一颗道具看图学投法 → 常用的点 <b>⭐ 收藏</b>。打游戏时切到「战术板」页看地图点位，或用套装的「开战」一键连翻。</p>
+    <p>所有配图<b>点击可放大</b>。看不懂的地方按目录找对应章节。</p>
   </div>
 
-  <div class="card">
-    <p class="q">② 我在网页里做的修改存在哪？</p>
-    <p>先存进「<b>浏览器的小抽屉</b>」——每个浏览器各有各的抽屉，换浏览器、清缓存之后就看不到了。</p>
-    <p>点过「<b>关联项目文件夹</b>」和「<b>开启自动保存</b>」之后，你的修改会在 1 秒内自动写进项目文件夹里的文件。<b>那才是真身</b>——以后不管换哪台电脑、哪个浏览器打开，看到的都一样。</p>
-    <p class="tip">队长版和朋友版的区别：发给朋友的压缩包里没有源文件，所以朋友的修改永远只在他自己的小抽屉里——朋友录完记得用 ⚙ → 📤 分享给队长留底。</p>
+  <div class="toc">
+    <a href="#s1"><b>①</b>认识主界面：两个页签和顶栏</a>
+    <a href="#s2"><b>②</b>查道具：列表、缩略图墙、详情页</a>
+    <a href="#s3"><b>③</b>搜索与筛选：找得快</a>
+    <a href="#s4"><b>④</b>战术板：地图三图层与时间轴</a>
+    <a href="#s5"><b>⑤</b>开战连翻：打游戏时的正确姿势</a>
+    <a href="#s6"><b>⑥</b>收藏、最近查看与待办面板</a>
+    <a href="#s7"><b>⑦</b>录入一条道具（管理模式）</a>
+    <a href="#s8"><b>⑧</b>批量录入：分拣台</a>
+    <a href="#s9"><b>⑨</b>我的修改存在哪？会不会丢？</a>
+    <a href="#s10"><b>⑩</b>发给朋友 &amp; 收朋友的道具</a>
+    <a href="#s11"><b>⑪</b>⚙ 设置逐项说明</a>
+    <a href="#s12"><b>⑫</b>键盘快捷键总表</a>
+    <a href="#faq"><b>❓</b>常见问题</a>
   </div>
 
-  <div class="card">
-    <p class="q">③ 顶部出现「● N 条修改待写入文件」怎么办？</p>
-    <p>浏览器重启后，授权会自动过期——这是浏览器的正常安全行为，不是坏了。顶栏会出现 <b>🔑 项目文件夹</b> / <b>🔗 自动保存</b> 按钮，点一下、允许一次，修改就会自动写进文件，这条提示随即消失。</p>
-    <p>放着不处理也不会丢——它一直替你留着，什么时候点什么时候写。</p>
-  </div>
+  <!-- ============ 1 ============ -->
+  <h2 id="s1"><span class="no">①</span>认识主界面</h2>
+  <p>打开后一共就<b>两个大页签</b>：<b>战术板</b>（默认，一张可点的地图）和<b>道具</b>（道具清单）。顶栏长这样：</p>
+  <figure class="narrow"><img src="assets/help/c1-topbar.jpg" alt="顶栏">
+    <figcaption>顶栏全貌（点击可放大）</figcaption></figure>
+  <table>
+    <tr><th style="width:3em">编号</th><th>是什么</th><th>怎么用</th></tr>
+    <tr><td>①</td><td><b>战术板 / 道具</b></td><td>两个大页签。战术板=地图视角找点位；道具=清单视角逐条看。</td></tr>
+    <tr><td>②</td><td><b>地图下拉</b></td><td>切换当前地图，册子记住上次选的。顺序可在 ⚙ 设置里调，第一位是打开时的默认图。</td></tr>
+    <tr><td>③</td><td><b>搜索框</b></td><td>支持中文、<b>拼音全拼和首字母</b>（比如打 <code>jia</code> 或 <code>jjy</code> 都能找到「警家烟」），多个词用空格隔开。按 <span class="kbd">/</span> 键直接聚焦。</td></tr>
+    <tr><td>④</td><td><b>🔧 管理</b></td><td>查阅 / 管理两种模式的总开关（见 <a href="#s7">第⑦节</a>）。<b>每次打开默认查阅</b>——平时只看不会误碰编辑按钮。</td></tr>
+    <tr><td>⑤</td><td><b>⚙ 设置</b></td><td>待办面板、地图排序、自定义筛选、导入导出都在这里（见 <a href="#s11">第⑪节</a>）。</td></tr>
+    <tr><td>⑥</td><td><b>类型图标</b></td><td>烟 / 闪 / 火 / 雷，<b>可多选</b>，同时作用于道具列表和战术板地图。</td></tr>
+    <tr><td>⑦</td><td><b>📦</b></td><td>只看战术包（套装）视图，仅道具页显示。</td></tr>
+    <tr><td>⑧</td><td><b>阵营</b></td><td>全部 / T / CT。双方通用的道具在 T、CT 下都会显示。</td></tr>
+    <tr><td>⑨</td><td><b>自定义 chips</b></td><td>自己在 ⚙ 设置里配的标签按钮（如 A区 / 反清），点一下=只看带该标签的道具，<b>单选互斥</b>，再点一下取消。在战术板页点它会自动切到道具页应用。</td></tr>
+  </table>
+  <p class="tip">没激活任何筛选时，第二行筛选带是<b>灰色的</b>——不是坏了，是提示你「现在没筛选」；点任意筛选后该项恢复高亮。</p>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
 
-  <div class="card">
-    <p class="q">④ 为什么改完要双击「同步并打包.bat」？</p>
-    <p>它做两件事：把项目文件里的内容<b>装进网页实际读取的数据</b>（不点它，别的电脑打开还是旧内容）；再把最新内容<b>打好发给朋友的压缩包</b>。</p>
-    <p>它只在<b>队长的电脑</b>上用（背后用到 Python，队长电脑已装好，双击即可）。朋友什么都不用装。</p>
-  </div>
+  <!-- ============ 2 ============ -->
+  <h2 id="s2"><span class="no">②</span>查道具：列表、缩略图墙、详情页</h2>
 
-  <div class="card">
-    <p class="q">⑤ 朋友怎么把自己喜欢的道具加进大家的册子？</p>
-    <p>在网页里「＋ 新增道具」、传好截图 → 点 <b>⚙ 设置 → 📤 把我的修改分享给队长</b> → 把下载的文件微信发给队长 → 队长在 ⚙ 设置里 <b>📥 导入朋友的修改</b>。</p>
-    <p>导入的都算「<b>待验证</b>」（橙色）——队长亲自进游戏试过，才会转成绿色的「已实测」，之后下次发的包里大家就都有了。</p>
-    <p class="tip">分拣台小知识：某一组的素材图<b>全部入册</b>后，它的文件夹会自动搬进「<b>已录入/</b>」留档（<b>图不会删</b>，想重录可以从那里把图拷回来）——看到文件夹被搬走是正常现象，不是丢了。</p>
-  </div>
+  <h3>2.1 列表页一行是什么意思</h3>
+  <figure><img src="assets/help/04-list.jpg" alt="道具列表页">
+    <figcaption>道具列表页：收藏置顶 → 战术包折叠区 → 按阶段分组（点击可放大）</figcaption></figure>
+  <figure class="narrow"><img src="assets/help/c2-row.jpg" alt="列表行"></figure>
+  <p><b>① 左簇</b>：类型图标 + 标题 + 标签。标题里「<b>名字-</b>」开头的小字（如 flamez-、寒王-、Jame-）是这条道具的<b>来源人物/战队</b>——职业选手、UP 主或朋友的代号，中英文都算，一眼分清学的是谁的。<b>② 中簇</b>：从哪（起点）→ 扔到哪（目标）。<b>③ 右簇</b>：<b>投法徽章</b>（比如「左键跳投」，由键位×移动×投掷自动拼出，跳投蓝字 / 走位投绿字 / 原地直投灰字）、<b>难度</b>（色点+简单/中等/困难，<b>点它=只看这一档</b>）、<b>状态</b>和 ⭐ 收藏。</p>
+  <p>列表按分组排：<b>⭐ 收藏</b>置顶 → <b>📦 战术包</b>折叠区 → 按使用阶段分组（默认 / 爆点 / 回防 / 防守 / 科研）。最底下有总数统计。</p>
 
+  <h3>2.2 缩略图墙：翻图更快</h3>
+  <figure><img src="assets/help/05-wall.jpg" alt="缩略图墙">
+    <figcaption>列表页顶部「☰ 列表 / ▦ 缩略图」可切换，偏好会记住；「▣ 大图」再放大一档</figcaption></figure>
+  <p>墙里每张卡片显示这条道具的<b>落点&效果图</b>（缺了就退回站位图）。<b>点有图的卡片直接放大</b>进入看图模式：滚轮缩放、拖拽移动、<span class="kbd">J</span>/<span class="kbd">K</span> 直接跳到上/下一条道具的图；点没图的卡片进详情。</p>
+  <figure><img src="assets/help/08-lightbox.jpg" alt="看图放大模式">
+    <figcaption>放大模式：滚轮缩放、左右半区（或 ←/→）切图，J/K 跨道具连翻</figcaption></figure>
+
+  <h3>2.3 详情页：一条道具的全部信息</h3>
+  <figure><img src="assets/help/06-detail.jpg" alt="详情页">
+    <figcaption>详情页上半：导航条 / 标题 / 一句话怎么扔 / 徽章 / 大图</figcaption></figure>
+  <figure><img src="assets/help/07-detail-viewer.jpg" alt="翻图面板与迷你定位图">
+    <figcaption>翻图面板：站位 / 瞄点 / 落点&效果三个槽位切换；下方还有迷你定位图</figcaption></figure>
+  <figure class="narrow"><img src="assets/help/c3-viewer.jpg" alt="翻图面板特写">
+    <figcaption>① 大图（点它放大，左右半区翻槽）② 槽位 chips ③ 上传/替换（管理模式）</figcaption></figure>
+  <figure><img src="assets/help/07b-detail-foot.jpg" alt="详情页底部">
+    <figcaption>详情页底部：来源署名 + 实测日期 + 可点击复制的道具 ID</figcaption></figure>
+  <ul>
+    <li><b>翻图面板</b>：左右半区点击或 <span class="kbd">[</span> <span class="kbd">]</span> 在槽位间循环，点大图放大。完整一条道具至少三张图：<b>站位</b>（含地标）、<b>瞄点</b>（准星对哪）、<b>落点&效果</b>（烟成/火铺的样子）。</li>
+    <li><b>迷你定位图</b>：起点（蓝）和落点（橙）在整张地图的位置，点它直接跳到战术板 💥 道具层看全图。</li>
+    <li><b>状态徽章</b>：<span class="badge b-ok">已实测</span> = 真进游戏复现过；<span class="badge b-draft">待验证</span> = 还没实测过，先参考。点状态徽章（两段确认）可以切换并自动记下日期。</li>
+    <li><b>ID 小钮</b>：点击复制这条道具的编号，跟别人交流或报问题时精确指认。</li>
+    <li><b>所属战术包</b>：点击直达该套装的只看视图。</li>
+  </ul>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 3 ============ -->
+  <h2 id="s3"><span class="no">③</span>搜索与筛选：找得快</h2>
+  <table>
+    <tr><th style="width:14em">想找什么</th><th>怎么做</th></tr>
+    <tr><td>按名字 / 点位</td><td>搜索框直接打字，<b>空格分词</b>、多个词都要命中。支持拼音：<code>jia</code>（警家）、<code>zhonglu</code> 或 <code>zl</code>（中路）。</td></tr>
+    <tr><td>按难度</td><td>搜索 <code>难度:简单</code> / <code>难度:困难</code>（或 <code>diff:easy</code> 等）；列表里直接点<b>难度徽章</b>也一样。</td></tr>
+    <tr><td>按标签</td><td>点顶栏自定义 chips（A区 / 反清…）；词表在 ⚙ 设置「自定义筛选」里配。</td></tr>
+    <tr><td>按类型 / 阵营</td><td>顶栏烟闪火雷图标（多选）+ 全部/T/CT。</td></tr>
+    <tr><td>按报点点位</td><td>战术板页直接<b>点地图上的地名</b>，自动列出与该点相关的道具。</td></tr>
+    <tr><td>组合</td><td>以上全部条件<b>同时生效</b>（取交集），随便叠。</td></tr>
+    <tr><td>清空</td><td><span class="kbd">Esc</span> 一路清掉筛选 / 弹层，最快。</td></tr>
+  </table>
+  <p class="tip">失效/弃用的道具默认隐藏，⚙ 设置里「显示失效与弃用条目」打开后可见（橙色/灰色徽章）。</p>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 4 ============ -->
+  <h2 id="s4"><span class="no">④</span>战术板：地图三图层与时间轴</h2>
+  <p>战术板页是一张可交互的地图，右上角切换三个图层：</p>
+
+  <h3>4.1 📍 报点层（默认）</h3>
+  <figure><img src="assets/help/01-tactics.jpg" alt="报点层">
+    <figcaption>地图上全是中文报点名；「🚀 道具起点 / 🎯 道具目标」是进阶钻取</figcaption></figure>
+  <p><b>点任意地名</b>＝列出与这个点位相关的道具（保留当前类型/阵营筛选）。「🚀 道具起点」模式：点地名看<b>从这里能丢到哪</b>；「🎯 道具目标」反向看<b>谁能丢到这</b>。「◎ 全部」回普通视图。</p>
+
+  <h3>4.2 💥 道具层</h3>
+  <figure><img src="assets/help/02-nades.jpg" alt="道具层">
+    <figcaption>每颗道具在它的主落点画一枚类型图标，同一点位聚合计数 ×N</figcaption></figure>
+  <p>图标 = 道具的<b>落点</b>。点图标：显示从哪丢（虚线连到起点）+ 底部弹出道具清单，再点清单里的道具直达详情。类型/阵营/搜索等筛选全部联动。</p>
+  <p class="tip"><b>✏️ 调点</b>（管理模式）：报点管区域、道具点管精准位置。同一区域重叠的道具会自动散开，把图标<b>拖到真实落点</b>就记住了；选中后出现名称标签和起点白点手柄（也可拖），<b>↺</b> 一键回报点位。没调过的道具停在报点中心，完全不影响使用。</p>
+
+  <h3>4.3 🕒 时间轴层</h3>
+  <figure><img src="assets/help/03-timeline.jpg" alt="时间轴层">
+    <figcaption>角色标（①-④）钉在各自第一个动作的道具起点；虚线=角色走位动线；下方是按倒计时排的步骤卡</figcaption></figure>
+  <ul>
+    <li>时间是<b>倒计时</b>：<b>1:55＝刚开局，0:00＝回合结束</b>，步骤按先发生的排上面。</li>
+    <li>每个步骤可分给 <b>①-⑤ 号角色</b>（只填名字，比如「1号 狙」），角色标自动钉在他第一个动作的道具起点。</li>
+    <li>「<b>动线只看</b>」：人多时点 ①②③ 只看该角色的路线，其余步骤变暗。</li>
+    <li>点步骤卡或时间 chip＝高亮联动；点步骤里的道具名弹小抽屉（缩略图+投法），<b>「详情 ›」才跳详情页</b>。</li>
+    <li>虚线走位动线由「✍️ 划动线」（管理模式）自定义——它画的是<b>人怎么走</b>；道具的飞行弹道在 💥 道具层看，两层不是一回事。</li>
+  </ul>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 5 ============ -->
+  <h2 id="s5"><span class="no">⑤</span>开战连翻：打游戏时的正确姿势</h2>
+  <figure><img src="assets/help/09-runbook.jpg" alt="开战连翻">
+    <figcaption>全屏沉浸卡：一张大图配一句投法，J/K 翻页</figcaption></figure>
+  <p>两个入口：道具列表里 <b>📦 套装行的「🚀 开战」</b>（按 烟→闪→火→雷 的顺序过一遍套路）、战术板卡上的 <b>「🚀 按时间轴开战」</b>（按时间轴顺序）。进入后：</p>
+  <ul>
+    <li><span class="kbd">J</span>/<span class="kbd">K</span> 或 <span class="kbd">←</span><span class="kbd">→</span> 翻卡，顶部显示进度（1 / 4）；</li>
+    <li>每张卡就是「图 + 一句话怎么扔 + 投法/难度徽章」，瞄一眼就能扔；</li>
+    <li><span class="kbd">Esc</span> 退出回到原视图。</li>
+  </ul>
+  <p class="tip">建议：把副屏浏览器按 <span class="kbd">F11</span> 全屏，翻卡更舒服；连翻不会翻过头，到头停住。</p>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 6 ============ -->
+  <h2 id="s6"><span class="no">⑥</span>收藏、最近查看与待办面板</h2>
+  <ul>
+    <li><b>⭐ 收藏</b>：列表行或详情页点星，收藏的道具自动置顶成一组。</li>
+    <li><b>最近查看</b>：道具列表顶部一排小卡，点直达刚看过的道具。</li>
+    <li><b>📖 册子待办</b>（⚙ 设置里）：哪几颗<b>缺图</b>、哪几颗<b>待验证</b>，分组计数、点一下直达那颗道具去补。</li>
+  </ul>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 7 ============ -->
+  <h2 id="s7"><span class="no">⑦</span>录入一条道具（管理模式）</h2>
+  <p>点顶栏 <b>🔧 管理</b>，所有录入与编辑入口就出现了：道具页工具栏的「＋ 新增道具 / 📥 分拣台」、详情页「编辑」、战术板「＋ 新增战术板 / ⚙ 编辑」等。再点一次 🔧 回到查阅模式，入口全部收起。</p>
+  <figure><img src="assets/help/10-editor.jpg" alt="道具编辑器">
+    <figcaption>道具编辑器：所有字段网页内可改，保存即生效</figcaption></figure>
+  <h3>7.1 关键字段怎么填</h3>
+  <table>
+    <tr><th style="width:9em">字段</th><th>填法</th></tr>
+    <tr><td>标题 / 一句话怎么扔</td><td>「一句话怎么扔」是卡片上<b>最大的一行字</b>，要能单独看懂：贴哪、瞄哪、怎么出手。</td></tr>
+    <tr><td>起点 / 目标</td><td>点「在地图上选」从报点里挑（支持拼音搜索），也可手输；目标可多选。起点/目标是搜索与钻取的关键，尽量用报点名。</td></tr>
+    <tr><td>键位 · 移动 · 投掷</td><td>三个下拉自动拼出<b>投法徽章</b>：左键/右键/双键 × 原地/蹲下/W/走一步/Shift/Shift+W/跑 × 直投/跳投/蹲跳投 → 如「左键跳投」「Shift+W·双键·跳投」「右键轻抛」。教学视频里说「左键跳投一颗」，照着填这三个字段就行。</td></tr>
+    <tr><td>难度</td><td>简单 / 中等 / 困难 三档（快捷键 <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span>）。新建时按投法智能推荐，手动点过就以手动为准。</td></tr>
+    <tr><td>标签 / 战术包</td><td>标签=战术特征词（单向 / 瞬爆 / 反清 / A区…，回车添加，有建议列表）；战术包=自由命名的套装（如「A包爆弹三件套」），配 📦 只看和开战连翻。</td></tr>
+    <tr><td>报点关联</td><td>这条道具与哪些报点有关（多选），战术板钻取和点位过滤靠它。</td></tr>
+    <tr><td>来源</td><td>谁的视频/网页学的就填谁（UP 主+链接），<b>署名随图永久保留</b>；自己实测的就填「自己」。</td></tr>
+  </table>
+  <h3>7.2 状态诚实：颜色约定</h3>
+  <p><span class="badge b-draft">待验证</span> 橙色＝还没在游戏里复现过（视频学的、朋友给的都是它）；<span class="badge b-ok">已实测</span> 绿色＝<b>自己进游戏扔成过</b>，点状态徽章两段确认切换、自动记日期；<span class="badge b-bad">已失效</span>＝点位过时了别再练。没把握就先留橙色，别急着标绿。</p>
+  <h3>7.3 传图</h3>
+  <ul>
+    <li>详情页翻图面板「上传/替换」，或直接 <b>Ctrl+V 粘贴截图</b>到对应槽位（游戏里 F12 截图后复制就能贴）；</li>
+    <li>自动压缩：宽 ≤1920、单图 ≤1MB，不用提前处理；<b>GIF 动图原样保留</b>不压缩（超 8MB 会提醒）；</li>
+    <li>补落点视角等额外图用「扩展槽」，可随时删除。</li>
+  </ul>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 8 ============ -->
+  <h2 id="s8"><span class="no">⑧</span>批量录入：分拣台</h2>
+  <p>一次录一批（比如从视频抽了一组图）用<b>📥 分拣台</b>（道具页工具栏，管理模式）。把素材截图放进项目根目录的「<b>文件夹批量录入</b>」，<b>一个子文件夹＝一张图</b>（如「文件夹批量录入/荒漠迷城/」），然后打开分拣台：</p>
+  <figure><img src="assets/help/12-sortdesk.jpg" alt="分拣台">
+    <figcaption>分拣台：上面是素材池，下面一行一行入坑；右下「全部导入」一键入库</figcaption></figure>
+  <ol class="steps">
+    <li><b>素材池</b>按子文件夹分组显示。点素材大图入到选中行的坑位：<b>1 站位 → 2 瞄点 → 4 落点&效果</b> 顺序自动对号；入 1/4 坑时会顺手弹起点/目标选择。</li>
+    <li><b>标题自动带出</b>：站位图的<b>文件名</b>就是标题（「警家单向烟.png」→ 标题「警家单向烟」）——录屏截图时把文件名起好，分拣时零输入。</li>
+    <li><b>文件名还会自动抓字段</b>：类型（烟/闪/火/雷）、投掷（跳投/蹲跳投/直投/平投/轻抛）、移动（跑投/走一步/W一步/W跳投/Shift+W/蹲投）、键位（左键/右键/双键），写进文件名即可，导入前可改。</li>
+    <li><b>⏩ 成组</b>：池组名行一键「每 3 张自动建一行入坑」，赶时间先成组再逐行补字段。</li>
+    <li><b>本批来源</b>选「自己」或「视频」：视频档填 UP 主+BV 号（署名红线），并且<b>一律按待验证导入</b>（实测勾禁用）。</li>
+    <li><b>落点📍列</b>：小地图上拖图标调落点（与战术板 ✏️ 同款，重叠自动散开），调不调都能正常导入。</li>
+    <li><b>全部导入</b>：一行一条写入册子；有重复（同图+同类型+同起点+同目标）会黄条提醒但不拦。</li>
+  </ol>
+  <p class="tip">某组素材全部入册后，它的文件夹会自动搬进「<b>已录入/</b>」并重建空文件夹+说明文件——正常现象不是丢了。<b>「已录入」的原图确认录完后可整个删除省空间</b>，正式压缩图已经在册子里了。误关分拣台？重开会问你要不要<b>恢复行草稿</b>。</p>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 9 ============ -->
+  <h2 id="s9"><span class="no">⑨</span>我的修改存在哪？会不会丢？</h2>
+  <p>分两层，像「小抽屉 + 保险柜」：</p>
+  <ul>
+    <li><b>浏览器的小抽屉</b>：网页里做的修改<b>立刻生效</b>，先存在本浏览器里。换浏览器、清缓存就看不到了——所以只是暂存。</li>
+    <li><b>项目文件夹（真身）</b>：第一次使用时点一下顶栏的「<b>📁 关联项目文件夹</b>」并开启自动保存（浏览器会问一次权限），之后 1 秒内修改自动写进项目文件——<b>那才是永久保存</b>，换电脑、换浏览器打开都一样。</li>
+  </ul>
+  <figure class="narrow"><img src="assets/help/c4-badge.jpg" alt="待写徽标">
+    <figcaption>① 顶栏出现「● N 条修改待写入文件」= 有修改还没写进文件</figcaption></figure>
+  <ul>
+    <li>浏览器重启后授权会自动过期（安全机制，不是坏了）：顶栏出现 <b>🔑 / 🔗</b> 按钮，点一下重新允许即可。</li>
+    <li>看到「<b>● N 条修改待写入文件</b>」：点徽标一键补写；放着不处理也不会丢，它一直替你留着。</li>
+    <li><b>绝不无声丢失</b>：任何被新内容取代的旧修改都会自动进 ⚙ 设置的「<b>被搁置的本地修改</b>」留底，能查看、能导出。</li>
+    <li>「改了却看不到」：按 <span class="kbd">Ctrl+F5</span> 强制刷新一次再看。</li>
+  </ul>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 10 ============ -->
+  <h2 id="s10"><span class="no">⑩</span>发给朋友 &amp; 收朋友的道具</h2>
+  <h3>10.1 队长：更新数据并发包</h3>
+  <p>双击项目根目录的「<b>同步并打包.bat</b>」，它自动做三件事：</p>
+  <ol class="steps">
+    <li><b>备份</b>：把当前数据快照存进 backups/（自动保留最近 5 份，可整目录删），多花一两秒属正常；</li>
+    <li><b>装数据</b>：把项目文件里的最新内容装进网页实际读取的数据（不点它，别人打开还是旧的）；</li>
+    <li><b>打包</b>：生成 dist/ 里发给朋友的 zip 压缩包，微信/QQ 直接发。</li>
+  </ol>
+  <p>朋友拿到后<b>解压、双击 index.html</b> 就能用——不装任何环境。包里也带着这本手册（⚙ → 📖 使用说明）。</p>
+  <h3>10.2 朋友：把自己录的道具给队长</h3>
+  <ol class="steps">
+    <li>朋友在自己电脑上「＋ 新增道具」、传好图；</li>
+    <li>⚙ 设置 → <b>📤 把我的修改分享给队长</b> → 填昵称 → 导出 JSON 文件，微信发给队长；</li>
+    <li>队长 ⚙ 设置 → <b>📥 导入朋友的修改</b> → 预览勾选后收编。</li>
+  </ol>
+  <p class="tip">朋友导入的道具一律「<b>待验证</b>」，不会覆盖队长已实测的状态；重名道具自动加后缀不会互相覆盖。朋友的修改只存在他自己的浏览器里——<b>录完记得及时导出分享留底</b>。战术板不参与分享，各队各有各的打法。</p>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 11 ============ -->
+  <h2 id="s11"><span class="no">⑪</span>⚙ 设置逐项说明</h2>
+  <figure><img src="assets/help/11-settings.jpg" alt="设置面板">
+    <figcaption>设置面板（管理模式显示全部条目；查阅模式下管理类条目自动隐藏）</figcaption></figure>
+  <table>
+    <tr><th style="width:11em">条目</th><th>说明</th></tr>
+    <tr><td>📖 册子待办</td><td>已实测/待验证/已失效/缺基础图 四组计数，点开直达对应道具去补图或实测。</td></tr>
+    <tr><td>显示失效与弃用条目</td><td>默认隐藏失效道具，勾上后列表可见（灰/红徽章）。</td></tr>
+    <tr><td>地图排序</td><td>↑↓ 调整顶栏地图顺序，<b>第一位＝打开时的默认地图</b>。</td></tr>
+    <tr><td>自定义移动方式</td><td>给「移动」下拉加自定义项（如「蹲下」），会出现在投法徽章里。</td></tr>
+    <tr><td>自定义筛选</td><td>把常用标签一键变成顶栏 chips 按钮，数量不限；<b>顶栏只显示这里添加的词</b>。</td></tr>
+    <tr><td>被搁置的本地修改</td><td>被新内容安全取代的旧修改都在这里留底，可导出 JSON、可两段确认清空。</td></tr>
+    <tr><td>📤 分享 / 📥 导入</td><td>见第⑩节。</td></tr>
+    <tr><td>📖 使用说明</td><td>就是本页。</td></tr>
+  </table>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ 12 ============ -->
+  <h2 id="s12"><span class="no">⑫</span>键盘快捷键总表</h2>
+  <table>
+    <tr><th style="width:8em">按键</th><th>在哪 / 干什么</th></tr>
+    <tr><td><span class="kbd">/</span></td><td>聚焦搜索框</td></tr>
+    <tr><td><span class="kbd">J</span> <span class="kbd">K</span> 或 <span class="kbd">↑</span> <span class="kbd">↓</span></td><td>列表里高亮步进，<span class="kbd">Enter</span> 进详情</td></tr>
+    <tr><td><span class="kbd">←</span> <span class="kbd">→</span></td><td>详情页上一条 / 下一条；lightbox 里切图</td></tr>
+    <tr><td><span class="kbd">Backspace</span></td><td>详情页回列表</td></tr>
+    <tr><td><span class="kbd">[</span> <span class="kbd">]</span></td><td>详情页翻图槽位</td></tr>
+    <tr><td>滚轮 / 双击</td><td>lightbox 缩放 / 复位</td></tr>
+    <tr><td><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></td><td>编辑器里选难度（打字时不劫持）</td></tr>
+    <tr><td><span class="kbd">Esc</span></td><td>万能退出：关弹层 → 清筛选 → 退编辑 → 详情回列表，一路按一路退</td></tr>
+    <tr><td><span class="kbd">Ctrl+V</span></td><td>编辑器/详情/分拣台直接贴截图</td></tr>
+    <tr><td><span class="kbd">Ctrl+F5</span></td><td>强制刷新（改了看不到时用）</td></tr>
+  </table>
+  <p class="totop"><a href="#top">↑ 回目录</a></p>
+
+  <!-- ============ FAQ ============ -->
+  <h2 id="faq"><span class="no">❓</span>常见问题</h2>
   <div class="card">
-    <p class="q">⑥ 遇到问题怎么办？</p>
-    <p><b>改了却看不到</b> → 按 <b>Ctrl+F5</b> 强制刷新一次再看。</p>
-    <p><b>换了一个浏览器</b> → 第一次使用时点一次「关联项目文件夹」和「开启自动保存」就好。</p>
-    <p><b>担心修改丢失</b> → 任何被新内容取代的旧修改都会进「搁置区」留底，⚙ 设置里能看到、能导出，<b>绝不会无声消失</b>。</p>
+    <p><b>Q：打开是空白 / 提示没有数据？</b><br>
+    A：只有队长版可能出现——双击一次「同步并打包.bat」生成数据即可。朋友版（压缩包）不会出现这个问题。</p>
+    <p><b>Q：顶栏「● N 条修改待写入文件」一直挂着？</b><br>
+    A：点它一键写入文件；或点 🔑/🔗 重新授权后自动写入。不处理也不丢。</p>
+    <p><b>Q：换了浏览器 / 清了缓存，修改没了？</b><br>
+    A：小抽屉是每个浏览器各一份。重新点一次「关联项目文件夹」+自动保存，磁盘上的真身都在；朋友版（没关联文件夹的）请平时就用 📤 分享留底。</p>
+    <p><b>Q：担心改错 / 被覆盖？</b><br>
+    A：被取代的旧修改全部进「搁置区」留底，绝不静默消失；队长双击 bat 时还会自动做整库备份（保留最近 5 份）。</p>
+    <p><b>Q：传的图会被压缩吗？</b><br>
+    A：自动压到宽 ≤1920、单图 ≤1MB，看得清为准；GIF 动图原样保留不压（超 8MB 提醒，建议 ≤5MB）。</p>
+    <p><b>Q：为什么有的道具是橙色的？</b><br>
+    A：「待验证」=还没人进游戏复现过。学的时候多注意，实测扔成了就在详情页点状态徽章转绿。</p>
+    <p><b>Q：朋友导入了和我同名的道具？</b><br>
+    A：自动加「-f2」后缀共存，不会覆盖你的实测记录。</p>
+    <p><b>Q：标题里「名字-」小字是什么？</b><br>
+    A：来源人物/战队（职业选手、UP 主、朋友代号），中英文都算，表示这条道具学的是谁的手法。</p>
+    <p><b>Q：打游戏时怎么用最顺手？</b><br>
+    A：副屏开册子按 F11 全屏（或自己用置顶工具），平时停在战术板/道具页；回合间隙用套装「开战」连翻过一遍套路，Esc 秒退。</p>
   </div>
 
   <p class="foot">非商用学习项目 · 素材署名保留 · 欢迎分享给需要的 CS2 新手</p>
 </div>
+<script>
+  // 点图在新标签页打开原图（file:// 下同样可用）；纯静态，无任何依赖
+  document.querySelectorAll("figure img").forEach(img => {
+    img.addEventListener("click", () => window.open(img.src, "_blank"));
+  });
+</script>
 </body>
 </html>

@@ -1147,11 +1147,12 @@ def _tactic_template(sid, map_, side):
 """
 
 README_TXT = """双击 index.html 打开道具速查与战术板。
-详细图文说明：打开网页后点右上 ⚙ 设置 → 📖 使用说明。
+详细图文手册：网页里点 ⚙ 设置 → 📖 使用说明，或直接双击 help.html（带目录和截图，点图可放大）。
 按 F11 全屏观感更佳；数据为静态页面，无需联网。
 非商用学习项目，素材署名保留，欢迎分享给需要的 CS2 新手。
-想录自己的道具：网页右上工具栏「＋ 新增道具」，图传好，改完点 ⚙ 设置 → 📤 把我的修改分享给队长，
-下载的文件微信发给队长即可收进大家的册子（录完是"待验证"，队长实测后才转绿）。
+想录自己的道具：先点 🔧 管理开录入入口，网页右上工具栏「＋ 新增道具」，图传好，
+改完点 ⚙ 设置 → 📤 把我的修改分享给队长，下载的文件微信发给队长即可收进大家的册子
+（录完是"待验证"，队长实测后才转绿）。
 你的修改存在本浏览器，换电脑/清缓存会丢——录完记得及时分享留底。
 """
 
@@ -1282,7 +1283,7 @@ def cmd_pack(_args):
                 n += 1
         add(ROOT / "index.html", "cs2-playbook/index.html")
         add(ROOT / "help.html", "cs2-playbook/help.html")
-        for sub in ("js", "css", "icons", "radar"):
+        for sub in ("js", "css", "icons", "radar", "help"):
             for p in sorted((ROOT / "assets" / sub).glob("*")):
                 add(p, f"cs2-playbook/assets/{sub}/{p.name}")
         add(build_dir / "data.js", "cs2-playbook/build/data.js")
