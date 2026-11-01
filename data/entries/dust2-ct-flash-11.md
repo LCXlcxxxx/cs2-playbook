@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: draft
 spots: [A门内, 匪A门]
-tags: [前顶]
+tags: [前顶, A区]
 related: []
 source:
   kind: self

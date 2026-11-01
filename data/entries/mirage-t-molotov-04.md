@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [中远匪口, 拱门]
-tags: []
+tags: [中路]
 related: []
 source:
   kind: self

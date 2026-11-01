@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: draft
 spots: [头皮位, A小楼梯下]
-tags: []
+tags: [A区]
 related: []
 pin_targets: {A小楼梯下: [0.6562, 0.3452]}
 source:

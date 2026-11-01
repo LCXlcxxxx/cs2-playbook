@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [T字连接, A 凹槽]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

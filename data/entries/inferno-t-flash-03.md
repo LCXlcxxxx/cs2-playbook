@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [A二楼, 高箱]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

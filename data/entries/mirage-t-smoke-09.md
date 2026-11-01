@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [匪二楼, B 连接]
-tags: []
+tags: [B区]
 related: []
 pin_targets:
   "B 连接": [0.4304, 0.2952]

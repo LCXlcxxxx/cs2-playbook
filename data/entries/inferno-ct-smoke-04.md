@@ -14,7 +14,7 @@ difficulty: normal
 phase: [anti-eco]
 status: draft
 spots: [A1, 马棚]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

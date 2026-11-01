@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [A斜坡, 电梯位]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

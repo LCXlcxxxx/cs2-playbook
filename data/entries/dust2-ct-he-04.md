@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [卡车, 中门]
-tags: []
+tags: [中路]
 related: []
 source:
   kind: self

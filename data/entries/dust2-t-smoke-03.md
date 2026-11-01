@@ -14,7 +14,7 @@ difficulty: normal
 phase: [execute]
 status: draft
 spots: [B通/B2, B门]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: draft
 spots: [匪家, 警A门]
-tags: []
+tags: [A区]
 related: []
 pin_origin: [0.5736, 0.8351]
 pin_targets: {警A门: [0.6971, 0.5304]}

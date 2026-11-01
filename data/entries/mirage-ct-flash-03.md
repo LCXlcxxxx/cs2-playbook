@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [警亭, A1/A 门]
-tags: [反清, 控中路]
+tags: [反清, 控中路, A区]
 sets: []
 related: []
 source:

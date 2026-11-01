@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [中远匪口, 中路]
-tags: []
+tags: [中路]
 related: []
 pin_targets: {中路: [0.5316, 0.4708]}
 source:

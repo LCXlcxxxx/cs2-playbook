@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [匪家, 中远匪口]
-tags: []
+tags: [中路]
 related: []
 source:
   kind: self

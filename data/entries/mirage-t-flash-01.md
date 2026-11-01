@@ -14,7 +14,7 @@ difficulty: normal
 phase: [execute]
 status: verified
 spots: [匪家, A 包点]
-tags: []
+tags: [A区]
 sets: [A包爆弹三件套]
 related: []
 source:

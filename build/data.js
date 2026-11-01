@@ -1,6 +1,6 @@
 window.PLAYBOOK = {
- "generated_at": "2026-11-01T12:06:03",
- "builtAt": "2026-11-01T04:06:03Z",
+ "generated_at": "2026-11-01T12:22:25",
+ "builtAt": "2026-11-01T04:22:25Z",
  "SCHEMA": {
   "entry": [
    {
@@ -635,7 +635,8 @@ window.PLAYBOOK = {
     "A斜坡"
    ],
    "tags": [
-    "反清"
+    "反清",
+    "A区"
    ],
    "related": [],
    "source": {
@@ -693,7 +694,9 @@ window.PLAYBOOK = {
    "spots": [
     "A大"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "pin_origin": [
     0.841,
@@ -819,7 +822,8 @@ window.PLAYBOOK = {
     "中门"
    ],
    "tags": [
-    "反清"
+    "反清",
+    "中路"
    ],
    "related": [],
    "source": {
@@ -879,7 +883,8 @@ window.PLAYBOOK = {
     "中门"
    ],
    "tags": [
-    "反清"
+    "反清",
+    "中路"
    ],
    "related": [],
    "source": {
@@ -996,7 +1001,8 @@ window.PLAYBOOK = {
     "B洞"
    ],
    "tags": [
-    "反清"
+    "反清",
+    "B区"
    ],
    "related": [],
    "source": {
@@ -1055,7 +1061,9 @@ window.PLAYBOOK = {
     "狗洞",
     "B 死点"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -1114,7 +1122,8 @@ window.PLAYBOOK = {
     "A门内"
    ],
    "tags": [
-    "前顶"
+    "前顶",
+    "A区"
    ],
    "related": [],
    "source": {
@@ -1174,7 +1183,8 @@ window.PLAYBOOK = {
     "匪A门"
    ],
    "tags": [
-    "前顶"
+    "前顶",
+    "A区"
    ],
    "related": [],
    "source": {
@@ -1234,7 +1244,8 @@ window.PLAYBOOK = {
     "A斜坡"
    ],
    "tags": [
-    "反清"
+    "反清",
+    "A区"
    ],
    "related": [],
    "source": {
@@ -1293,7 +1304,9 @@ window.PLAYBOOK = {
     "A斜坡",
     "忍者位"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -1351,7 +1364,9 @@ window.PLAYBOOK = {
     "A斜坡",
     "电梯位"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -1538,7 +1553,9 @@ window.PLAYBOOK = {
     "头皮位",
     "A小楼梯下"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "pin_targets": {
     "A小楼梯下": [
@@ -1602,7 +1619,9 @@ window.PLAYBOOK = {
     "卡车",
     "中门"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -1731,7 +1750,9 @@ window.PLAYBOOK = {
     "沙地",
     "中路"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -1789,7 +1810,9 @@ window.PLAYBOOK = {
     "狗洞",
     "B 死点"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -2370,7 +2393,9 @@ window.PLAYBOOK = {
     "B通/B2",
     "狗位"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -2428,7 +2453,9 @@ window.PLAYBOOK = {
     "中路",
     "中门"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "pin_targets": {
     "中门": [
@@ -2979,7 +3006,9 @@ window.PLAYBOOK = {
     "B通/B2",
     "白车"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -3259,7 +3288,9 @@ window.PLAYBOOK = {
     "B通/B2",
     "狗洞"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -3317,7 +3348,9 @@ window.PLAYBOOK = {
     "匪家",
     "警A门"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "pin_origin": [
     0.5736,
@@ -3385,7 +3418,9 @@ window.PLAYBOOK = {
     "B通/B2",
     "B门"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -3850,7 +3885,8 @@ window.PLAYBOOK = {
     "中门"
    ],
    "tags": [
-    "A区"
+    "A区",
+    "中路"
    ],
    "pin_origin": [
     0.6263,
@@ -3920,7 +3956,8 @@ window.PLAYBOOK = {
    ],
    "tags": [
     "默认",
-    "控中路"
+    "控中路",
+    "中路"
    ],
    "related": [],
    "pin_origin": [
@@ -4417,7 +4454,9 @@ window.PLAYBOOK = {
     "A1",
     "马棚"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -4593,7 +4632,9 @@ window.PLAYBOOK = {
     "A二楼",
     "高箱"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -4769,7 +4810,9 @@ window.PLAYBOOK = {
     "香蕉道",
     "B 死点"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -5181,7 +5224,9 @@ window.PLAYBOOK = {
     "T字连接",
     "A 凹槽"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -5299,7 +5344,9 @@ window.PLAYBOOK = {
     "中路",
     "连接凹槽"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -5476,7 +5523,9 @@ window.PLAYBOOK = {
     "A二楼",
     "草车"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -5535,7 +5584,9 @@ window.PLAYBOOK = {
     "中路",
     "忍者位"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -5653,7 +5704,8 @@ window.PLAYBOOK = {
     "B 小"
    ],
    "tags": [
-    "反清"
+    "反清",
+    "B区"
    ],
    "sets": [],
    "related": [],
@@ -5716,7 +5768,8 @@ window.PLAYBOOK = {
    ],
    "tags": [
     "反清",
-    "控中路"
+    "控中路",
+    "A区"
    ],
    "sets": [],
    "related": [],
@@ -5777,7 +5830,9 @@ window.PLAYBOOK = {
     "狗洞",
     "A 二楼 (宫殿)"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -5836,7 +5891,9 @@ window.PLAYBOOK = {
     "匪家",
     "A 包点"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "sets": [
     "A包爆弹三件套"
    ],
@@ -5898,7 +5955,9 @@ window.PLAYBOOK = {
     "中远匪口",
     "沙袋"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "sets": [],
    "related": [],
    "source": {
@@ -5958,7 +6017,10 @@ window.PLAYBOOK = {
     "中远匪口",
     "B 小"
    ],
-   "tags": [],
+   "tags": [
+    "B区",
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -6017,7 +6079,9 @@ window.PLAYBOOK = {
     "A 二楼 (宫殿)",
     "A 楼梯"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "sets": [
     "A包爆弹三件套"
    ],
@@ -6079,7 +6143,9 @@ window.PLAYBOOK = {
     "A 二楼 (宫殿)",
     "A 楼梯"
    ],
-   "tags": [],
+   "tags": [
+    "A区"
+   ],
    "sets": [
     "A包爆弹三件套"
    ],
@@ -6141,7 +6207,9 @@ window.PLAYBOOK = {
     "中远匪口",
     "拱门"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -6200,7 +6268,9 @@ window.PLAYBOOK = {
     "中远匪口",
     "中路"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "pin_targets": {
     "中路": [
@@ -6265,7 +6335,9 @@ window.PLAYBOOK = {
     "匪家",
     "中远匪口"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",
@@ -6742,7 +6814,9 @@ window.PLAYBOOK = {
     "匪二楼",
     "B 连接"
    ],
-   "tags": [],
+   "tags": [
+    "B区"
+   ],
    "related": [],
    "pin_targets": {
     "B 连接": [
@@ -7002,7 +7076,9 @@ window.PLAYBOOK = {
     "跳台下",
     "拱门"
    ],
-   "tags": [],
+   "tags": [
+    "中路"
+   ],
    "related": [],
    "source": {
     "kind": "self",

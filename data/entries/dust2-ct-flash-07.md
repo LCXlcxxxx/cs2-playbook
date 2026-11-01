@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [白车, B洞]
-tags: [反清]
+tags: [反清, B区]
 related: []
 source:
   kind: self

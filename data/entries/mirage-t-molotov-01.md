@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [A 二楼 (宫殿), A 楼梯]
-tags: []
+tags: [A区]
 sets: [A包爆弹三件套]
 related: []
 source:

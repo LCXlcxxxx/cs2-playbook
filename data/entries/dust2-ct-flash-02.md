@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: draft
 spots: [A大]
-tags: []
+tags: [A区]
 related: []
 pin_origin: [0.841, 0.4029]
 pin_targets: {A大: [0.8516, 0.4705]}

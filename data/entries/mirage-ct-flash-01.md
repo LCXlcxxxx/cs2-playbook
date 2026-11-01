@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [B 连接, B 小]
-tags: [反清]
+tags: [反清, B区]
 sets: []
 related: []
 source:

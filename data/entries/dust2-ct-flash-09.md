@@ -14,7 +14,7 @@ difficulty: normal
 phase: [retake]
 status: draft
 spots: [狗洞, B 死点]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

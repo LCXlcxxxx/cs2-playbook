@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [中门]
-tags: [A区]
+tags: [A区, 中路]
 pin_origin: [0.6263, 0.8501]
 pin_targets: {中门: [0.4479, 0.3655]}
 source:

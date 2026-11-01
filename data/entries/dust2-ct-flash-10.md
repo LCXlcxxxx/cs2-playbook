@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [A大, A门内]
-tags: [前顶]
+tags: [前顶, A区]
 related: []
 source:
   kind: self

@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [空调, A斜坡]
-tags: [反清]
+tags: [反清, A区]
 related: []
 source:
   kind: self

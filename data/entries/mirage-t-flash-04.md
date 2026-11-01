@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [中远匪口, B 小]
-tags: []
+tags: [B区, 中路]
 related: []
 source:
   kind: self
