@@ -113,11 +113,12 @@ function chipMatch(e) {
   return true;
 }
 
-// chips 行视觉态同步（I50）：仅道具 Tab 显示；选中高亮、清除按钮显隐、溢出时两端渐隐
+// chips 行视觉态同步（I50；R3-L19b 起两个 Tab 都显示——战术板页点 chip 由 app.js 切到道具页应用）：
+// 选中高亮、清除按钮显隐、溢出时两端渐隐
 function refreshChipFilter() {
   const wrap = $("#chip-filter");
   if (!wrap) return;
-  wrap.hidden = state.tab !== "entries";
+  wrap.hidden = false;
   $$(".fchip", wrap).forEach(b => b.classList.toggle("on", state.filterChips.has(b.dataset.fchip)));
   const clearBtn = $("[data-fchipclear]", wrap);
   if (clearBtn) clearBtn.hidden = !state.filterChips.size;

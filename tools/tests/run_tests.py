@@ -190,8 +190,21 @@ def s1_chips(page, base):
     page.wait_for_timeout(200)
     assert H.mw_all_text(page, "#chip-filter .fchip.on") == [], "清除后不应有选中 chip"
     assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "清除后应恢复全量"
+    # R3-L19b：战术板 Tab 也显示 chips；点 chip 自动切到道具页并应用筛选
+    page.evaluate("(ts) => { saveCustomChipWords(ts); buildChipFilterRow(); state.filterChips.clear(); }", tags)
+    page.evaluate("() => { state.tab = 'tactics'; render(); }")
+    page.wait_for_timeout(300)
+    assert H.mw_count(page, f'#chip-filter [data-fchip="tag-{tags[0]}"]') >= 1, "战术板页应显示 chips 行"
+    H.mw_click(page, f'#chip-filter [data-fchip="tag-{tags[0]}"]')
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => state.tab") == "entries", "战术板点 chip 应自动切到道具页"
+    assert page.evaluate("(t) => state.filterChips.has('tag-' + t)", tags[0]), "切页后 chip 应保持选中"
+    got = page.evaluate("() => data.entries.filter(entryMatch).length")
+    assert got == page.evaluate(
+        "(t) => data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t)).length", tags[0]), \
+        "切到道具页后应按该词过滤"
     # 清理
-    page.evaluate("() => { saveCustomChipWords([]); buildChipFilterRow(); state.filterChips.clear(); }")
+    page.evaluate("() => { saveCustomChipWords([]); buildChipFilterRow(); state.filterChips.clear(); state.tab = 'tactics'; render(); }")
 
 
 @case("顶栏/📦 只看战术包开关")

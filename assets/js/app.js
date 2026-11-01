@@ -78,6 +78,7 @@ function init() {
     } else {
       for (const other of allFilterChips()) if (other.dim === chip.dim) state.filterChips.delete(other.id);
       state.filterChips.add(chip.id);
+      if (state.tab !== "entries") state.tab = "entries";   // R3-L19b：战术板页点 chip=自动切到道具页应用筛选
     }
     refreshChipFilter();
     render();
