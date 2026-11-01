@@ -58,8 +58,8 @@ function init() {
     render();
   });
 
-  // 快捷筛选 chips（R3-L3 自定义；R3-L19 起顶栏仅显示 ⚙ 设置里配置的词）：多词 AND、与搜索词 AND；
-  // 行内容由 buildChipFilterRow() 构建（设置弹层增删自定义词后重调），委托监听只挂一次
+  // 快捷筛选 chips（R3-L3 自定义；R3-L19 起顶栏仅显示 ⚙ 设置里配置的词；R3-L19c 单选互斥同阵营语义）：
+  // 与搜索词 AND；行内容由 buildChipFilterRow() 构建（设置弹层增删自定义词后重调），委托监听只挂一次
   const chipWrap = $("#chip-filter");
   buildChipFilterRow();
   chipWrap.addEventListener("click", ev => {
@@ -76,7 +76,7 @@ function init() {
     if (state.filterChips.has(chip.id)) {
       state.filterChips.delete(chip.id);   // 再点已选中的=取消
     } else {
-      for (const other of allFilterChips()) if (other.dim === chip.dim) state.filterChips.delete(other.id);
+      state.filterChips.clear();   // R3-L19c：标签筛选单选——点第二词顶掉第一词（同阵营 全部/T/CT 语义）
       state.filterChips.add(chip.id);
       if (state.tab !== "entries") state.tab = "entries";   // R3-L19b：战术板页点 chip=自动切到道具页应用筛选
     }

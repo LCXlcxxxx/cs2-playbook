@@ -77,12 +77,13 @@ function targetDisplay(e) {
 
 // 快捷筛选 chips：R3-L19 起（用户 2026-11-01 拍板「没有设置的标签不要显示在上端」）顶栏只显示
 // 用户在 ⚙ 设置「自定义筛选」里添加的词——I50 的十个内置词（单向烟/瞬爆闪/自助闪/灭火/跳投/跑投/
-// 已实测/简单/中等/困难）不再渲染（原表见 git 历史 R3-L18 提交）。多词 AND，再与类型/阵营/地图/报点
-// 过滤、搜索词按 AND 组合（entryMatch 内按 state.tab 门控——只作用道具 Tab 的列表，战术板图层/报点
-// 相关性链路不受影响）。
+// 已实测/简单/中等/困难）不再渲染（原表见 git 历史 R3-L18 提交）。**R3-L19c 单选互斥**（用户拍板
+// 「和点选阵营一样的逻辑，只能选一个」）：一次只亮一个词，再点已选=取消。选中词与类型/阵营/地图/
+// 报点过滤、搜索词按 AND 组合（entryMatch 内按 state.tab 门控——只作用道具 Tab 的列表，战术板图层/
+// 报点相关性链路不受影响）。
 
 // 自定义筛选 chips（R3-L3，用户 2026-10-26 拍板）：把任意 tags 词提升为顶栏筛选按钮，数量不限。
-// 词表存 localStorage（持久）；每词独立 dim=多个自定义词可叠加 AND；选中态仍会话内（state.filterChips 原语义）。
+// 词表存 localStorage（持久）；R3-L19c 起顶栏单选互斥（dim 字段保留不再参与互斥逻辑）；选中态仍会话内（state.filterChips 原语义）。
 const CUSTOM_CHIPS_KEY = "pb-custom-chips";
 function customChipWords() {
   try {

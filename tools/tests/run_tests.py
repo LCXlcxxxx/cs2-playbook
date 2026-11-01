@@ -161,7 +161,7 @@ def s1_search_tokens(page, base):
     clear_search(page)
 
 
-@case("顶栏/chips 行仅显示自定义词 + 多词 AND + 清除")
+@case("顶栏/chips 行仅显示自定义词 + 单选互斥（R3-L19c）+ 清除")
 def s1_chips(page, base):
     goto(page, base)
     go_entries(page)
@@ -177,19 +177,25 @@ def s1_chips(page, base):
     assert labels == tags, f"chips 行应只含自定义词 {tags}，实际 {labels}"
     assert not (forbidden & set(labels)), f"内置词不应出现在 chips 行: {labels}"
     n_all = page.evaluate("() => data.entries.filter(entryMatch).length")
-    expected = page.evaluate(
-        "(ts) => data.entries.filter(e => entryMatch(e) && ts.every(t => (e.tags || []).includes(t))).length", tags)
-    for t in tags:
-        H.mw_click(page, f'#chip-filter [data-fchip="tag-{t}"]')
-        page.wait_for_timeout(200)
-    got = page.evaluate("() => data.entries.filter(entryMatch).length")
-    assert got == expected, f"两词 AND 应命中 {expected}，实际 {got}"
-    assert sorted(H.mw_all_text(page, "#chip-filter .fchip.on")) == sorted(tags), \
-        f"两词应同时点亮，实际 {H.mw_all_text(page, '#chip-filter .fchip.on')}"
-    H.mw_click(page, "[data-fchipclear]")
+    exp1 = page.evaluate(
+        "(t) => data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t)).length", tags[0])
+    exp2 = page.evaluate(
+        "(t) => data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t)).length", tags[1])
+    # R3-L19c 单选：点第一词亮第一词
+    H.mw_click(page, f'#chip-filter [data-fchip="tag-{tags[0]}"]')
     page.wait_for_timeout(200)
-    assert H.mw_all_text(page, "#chip-filter .fchip.on") == [], "清除后不应有选中 chip"
-    assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "清除后应恢复全量"
+    assert page.evaluate("() => data.entries.filter(entryMatch).length") == exp1, "点第一词应按其过滤"
+    assert H.mw_all_text(page, "#chip-filter .fchip.on") == [tags[0]], "应只亮第一词"
+    # 点第二词顶掉第一词（同阵营 全部/T/CT 语义）
+    H.mw_click(page, f'#chip-filter [data-fchip="tag-{tags[1]}"]')
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => data.entries.filter(entryMatch).length") == exp2, "点第二词应替换为按其过滤"
+    assert H.mw_all_text(page, "#chip-filter .fchip.on") == [tags[1]], f"应只亮第二词，实际 {H.mw_all_text(page, '#chip-filter .fchip.on')}"
+    # 再点已选中的=取消
+    H.mw_click(page, f'#chip-filter [data-fchip="tag-{tags[1]}"]')
+    page.wait_for_timeout(200)
+    assert H.mw_all_text(page, "#chip-filter .fchip.on") == [], "再点已选中的应取消"
+    assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "取消后应恢复全量"
     # R3-L19b：战术板 Tab 也显示 chips；点 chip 自动切到道具页并应用筛选
     page.evaluate("(ts) => { saveCustomChipWords(ts); buildChipFilterRow(); state.filterChips.clear(); }", tags)
     page.evaluate("() => { state.tab = 'tactics'; render(); }")
@@ -1172,7 +1178,7 @@ def r3_compress(page, base):
 
 # ---------------------------------------------------------------- R3-L3 自定义筛选 chips
 
-@case("R3L3/自定义筛选：添加→顶栏出现→点击按 tag 过滤→与第二词 AND→设置回车创建")
+@case("R3L3/自定义筛选：添加→顶栏出现→点击按 tag 过滤→单选替换→设置回车创建")
 def r3l3_customchips(page, base):
     goto(page, base); go_entries(page)
     n_all = page.evaluate("() => data.entries.filter(entryMatch).length")
@@ -1191,7 +1197,7 @@ def r3l3_customchips(page, base):
     got = page.evaluate("() => data.entries.filter(entryMatch).length")
     assert got == expected, f"点击自定义 chip 应过滤到 {expected} 条（DOM 行数会因套装叠加视图重复，断言走数据口径）"
     assert page.evaluate("(t) => state.filterChips.has('tag-' + t)", tag)
-    # 与第二个自定义词叠加 AND（R3-L19：内置「已实测」chip 已退役）
+    # R3-L19c 单选：点第二词=替换第一词（不再叠加 AND）
     tag2 = page.evaluate(
         """(t) => { const es = data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t));
              for (const e of es) { const o = (e.tags || []).find(x => x !== t); if (o) return o; }
@@ -1200,17 +1206,18 @@ def r3l3_customchips(page, base):
         page.evaluate("(t) => { saveCustomChipWords([...customChipWords(), t]); buildChipFilterRow(); }", tag2)
         H.mw_click(page, f'#chip-filter [data-fchip="tag-{tag2}"]')
         page.wait_for_timeout(250)
-        both = page.evaluate("() => data.entries.filter(entryMatch).length")
-        expected2 = page.evaluate(
-            "(ts) => data.entries.filter(e => entryMatch(e) && ts.every(t => (e.tags || []).includes(t))).length",
-            [tag, tag2])
-        assert both == expected2, f"两词 AND 应命中 {expected2}，实际 {both}"
+        got = page.evaluate("() => data.entries.filter(entryMatch).length")
+        exp_t2 = page.evaluate(
+            "(t) => data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t)).length", tag2)
+        assert got == exp_t2, f"单选后应只按第二词过滤（{exp_t2}），实际 {got}"
+        assert H.mw_all_text(page, "#chip-filter .fchip.on") == [tag2], \
+            f"应只亮第二词，实际 {H.mw_all_text(page, '#chip-filter .fchip.on')}"
     else:
         page.evaluate("() => { saveCustomChipWords([...customChipWords(), 'AND占位词']); buildChipFilterRow(); }")
         H.mw_click(page, '[data-fchip="tag-AND占位词"]')
         page.wait_for_timeout(250)
         assert page.evaluate("() => data.entries.filter(entryMatch).length") == 0, \
-            "无共现词时占位词（库内无此 tag）AND 后应为 0 条"
+            "无共现词时占位词（库内无此 tag）选中后应为 0 条"
     page.evaluate("() => document.querySelector('[data-fchipclear]').click()")
     page.wait_for_timeout(200)
     assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "清除后应恢复全量"
