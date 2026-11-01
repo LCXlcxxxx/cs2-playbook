@@ -89,9 +89,45 @@ function cycleViewerSlot(e, dir) {
   if (panel) renderViewerPanel(panel, e);
 }
 
+// R3-L22：迷你报点定位图——起点/落点打在雷达缩略图上；点击跳战术板 💥 道具图层看全图落点。
+// 坐标源=调点覆写（pin_origin/pin_targets）优先，回落报点名 u/v；一个都定不了位则整块不渲染。
+function detailMiniMap(e) {
+  const mapInfo = data.maps[e.map] || {};
+  if (!mapInfo.radar) return "";
+  const pts = (typeof editableCalloutsFor === "function") ? editableCalloutsFor(e.map)
+    : (data.callouts[e.map] || []);
+  const byName = new Map(pts.map(p => [p.name, p]));
+  const dots = [];
+  const o = (Array.isArray(e.pin_origin) && e.pin_origin.length === 2)
+    ? { u: e.pin_origin[0], v: e.pin_origin[1] } : byName.get(e.origin);
+  if (o && isFinite(o.u) && isFinite(o.v)) {
+    dots.push({ u: o.u, v: o.v, cls: "mini-o", label: e.origin });
+  }
+  for (const t of targetVals(e)) {
+    const p = (e.pin_targets && Array.isArray(e.pin_targets[t]) && e.pin_targets[t].length === 2)
+      ? { u: e.pin_targets[t][0], v: e.pin_targets[t][1] } : byName.get(t);
+    if (p && isFinite(p.u) && isFinite(p.v)) {
+      dots.push({ u: p.u, v: p.v, cls: "mini-t", label: t });
+    }
+  }
+  if (!dots.length) return "";
+  return `<div class="mini-map-wrap" title="点击打开战术板 💥 道具图层，看它在全图的位置">
+    <div class="mini-map"><img src="${escapeHtml(mapInfo.radar)}" alt="" draggable="false">` +
+    dots.map(d => `<span class="mini-dot ${d.cls}" style="left:${(d.u * 100).toFixed(2)}%;top:${(d.v * 100).toFixed(2)}%" title="${escapeHtml(d.label)}"></span>`).join("") +
+    `</div>
+    <div class="mini-map-legend">
+      <span class="mini-legend-row"><i class="mini-dot mini-o"></i><span>起点 ${escapeHtml(e.origin)}</span></span>
+      <span class="mini-legend-row"><i class="mini-dot mini-t"></i><span>落点 ${escapeHtml(targetDisplay(e))}</span></span>
+      <span class="mini-map-hint">点击打开战术板 💥 看全图落点</span>
+    </div>
+  </div>`;
+}
+
 function entryCard(e) {
   const el = document.createElement("article");
-  el.className = `card entry st-${e.status}`;
+  const pbAnim = state._detailAnim;   // R3-L22：←→/进入详情的方向感滑动（一次性消费）
+  state._detailAnim = null;
+  el.className = `card entry st-${e.status}` + (pbAnim ? ` pb-anim-${pbAnim}` : "");
   el.id = `card-${e.id}`;
 
   const info = TYPE_INFO[e.type] || {};
@@ -151,12 +187,23 @@ function entryCard(e) {
         </span>
       </div>
       <div class="viewer-chips"></div>
-    </div>` + notes + srcNote + idCopy + setChips;
+    </div>` + detailMiniMap(e) + notes + srcNote + idCopy + setChips;
 
   renderViewerPanel($(".viewer-panel", el), e);
 
   // 所属战术包 chips（I47）：点击 = 📦 只看视图 + 展开/定位
   $$(".set-chip", el).forEach(btn => btn.addEventListener("click", () => openSetView(btn.dataset.setchip)));
+
+  // R3-L22：迷你报点图点击 → 战术板 💥 道具图层（全图看落点）
+  const miniMapEl = $(".mini-map-wrap", el);
+  if (miniMapEl) miniMapEl.addEventListener("click", () => {
+    state.entryView = null;
+    state.tab = "tactics";
+    state.map = e.map;
+    state.mapLayer = "nades";
+    $$("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === "tactics"));
+    render();
+  });
 
   // R3-L9：点击复制道具 ID
   $(".entry-id-copy", el).addEventListener("click", async ev => {
@@ -394,6 +441,7 @@ function runbookStep(dir) {
   const next = rb.idx + dir;
   if (next < 0 || next >= rb.items.length) return;   // 不回绕（实战从头开始）
   rb.idx = next;
+  state._rbAnim = dir > 0 ? "right" : "left";   // R3-L22：翻卡方向感滑动（一次性）
   renderRunbook();
 }
 
@@ -409,12 +457,14 @@ function renderRunbook() {
   const el = document.getElementById("runbook");
   if (!rb || !el) return;
   const item = rb.items[rb.idx];
+  const pbAnim = state._rbAnim;   // R3-L22：翻卡方向动画（一次性消费）
+  state._rbAnim = null;
   el.innerHTML = `
     <div class="runbook-head">
       <span class="runbook-src">🚀 ${escapeHtml(rb.name)}</span>
       <span class="runbook-num">${rb.idx + 1} / ${rb.items.length}</span>
     </div>
-    <div class="runbook-body">${item.type === "card" ? runbookCard(item.entry, item.stepText) : runbookBeat(item.texts)}</div>`;
+    <div class="runbook-body${pbAnim ? ` pb-anim-${pbAnim}` : ""}">${item.type === "card" ? runbookCard(item.entry, item.stepText) : runbookBeat(item.texts)}</div>`;
   el.hidden = false;
   document.body.style.overflow = "hidden";
   // 图片加载门控：加载完成才接受下次翻页

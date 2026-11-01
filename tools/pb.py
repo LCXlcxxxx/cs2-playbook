@@ -1297,6 +1297,26 @@ def cmd_pack(_args):
     return 0
 
 
+def cmd_backup(_args):
+    """R3-L22：bat 自动备份——data/tactics/tools/media 快照进 backups/，保留最近 5 份。
+    双击 bat 时先备份再 build+pack；快照可整目录删除。"""
+    import shutil
+    import time
+    root = Path(__file__).resolve().parent.parent
+    stamp = time.strftime("%Y-%m-%d_%H%M%S")
+    dest = root / "backups" / f"backup-{stamp}"
+    dest.mkdir(parents=True, exist_ok=True)
+    ignore = shutil.ignore_patterns("__pycache__", "*.pyc")
+    for name in ("data", "tactics", "tools", "media"):
+        src = root / name
+        if src.exists():
+            shutil.copytree(src, dest / name, ignore=ignore, dirs_exist_ok=True)
+    snaps = sorted((root / "backups").glob("backup-*"))
+    for old in snaps[:-5]:
+        shutil.rmtree(old, ignore_errors=True)
+    print(f"备份完成: backups/backup-{stamp}（保留最近 5 份，可随时整目录删除）")
+
+
 def cmd_migrate_difficulty(_args):
     """I51 一次性迁移：difficulty 数字（1-5）→ 三档枚举（1-2→easy / 3→normal / 4-5→hard）。
     每个写回前存 .bak（项目惯例）；缺失/非数字/越界的列出清单人工确认，不静默改。
@@ -1400,11 +1420,12 @@ def main(argv):
     p_verify.add_argument("id")
     p_verify.add_argument("--broken", action="store_true", help="标记失效（内容过时/版本改动），防止重复录入")
     sub.add_parser("migrate-difficulty", help="I51 一次性迁移：difficulty 数字 1-5 → easy/normal/hard（每文件存 .bak）")
+    sub.add_parser("backup", help="R3-L22 自动备份：data/tactics/tools/media 快照进 backups/，保留最近 5 份")
     sub.add_parser("test", help="R1-A 回归测试套件（playwright 可选依赖，缺失时优雅跳过）")
     args = ap.parse_args(argv)
     return {"lint": cmd_lint, "build": cmd_build, "new": cmd_new, "shots": cmd_shots,
             "pack": cmd_pack, "verify": cmd_verify, "migrate-difficulty": cmd_migrate_difficulty,
-            "test": cmd_test}[args.cmd](args)
+            "backup": cmd_backup, "test": cmd_test}[args.cmd](args)
 
 
 if __name__ == "__main__":

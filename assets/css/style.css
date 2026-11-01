@@ -2348,3 +2348,42 @@ min-height 兜底，带图条目不受影响）；无「需要 hidden 被压制�
 .pb-wall-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; min-width: 0; }
 .pb-wall-title { font-weight: 700; color: #fff; font-size: 14px; min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pb-wall-cell .badge-throw { flex: none; font-size: 13px; padding: 2px 8px; }
+
+
+/* ---------------- R3-L22：动线与动效批（只动 transform/opacity；respect prefers-reduced-motion） ---------------- */
+@keyframes pb-slide-right { from { opacity: 0; transform: translateX(28px); } }
+@keyframes pb-slide-left { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes pb-pop-in { from { opacity: 0; transform: scale(0.97); } }
+@keyframes pb-fade-in { from { opacity: 0; } }
+.pb-anim-right { animation: pb-slide-right 0.18s ease-out; }
+.pb-anim-left { animation: pb-slide-left 0.18s ease-out; }
+.picker-overlay, .sort-overlay, .sort-preview, #tl-drawer, #lightbox { animation: pb-pop-in 0.16s ease-out; }
+.tb-idle { transition: opacity 0.18s ease, filter 0.18s ease; }
+
+/* 迷你报点定位图（详情页；点击跳战术板💥） */
+.mini-map-wrap { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; cursor: pointer; }
+.mini-map { position: relative; flex: 0 0 auto; width: min(320px, 56%); border-radius: 10px; overflow: hidden; }
+.mini-map img { display: block; width: 100%; height: auto; }
+.mini-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55); }
+.mini-dot.mini-o { background: var(--accent); }
+.mini-dot.mini-t { background: #ff8a3d; }
+.mini-map-legend { display: flex; flex-direction: column; gap: 8px; font-size: 15px; color: var(--text); min-width: 0; }
+.mini-legend-row { display: flex; align-items: center; gap: 8px; }
+.mini-legend-row .mini-dot { position: static; transform: none; flex: none; }
+.mini-map-hint { font-size: 15px; color: var(--text-dim); }
+.mini-map-wrap:hover .mini-map { outline: 2px solid var(--accent); }
+
+/* 最近查看（列表页顶部快速回条） */
+.recent-strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 10px; }
+.recent-label { font-size: 15px; color: var(--text-dim); flex: none; }
+.recent-item { display: inline-flex; align-items: center; gap: 6px; max-width: 260px; padding: 4px 10px; border-radius: 8px; border: 1px solid #2c3a52; background: var(--panel-2, #1a2233); color: var(--text); font-size: 15px; cursor: pointer; overflow: hidden; white-space: nowrap; }
+.recent-item .type-ico { width: 16px; height: 16px; flex: none; }
+.recent-item:hover { border-color: var(--accent); }
+
+/* 墙大图密度档 */
+.pb-wall-grid.pb-wall-large { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pb-anim-right, .pb-anim-left, .picker-overlay, .sort-overlay, .sort-preview, #tl-drawer, #lightbox { animation: none !important; }
+  .tb-idle { transition: none !important; }
+}

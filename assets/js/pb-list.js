@@ -121,11 +121,36 @@ function rowTagsHtml(tags) {
    不进 pb-core 的 state（零共享文件红线）。分组/组头/锚点导航/过滤照旧，组内行改网格卡片；
    封面=落点&效果图（缺则站位图）；点卡片直达 lightbox（复用 I12 缩放）+ J/K 跨条目连翻。 */
 let wallView = localStorage.getItem("pb-list-view") === "wall";
+let wallLarge = localStorage.getItem("pb-wall-size") === "large";   // R3-L22：墙大图密度档
+
+// R3-L22：最近查看——跨刷新记忆 5 条，列表页顶部快速回到刚看的道具
+function recentViews() {
+  try {
+    const a = JSON.parse(localStorage.getItem("pb-recent-views") || "[]");
+    return Array.isArray(a) ? a.filter(Boolean) : [];
+  } catch { return []; }
+}
+
+function pushRecentView(id) {
+  const arr = recentViews().filter(x => x !== id);
+  arr.unshift(id);
+  localStorage.setItem("pb-recent-views", JSON.stringify(arr.slice(0, 5)));
+}
+
+function recentStripHtml() {
+  const items = recentViews().map(id => data.entries.find(x => x.id === id)).filter(Boolean).slice(0, 5);
+  if (!items.length) return "";
+  return `<div class="recent-strip"><span class="recent-label">最近查看</span>` +
+    items.map(e => `<button type="button" class="recent-item" data-recent="${escapeHtml(e.id)}" title="${escapeHtml(e.title)}——点击直接打开">` +
+      `<img class="type-ico" src="${(TYPE_INFO[e.type] || {}).icon || "assets/icons/icon-he.svg"}" alt="">` +
+      `${entryTitleHtml(e.title)}</button>`).join("") + `</div>`;
+}
 
 function listViewToggleHtml() {
   return `<div class="pb-view-bar" title="▦=一眼看全部道具效果图，点击放大（滚轮缩放）、J/K 连翻">
     <button type="button" class="pb-view-btn ${wallView ? "" : "on"}" data-view="list">☰ 列表</button>
     <button type="button" class="pb-view-btn ${wallView ? "on" : ""}" data-view="wall">▦ 缩略图</button>
+    ${wallView ? `<button type="button" class="pb-view-btn pb-size-btn ${wallLarge ? "on" : ""}" data-wsize="large" title="大图档：一格更大，游戏里瞄得更清">▣ 大图</button>` : ""}
   </div>`;
 }
 
@@ -136,7 +161,7 @@ function entryItemHtml(e) {
 // 分组内容包装（R3-L2②）：墙模式整组包 .pb-wall-grid 网格；列表模式平铺行
 function groupItemsHtml(items) {
   if (!wallView) return items.map(rowHtml).join("");
-  return `<div class="pb-wall-grid">${items.map(wallCellHtml).join("")}</div>`;
+  return `<div class="pb-wall-grid${wallLarge ? " pb-wall-large" : ""}">${items.map(wallCellHtml).join("")}</div>`;
 }
 
 function wallCellHtml(e) {
@@ -257,7 +282,7 @@ function entryListPanel(visible) {
     if (rest.length) groups.push({ ph: "other", items: rest });
   }
 
-  wrap.innerHTML = listViewToggleHtml() + groups.map(g => {
+  wrap.innerHTML = listViewToggleHtml() + recentStripHtml() + groups.map(g => {
     if (g.setsZone) {
       return `<div class="list-group-head">📦 战术包</div>` +
         g.setsZone.map(([name, items]) => setRowHtml(name, items)).join("");
@@ -278,7 +303,7 @@ function entryListPanel(visible) {
         const id = "diff-" + db.dataset.diffbtn;
         if (state.filterChips.has(id)) state.filterChips.delete(id);
         else {
-          for (const other of FILTER_CHIPS) if (other.dim === "diff") state.filterChips.delete(other.id);
+          state.filterChips.clear();   // R3-L19c/R3-L22：单选互斥；diff 伪-chip 不进 chips 行渲染，仅数据态
           state.filterChips.add(id);
         }
         refreshChipFilter();
@@ -302,8 +327,17 @@ function entryListPanel(visible) {
     toggleFav(st.dataset.fav);
     render();
   }));
+  // R3-L22：最近查看条点击直达详情
+  $$(".recent-item", wrap).forEach(b => b.addEventListener("click", () => openEntryDetail(b.dataset.recent)));
+  // R3-L22：墙大图密度档切换（记忆偏好）
+  $$(".pb-size-btn", wrap).forEach(btn => btn.addEventListener("click", () => {
+    wallLarge = !wallLarge;
+    localStorage.setItem("pb-wall-size", wallLarge ? "large" : "normal");
+    render();
+  }));
   // R3-L2②：视图切换（☰/▦，记忆偏好）+ 墙卡片交互（点卡片直达 lightbox；无图卡进详情=现状语义）
   $$(".pb-view-btn", wrap).forEach(btn => btn.addEventListener("click", () => {
+    if (btn.dataset.wsize) return;   // 大图按钮有自己的处理器
     const v = btn.dataset.view === "wall" ? "wall" : "list";
     if (v === (wallView ? "wall" : "list")) return;
     wallView = v === "wall";
@@ -323,6 +357,8 @@ function entryListPanel(visible) {
 function openEntryDetail(id) {
   state.entryListScroll = window.scrollY;
   state.detailFrom = "list";   // I42：列表行点击=来源列表（Esc 回列表）
+  state._detailAnim = "right";   // R3-L22：列表→详情右侧滑入
+  pushRecentView(id);   // R3-L22：记录最近查看
   // I42（用户 UX 反馈④）：进详情即清报点系筛选（spot/drill/searchTerms）——用户下次进道具
   // Tab 是干净列表；类型/阵营/地图顶栏选择不动（⑤）。
   state.spot = null;
@@ -415,6 +451,7 @@ function stepEntryDetail(dir) {
   if (idx < 0 || !order.length) return;
   const next = order[(idx + dir + order.length) % order.length];
   state.entryView = { id: next.id };
+  state._detailAnim = dir > 0 ? "right" : "left";   // R3-L22：←→ 方向感滑动
   render();
   window.scrollTo({ top: 0 });
 }

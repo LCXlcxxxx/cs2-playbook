@@ -103,6 +103,12 @@ function customChipObjs() {
 }
 function allFilterChips() { return customChipObjs(); }   // R3-L19：内置词退役，仅自定义
 function getFilterChip(id) {
+  // R3-L22 修复：难度徽章伪-chip（I51 列表行点难度徽章=按档过滤；R3-L19 删内置表时漏迁移，
+  // chipMatch 曾查不到 → 点击无效果）。不进 chips 行渲染，仅数据态。
+  if (typeof id === "string" && id.startsWith("diff-")) {
+    const v = id.slice(5);
+    return { id, label: "", dim: "diff", test: e => diffEnum(e.difficulty) === v };
+  }
   return customChipObjs().find(c => c.id === id) || null;   // 词被移除后的悬挂 id 安全跳过（chipMatch 判 null）
 }
 

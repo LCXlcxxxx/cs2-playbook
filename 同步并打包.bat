@@ -1,6 +1,9 @@
 @echo off
 rem 使用者唯一入口：网页里改完内容，双击我一次 = 同步数据 + 刷新发布包
 cd /d %~dp0
+echo [0/2] backup data/media/tools to backups folder ...
+call tools\pb.cmd backup
+if errorlevel 1 goto fail
 echo ============================================
 echo   CS2 Playbook 同步并打包
 echo ============================================

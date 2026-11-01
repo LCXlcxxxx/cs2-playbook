@@ -1910,6 +1910,77 @@ def r3l18_columns_sideid(page, base):
     page.evaluate("() => { sortSt.rows = []; sortSt.open = false; document.querySelectorAll('.sort-overlay,#sort-view').forEach(n => n.remove()); }")
 
 
+# ---------------------------------------------------------------- R3-L22 动线与动效
+
+@case("R3L22/迷你报点定位图：详情显示起落点并跳战术板💥")
+def r3l22_minimap(page, base):
+    goto(page, base)
+    go_entries(page)
+    _open_first_row(page)
+    assert page.evaluate("() => !!document.querySelector('.mini-map-wrap')"), "详情页应有迷你报点图"
+    assert page.evaluate("() => document.querySelectorAll('.mini-map .mini-dot').length") >= 1, \
+        "应至少有起点/落点一颗定位点"
+    # 点击 → 战术板 💥 道具图层
+    page.evaluate("() => document.querySelector('.mini-map-wrap').click()")
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => state.tab") == "tactics", "点击迷你图应切到战术板"
+    assert page.evaluate("() => state.mapLayer") == "nades", "应切到 💥 道具图层"
+    assert page.evaluate("() => state.entryView") is None, "应已离开详情视图"
+    # 清理
+    page.evaluate("() => { state.mapLayer = 'callouts'; state.map = 'de_mirage'; render(); }")
+
+
+@case("R3L22/最近查看回条 + 墙大图档 + 难度徽章单选修复")
+def r3l22_recent_wall_diff(page, base):
+    goto(page, base)
+    go_entries(page)
+    # 最近查看：进详情 → 回列表 → 顶部条含该条目 → 点击直达
+    first = page.evaluate("() => document.querySelector('.entry-row')?.dataset.id")
+    assert first, "列表应有条目"
+    H.mw_click(page, f'.entry-row[data-id="{first}"]')
+    page.wait_for_timeout(300)
+    page.evaluate("() => { state.entryView = null; render(); }")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => !!document.querySelector('.recent-strip')"), "回列表应出现最近查看条"
+    assert page.evaluate("(i) => !!document.querySelector(`.recent-item[data-recent='${i}']`)", first), \
+        "最近查看应含刚看的条目"
+    H.mw_click(page, f'.recent-item[data-recent="{first}"]')
+    page.wait_for_timeout(300)
+    assert page.evaluate("() => state.entryView?.id") == first, "点最近查看应回到该详情"
+    page.evaluate("() => { state.entryView = null; render(); }")
+    page.wait_for_timeout(200)
+    # 墙大图密度档（wallView 是模块态——必须走真实 UI 切换，不能只改 localStorage）
+    H.mw_click(page, '.pb-view-btn[data-view="wall"]')
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => !!document.querySelector('.pb-wall-grid')"), "墙视图应生效"
+    H.mw_click(page, ".pb-size-btn")
+    page.wait_for_timeout(250)
+    assert page.evaluate("() => !!document.querySelector('.pb-wall-grid.pb-wall-large')"), "大图档应生效"
+    assert page.evaluate("() => localStorage.getItem('pb-wall-size')") == "large", "大图档应记忆"
+    H.mw_click(page, ".pb-size-btn")
+    page.wait_for_timeout(200)
+    assert page.evaluate("() => !document.querySelector('.pb-wall-grid.pb-wall-large')"), "再点应还原"
+    H.mw_click(page, '.pb-view-btn[data-view="list"]')
+    page.wait_for_timeout(200)
+    page.evaluate("() => localStorage.removeItem('pb-wall-size')")
+    page.wait_for_timeout(200)
+    # 难度徽章点击=单选 diff 伪-chip（修复 R3-L19 回归：FILTER_CHIPS 残留引用曾致点击报错）
+    badge = page.evaluate("() => { const b = document.querySelector('[data-diffbtn]'); return b ? b.dataset.diffbtn : null; }")
+    assert badge, "列表应有难度徽章"
+    H.mw_click(page, f"[data-diffbtn='{badge}']")
+    page.wait_for_timeout(250)
+    assert page.evaluate("(v) => state.filterChips.has('diff-' + v)", badge), "点难度徽章应写入 diff 伪-chip"
+    exp = page.evaluate(
+        "(v) => data.entries.filter(e => entryMatch(e) && e.difficulty === v).length", badge)
+    got = page.evaluate("() => data.entries.filter(entryMatch).length")
+    assert got == exp, f"难度徽章过滤应命中 {exp}，实际 {got}"
+    H.mw_click(page, f"[data-diffbtn='{badge}']")
+    page.wait_for_timeout(200)
+    assert not page.evaluate("(v) => state.filterChips.has('diff-' + v)", badge), "再点应取消"
+    # 清理
+    page.evaluate("() => { state.filterChips.clear(); localStorage.removeItem('pb-recent-views'); render(); }")
+
+
 PIXEL_PAGES = [
     ("tactics", lambda pg, bs: goto(pg, bs)),
     ("entries", lambda pg, bs: (goto(pg, bs),
@@ -1971,6 +2042,8 @@ CASES = [
 r3l12_sortext,
 r3l15_clear_on_empty,
 r3l18_columns_sideid,
+r3l22_minimap,
+r3l22_recent_wall_diff,
     s6_pixels,
 ]
 
