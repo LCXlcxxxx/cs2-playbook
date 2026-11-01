@@ -14,7 +14,7 @@ difficulty: normal
 phase: [anti-eco]
 status: draft
 spots: [白车死点]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

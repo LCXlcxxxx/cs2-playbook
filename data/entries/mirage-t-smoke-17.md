@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [屋檐, 跳台, 跳台下]
-tags: []
+tags: [A区]
 sets: [A包爆弹三件套]
 related: []
 source:
@@ -22,3 +22,5 @@ source:
   creator: 自己
 checked: 2026-10-03
 ---
+
+

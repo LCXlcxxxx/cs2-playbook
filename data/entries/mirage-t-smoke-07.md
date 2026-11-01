@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [沙袋, 拱门, 跳台下]
-tags: []
+tags: [A区, 中路]
 related: []
 source:
   kind: self

@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [拱门, Jungle]
-tags: []
+tags: [中路]
 related: []
 source:
   kind: self

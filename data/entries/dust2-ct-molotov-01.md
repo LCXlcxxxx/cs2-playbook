@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [沙地, 中路]
-tags: [中路]
+tags: [A区, B区, 中路]
 related: []
 source:
   kind: self

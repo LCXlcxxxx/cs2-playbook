@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [沙袋, 石板]
-tags: [反清]
+tags: [反清, B区]
 sets: []
 related: []
 source:

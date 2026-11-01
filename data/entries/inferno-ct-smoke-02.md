@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [警家, 香蕉道]
-tags: []
+tags: [B区, 中路]
 related: []
 source:
   kind: self

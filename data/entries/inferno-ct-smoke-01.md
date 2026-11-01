@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [书房, 黄墙]
-tags: []
+tags: [A区, B区]
 related: []
 source:
   kind: self

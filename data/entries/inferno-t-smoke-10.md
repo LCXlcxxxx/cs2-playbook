@@ -14,7 +14,7 @@ difficulty: normal
 phase: [execute]
 status: draft
 spots: [中路, 忍者位]
-tags: [中路]
+tags: [A区, 中路]
 related: []
 source:
   kind: self

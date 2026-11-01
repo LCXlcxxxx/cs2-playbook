@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [黄墙, 香蕉道]
-tags: []
+tags: [B区, 中路]
 related: []
 source:
   kind: self

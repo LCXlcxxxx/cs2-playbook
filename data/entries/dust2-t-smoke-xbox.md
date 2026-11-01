@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [后花园平台, 叉箱]
-tags: [默认, 控中路]
+tags: [默认, 控中路, 中路]
 related: []
 pin_origin: [0.1831, 0.7745]
 pin_targets:

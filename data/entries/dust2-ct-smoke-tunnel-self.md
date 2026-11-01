@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [暗道, 沙地]
-tags: [中路]
+tags: [B区, 中路]
 pin_origin: [0.4672, 0.2615]
 pin_targets:
   暗道: [0.4488, 0.726]

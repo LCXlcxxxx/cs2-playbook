@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [侧道桥, VIP]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [蓝车]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

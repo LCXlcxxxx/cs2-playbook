@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [小凹槽, 连接]
-tags: []
+tags: [A区, B区]
 related: []
 source:
   kind: self

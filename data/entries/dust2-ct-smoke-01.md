@@ -14,7 +14,7 @@ difficulty: normal
 phase: [postplant]
 status: draft
 spots: [卡车, 空调]
-tags: []
+tags: [A区, B区]
 related: []
 source:
   kind: self

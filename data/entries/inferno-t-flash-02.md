@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [匪家, 匪口]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

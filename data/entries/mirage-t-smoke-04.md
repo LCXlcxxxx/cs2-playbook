@@ -14,7 +14,7 @@ difficulty: easy
 phase: [execute]
 status: verified
 spots: [屋檐, 跳台下]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

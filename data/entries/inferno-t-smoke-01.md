@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [香蕉道, 棺材]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

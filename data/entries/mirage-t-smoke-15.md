@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [匪家, 跳台下, 拱门]
-tags: []
+tags: [A区, 中路]
 related: []
 source:
   kind: self

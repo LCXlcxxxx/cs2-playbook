@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: draft
 spots: [石板, 双架]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

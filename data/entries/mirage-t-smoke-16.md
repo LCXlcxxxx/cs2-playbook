@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [跳台下]
-tags: []
+tags: [A区, 中路]
 related: []
 source:
   kind: self

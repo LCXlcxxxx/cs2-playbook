@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [后花园平台, 警家]
-tags: [默认, 控中路]
+tags: [默认, 控中路, A区]
 related: []
 pin_origin: [0.2004, 0.7678]
 pin_targets: {警家: [0.5142, 0.2435]}

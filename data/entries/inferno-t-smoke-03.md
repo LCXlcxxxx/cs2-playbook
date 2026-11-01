@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [匪家, T字连接]
-tags: []
+tags: [A区]
 related: []
 source:
   kind: self

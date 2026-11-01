@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: draft
 spots: [中路, 中门]
-tags: [中路]
+tags: [A区, B区, 中路]
 related: []
 pin_targets: {中门: [0.442, 0.3461]}
 source:

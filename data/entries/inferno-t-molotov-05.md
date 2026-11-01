@@ -14,7 +14,7 @@ difficulty: normal
 phase: [execute]
 status: draft
 spots: [木板/车位, 三箱]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [沙袋, Jungle]
-tags: []
+tags: [A区, 中路]
 sets: []
 related: []
 source:

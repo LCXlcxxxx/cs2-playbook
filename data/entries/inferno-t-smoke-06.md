@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [中路, 连接凹槽]
-tags: [中路]
+tags: [A区, 中路]
 related: []
 source:
   kind: self

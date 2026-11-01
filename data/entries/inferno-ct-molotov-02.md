@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [喷泉, 木板/车位]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

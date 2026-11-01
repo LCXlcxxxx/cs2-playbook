@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [中远匪口, 沙袋]
-tags: [中路]
+tags: [A区, 中路]
 sets: []
 related: []
 source:

@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [下水道, VIP]
-tags: []
+tags: [B区]
 related: []
 source:
   kind: self

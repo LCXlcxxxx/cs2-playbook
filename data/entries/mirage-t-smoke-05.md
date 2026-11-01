@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [沙袋, VIP]
-tags: []
+tags: [A区, B区, 中路]
 related: []
 source:
   kind: self

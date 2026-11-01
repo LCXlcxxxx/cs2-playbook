@@ -14,7 +14,7 @@ difficulty: normal
 phase: [retake]
 status: draft
 spots: [沙地, 狗洞]
-tags: []
+tags: [B区, 中路]
 related: []
 source:
   kind: self

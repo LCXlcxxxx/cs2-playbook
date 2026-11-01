@@ -14,7 +14,7 @@ difficulty: easy
 phase: [retake]
 status: verified
 spots: [狗洞, A 二楼 (宫殿)]
-tags: [A区]
+tags: [A区, B区]
 related: []
 source:
   kind: self

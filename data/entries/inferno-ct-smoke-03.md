@@ -14,7 +14,7 @@ difficulty: normal
 phase: [anti-eco]
 status: draft
 spots: [连接凹槽, 小凹槽]
-tags: []
+tags: [A区, 中路]
 related: []
 source:
   kind: self

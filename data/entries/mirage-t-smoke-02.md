@@ -14,7 +14,7 @@ difficulty: easy
 phase: [default]
 status: verified
 spots: [匪家, 拱门]
-tags: []
+tags: [中路]
 related: []
 source:
   kind: self

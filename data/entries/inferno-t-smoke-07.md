@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [侧道桥, 连接凹槽]
-tags: []
+tags: [中路]
 related: []
 source:
   kind: self

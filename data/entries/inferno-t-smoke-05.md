@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [T字连接, 连接]
-tags: []
+tags: [A区, B区]
 related: []
 source:
   kind: self

@@ -14,7 +14,7 @@ difficulty: normal
 phase: [default]
 status: verified
 spots: [匪二楼, 超市门, 超市]
-tags: []
+tags: [B区]
 related: []
 pin_targets:
   超市门: [0.1717, 0.3916]
