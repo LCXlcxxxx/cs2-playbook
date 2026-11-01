@@ -58,7 +58,7 @@ function init() {
     render();
   });
 
-  // 快捷筛选 chips（I50 + R3-L3 自定义）：同 dim 互斥单选、跨 dim AND、与搜索词 AND；
+  // 快捷筛选 chips（R3-L3 自定义；R3-L19 起顶栏仅显示 ⚙ 设置里配置的词）：多词 AND、与搜索词 AND；
   // 行内容由 buildChipFilterRow() 构建（设置弹层增删自定义词后重调），委托监听只挂一次
   const chipWrap = $("#chip-filter");
   buildChipFilterRow();
@@ -373,7 +373,7 @@ function onKey(ev) {
 
 function bootLightboxZoom() { initLightboxZoom(); }
 
-/* 快捷筛选 chips 行构建（I50 固定集合 + R3-L3 自定义）：id/label 过 escapeHtml（自定义词是用户输入）；
+/* 快捷筛选 chips 行构建（R3-L3 自定义；R3-L19 起仅自定义词，内置词退役）：id/label 过 escapeHtml（自定义词是用户输入）；
    ⚙ 设置增删自定义词后也会重调本函数，委托监听在 init 只挂一次 */
 function buildChipFilterRow() {
   const wrap = $("#chip-filter");

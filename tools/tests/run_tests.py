@@ -161,31 +161,37 @@ def s1_search_tokens(page, base):
     clear_search(page)
 
 
-@case("顶栏/chips 同维互斥 + 跨维 AND + 清除")
+@case("顶栏/chips 行仅显示自定义词 + 多词 AND + 清除")
 def s1_chips(page, base):
     goto(page, base)
     go_entries(page)
-
-    def chip_on():
-        return H.mw_all_text(page, "#chip-filter .fchip.on")
-    H.mw_click(page, '#chip-filter [data-fchip="jump"]')
-    page.wait_for_timeout(200)
-    assert chip_on() == ["跳投"], f"跳投应亮，实际 {chip_on()}"
-    H.mw_click(page, '#chip-filter [data-fchip="run"]')
-    page.wait_for_timeout(200)
-    assert chip_on() == ["跑投"], f"跑投应顶掉跳投，实际 {chip_on()}"
-    for eid in row_ids(page):
-        e = entry_of(page, eid)
-        assert e["move"] in ("w", "run"), f"{eid} move={e['move']} 泄入跑投"
-    H.mw_click(page, '#chip-filter [data-fchip="verified"]')
-    page.wait_for_timeout(200)
-    assert sorted(chip_on()) == ["已实测", "跑投"], f"应跨维双亮，实际 {chip_on()}"
-    for eid in row_ids(page):
-        e = entry_of(page, eid)
-        assert e["status"] == "verified" and e["move"] in ("w", "run"), f"{eid} 泄入 AND"
+    # R3-L19：内置十个词（单向烟/跳投/已实测/难度…）不再渲染，顶栏只显示 ⚙ 设置里配置的自定义词
+    forbidden = {"单向烟", "瞬爆闪", "自助闪", "灭火", "跳投", "跑投", "已实测", "简单", "中等", "困难"}
+    tags = page.evaluate(
+        "() => { const m = new Map();"
+        " for (const e of data.entries.filter(entryMatch)) for (const t of (e.tags || [])) m.set(t, (m.get(t) || 0) + 1);"
+        " return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]); }")
+    assert len(tags) == 2, f"当前地图需要两个库内标签做测试: {tags!r}"
+    page.evaluate("(ts) => { saveCustomChipWords(ts); buildChipFilterRow(); }", tags)
+    labels = H.mw_all_text(page, "#chip-filter .fchip")
+    assert labels == tags, f"chips 行应只含自定义词 {tags}，实际 {labels}"
+    assert not (forbidden & set(labels)), f"内置词不应出现在 chips 行: {labels}"
+    n_all = page.evaluate("() => data.entries.filter(entryMatch).length")
+    expected = page.evaluate(
+        "(ts) => data.entries.filter(e => entryMatch(e) && ts.every(t => (e.tags || []).includes(t))).length", tags)
+    for t in tags:
+        H.mw_click(page, f'#chip-filter [data-fchip="tag-{t}"]')
+        page.wait_for_timeout(200)
+    got = page.evaluate("() => data.entries.filter(entryMatch).length")
+    assert got == expected, f"两词 AND 应命中 {expected}，实际 {got}"
+    assert sorted(H.mw_all_text(page, "#chip-filter .fchip.on")) == sorted(tags), \
+        f"两词应同时点亮，实际 {H.mw_all_text(page, '#chip-filter .fchip.on')}"
     H.mw_click(page, "[data-fchipclear]")
     page.wait_for_timeout(200)
-    assert chip_on() == [], "清除后不应有选中 chip"
+    assert H.mw_all_text(page, "#chip-filter .fchip.on") == [], "清除后不应有选中 chip"
+    assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "清除后应恢复全量"
+    # 清理
+    page.evaluate("() => { saveCustomChipWords([]); buildChipFilterRow(); state.filterChips.clear(); }")
 
 
 @case("顶栏/📦 只看战术包开关")
@@ -1153,7 +1159,7 @@ def r3_compress(page, base):
 
 # ---------------------------------------------------------------- R3-L3 自定义筛选 chips
 
-@case("R3L3/自定义筛选：添加→顶栏出现→点击按 tag 过滤→与内置 AND→设置回车创建")
+@case("R3L3/自定义筛选：添加→顶栏出现→点击按 tag 过滤→与第二词 AND→设置回车创建")
 def r3l3_customchips(page, base):
     goto(page, base); go_entries(page)
     n_all = page.evaluate("() => data.entries.filter(entryMatch).length")
@@ -1172,12 +1178,26 @@ def r3l3_customchips(page, base):
     got = page.evaluate("() => data.entries.filter(entryMatch).length")
     assert got == expected, f"点击自定义 chip 应过滤到 {expected} 条（DOM 行数会因套装叠加视图重复，断言走数据口径）"
     assert page.evaluate("(t) => state.filterChips.has('tag-' + t)", tag)
-    # 与内置「已实测」叠加 AND
-    page.evaluate(
-        "() => [...document.querySelectorAll('[data-fchip]')].find(b => b.dataset.fchip === 'verified').click()")
-    page.wait_for_timeout(250)
-    both = page.evaluate("() => data.entries.filter(entryMatch).length")
-    assert both <= expected, f"叠加已实测后应不多于 {expected}: {both}"
+    # 与第二个自定义词叠加 AND（R3-L19：内置「已实测」chip 已退役）
+    tag2 = page.evaluate(
+        """(t) => { const es = data.entries.filter(e => entryMatch(e) && (e.tags || []).includes(t));
+             for (const e of es) { const o = (e.tags || []).find(x => x !== t); if (o) return o; }
+             return null; }""", tag)
+    if tag2:
+        page.evaluate("(t) => { saveCustomChipWords([...customChipWords(), t]); buildChipFilterRow(); }", tag2)
+        H.mw_click(page, f'#chip-filter [data-fchip="tag-{tag2}"]')
+        page.wait_for_timeout(250)
+        both = page.evaluate("() => data.entries.filter(entryMatch).length")
+        expected2 = page.evaluate(
+            "(ts) => data.entries.filter(e => entryMatch(e) && ts.every(t => (e.tags || []).includes(t))).length",
+            [tag, tag2])
+        assert both == expected2, f"两词 AND 应命中 {expected2}，实际 {both}"
+    else:
+        page.evaluate("() => { saveCustomChipWords([...customChipWords(), 'AND占位词']); buildChipFilterRow(); }")
+        H.mw_click(page, '[data-fchip="tag-AND占位词"]')
+        page.wait_for_timeout(250)
+        assert page.evaluate("() => data.entries.filter(entryMatch).length") == 0, \
+            "无共现词时占位词（库内无此 tag）AND 后应为 0 条"
     page.evaluate("() => document.querySelector('[data-fchipclear]').click()")
     page.wait_for_timeout(200)
     assert page.evaluate("() => data.entries.filter(entryMatch).length") == n_all, "清除后应恢复全量"

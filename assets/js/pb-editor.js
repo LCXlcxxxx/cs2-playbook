@@ -702,7 +702,7 @@ function openSettings() {
         </span>
       </div>
       <div class="set-row pb-mng">
-        <div class="set-label">自定义筛选<span class="set-tip">把常用标签一键变成顶栏筛选按钮，数量不限——点按钮=只看带该标签的道具</span></div>
+        <div class="set-label">自定义筛选<span class="set-tip">把常用标签一键变成顶栏筛选按钮，数量不限——点按钮=只看带该标签的道具；顶栏只显示这里添加的词</span></div>
         <span class="chips-row" id="set-customchips"></span>
         <span class="chips-row" id="set-customchip-lib"></span>
         <span class="pick-row">

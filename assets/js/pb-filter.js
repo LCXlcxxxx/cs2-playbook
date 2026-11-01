@@ -75,23 +75,11 @@ function targetDisplay(e) {
   return targetVals(e).join(" / ");
 }
 
-// 快捷筛选 chips（I50）：chip→谓词集中一处；dim=互斥维度（同 dim 单选防恒空集，如跳投/跑投同属投法维），
-// 跨 dim AND，再与类型/阵营/地图/报点过滤、搜索词按 AND 组合（entryMatch 内按 state.tab 门控——只作用道具
-// Tab 的列表，战术板图层/报点相关性链路不受影响）。
-const FILTER_CHIPS = [
-  { id: "oneway-smoke", label: "单向烟", dim: "oneway-smoke", test: e => e.type === "smoke" && (e.tags || []).includes("单向") },
-  { id: "instant-flash", label: "瞬爆闪", dim: "instant-flash", test: e => e.type === "flash" && (e.tags || []).includes("瞬爆") },
-  { id: "self-flash", label: "自助闪", dim: "self-flash", test: e => e.type === "flash" && (e.tags || []).includes("自助") },
-  { id: "extinguish", label: "灭火", dim: "extinguish", test: e => (e.tags || []).includes("灭火") },
-  { id: "jump", label: "跳投", dim: "throw", test: e => e.action === "jump" || e.action === "crouch-jump" },
-  { id: "run", label: "跑投", dim: "throw", test: e => e.move === "w" || e.move === "run" },
-  { id: "verified", label: "已实测", dim: "verified", test: e => e.status === "verified" },
-  // I51：难度三档（同 dim 互斥单选）
-  { id: "diff-easy", label: "简单", dim: "diff", test: e => diffEnum(e.difficulty) === "easy" },
-  { id: "diff-normal", label: "中等", dim: "diff", test: e => diffEnum(e.difficulty) === "normal" },
-  { id: "diff-hard", label: "困难", dim: "diff", test: e => diffEnum(e.difficulty) === "hard" },
-];
-const FILTER_CHIP_BY_ID = new Map(FILTER_CHIPS.map(c => [c.id, c]));
+// 快捷筛选 chips：R3-L19 起（用户 2026-11-01 拍板「没有设置的标签不要显示在上端」）顶栏只显示
+// 用户在 ⚙ 设置「自定义筛选」里添加的词——I50 的十个内置词（单向烟/瞬爆闪/自助闪/灭火/跳投/跑投/
+// 已实测/简单/中等/困难）不再渲染（原表见 git 历史 R3-L18 提交）。多词 AND，再与类型/阵营/地图/报点
+// 过滤、搜索词按 AND 组合（entryMatch 内按 state.tab 门控——只作用道具 Tab 的列表，战术板图层/报点
+// 相关性链路不受影响）。
 
 // 自定义筛选 chips（R3-L3，用户 2026-10-26 拍板）：把任意 tags 词提升为顶栏筛选按钮，数量不限。
 // 词表存 localStorage（持久）；每词独立 dim=多个自定义词可叠加 AND；选中态仍会话内（state.filterChips 原语义）。
@@ -112,9 +100,9 @@ function customChipObjs() {
     test: e => (e.tags || []).includes(w),
   }));
 }
-function allFilterChips() { return FILTER_CHIPS.concat(customChipObjs()); }
+function allFilterChips() { return customChipObjs(); }   // R3-L19：内置词退役，仅自定义
 function getFilterChip(id) {
-  return FILTER_CHIP_BY_ID.get(id) || customChipObjs().find(c => c.id === id) || null;
+  return customChipObjs().find(c => c.id === id) || null;   // 词被移除后的悬挂 id 安全跳过（chipMatch 判 null）
 }
 
 function chipMatch(e) {
